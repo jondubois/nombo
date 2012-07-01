@@ -1,0 +1,1 @@
+alert("Not Accessible Error - The given script is not accessible through the current router");

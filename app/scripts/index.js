@@ -1,4 +1,25 @@
+$n.grab.frameworkCSS('bootstrap');
+$n.grab.script('showtable');
+
+var template = $n.grab.template('mytemplate');
+
 $n.ready(function() {
-	var text = "Thank you for downloading nCombo. For more info on how to get started, please visit <a href=\"http://ncombo.com/\">http://ncombo.com/</a>.";
-	$(document.body).html('<div style="padding:20px;">' + text + '</div>');
+	var dataRows = [
+			{month: 'January', amount: '$100'},
+			{month: 'February', amount: '$200'},
+			{month: 'March', amount: '$300'} ];
+	
+	$(document.body).append(template.render({rows: dataRows}));
+	
+	/*
+	$n.acall('test', 'fun', 'Hi', function(data) {
+		$(document.body).append(data + "<br />");
+	});
+	*/
+	
+	$n.acall('indirect', 'stream', 'Test ', function(data) {
+		$(document.body).append(data + "<br />");
+	});
+	
+	$n.acall('indirect', 'second');
 });

@@ -295,11 +295,8 @@ var actions = {
 				if(isEmpty(watchMap[command.event])) {
 					delete watchMap[command.event];
 				}
-				send(socket, {id: command.id, type: 'response', action: 'unwatch', event: command.event});
-			} else {
-				var error = 'nData Error - Cannot unwatch the specified ' + command.event + ' event - It is not currently being watched by the requesting socket';
-				send(socket, {id: command.id, type: 'response', action: 'unwatch', event: command.event, error: error});
 			}
+			send(socket, {id: command.id, type: 'response', action: 'unwatch', event: command.event});
 		} else {
 			watchMap = {};
 			send(socket, {id: command.id, type: 'response', action: 'unwatch', event: null});
@@ -312,9 +309,8 @@ var actions = {
 			for(i in watchMap[command.event]) {
 				send(watchMap[command.event][i], {type: 'event', event: command.event, value: command.value});
 			}
-			
-			send(socket, {id: command.id, type: 'response', action: 'broadcast', value: command.value, event: command.event});
 		}
+		send(socket, {id: command.id, type: 'response', action: 'broadcast', value: command.value, event: command.event});
 	}
 }
 

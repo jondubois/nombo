@@ -40,10 +40,10 @@ The callback is in form: callback(err)
 this existing value will be placed inside an empty array and the specified value argument will be appended to that array.
 The callback is in form: callback(err)
 
-- remove(key, callback) - Removes the value at key. If value is an array, it will remove the entire array
+- remove(key, callback) - Removes the value at key. If value is an array, it will remove the entire array.
 The callback is in form: callback(err, value)
 
-- removeAll(callback) - Clears nData completely
+- removeAll(callback) - Clears nData completely.
 The callback is in form: callback(err)
 
 - pop(key, callback) - Removes the last numerically-indexed entry at key; callback is in the form: callback(err, value)
@@ -77,7 +77,7 @@ dataClient.get('this.is.a', function(value) {
 
 The above would output: {deep:{key:'Hello world'}}
 
-nCombo generally doesn't restrict you from doign anything you want. It is perfectly OK to call this:
+nCombo generally doesn't restrict you from doing anything you want. It is perfectly OK to call this:
 
 dataClient.add('this.is.a', 'foo');
 

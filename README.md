@@ -10,15 +10,15 @@ npm install -g ncombo
 nCombo offers several ground-breaking features:
 
 - It's fast
+- It dramatically reduces development time
 - It lets you program in a single language (JavaScript)
 - Full duplex client-server communication (thanks to socket.io)
-- Server interfaces are simple Node.js modules which can be called from your client-side JavaScript - Unlike traditional functions, functions defined in server interfaces can return multiple times from a single call (thus they can act as a stream of data).
-- nCombo offers a simple webservice module which allows you to interact with other nCombo applications' server interfaces (including securely over the WSS protocol) - Effectively various nCombo applications can be hooked into one another to easily exchange data without having to consider the underlying protocols.
-- nCombo allows your client-side scripts to listen to server-side events. (Using the webservice module, you can also listen to events which occur on remote nCombo apps - If they allow you).
-- Makes efficient use of caching (in release mode) to improve the user experience when accessing an application multiple times.
-- A Session object which uniquely identifies each client is appended to all requests. The session object can be manipulated to store data unique to each client.
-- A Global object can be used to store data that can be shared between all clients - It also gives you access to all connected clients and lets you selectively exchange data between them.
-- While in release mode, an error in your server-interface code will not bring down the whole server.
-- nCombo comes with all the standard middleware for session management, routing and the like. nCombo lets you add custom middleware to do tasks such as user authorization (such as controlling who has access to a file or server interface or who can listen to specific server events). Middleware comes in several varieties; 'localCall', 'remoteCall', 'localEvent' and 'remoteEvent' each one allows you to filter requests relating to specific types of actions.
-- nCombo makes use of all available CPU cores for maximum efficiency and concurrency.
-- nCombo comes with default upload middleware and offers Valumn's uploader client-side. Creating an upload feature only takes a few lines of code.
+- Allows you to call server-side functions from your client-side scripts
+- nCombo offers a simple webservice module which allows you to seamlessly interact with other nCombo applications
+- nCombo allows your client-side scripts to listen to server-side events. (You can also listen to events which occur on remote nCombo servers - If they allow you of course)
+- Makes efficient use of caching (in release mode) - Restarting an nCombo server causes browsers to refresh their cache - So clients stay up to date
+- A Session object which uniquely identifies each client is appended to all requests - The session object can be manipulated to store data unique to each client
+- A Global object can be used to store data that can be shared between all clients - It also gives you access to all connected clients and lets you selectively exchange data between them
+- nCombo comes with all the standard middleware for session management, routing and the like - nCombo lets you add custom middleware to do tasks such as user authorization (such as controlling who has access to a file or server interface or who can listen to specific server events) - Middleware comes in several varieties; 'router', 'localCall', 'remoteCall', 'localEvent' and 'remoteEvent' each one allows you to filter requests relating to specific types of actions
+- nCombo makes use of all available CPU cores for maximum efficiency and concurrency (or you can optionally specify the number of workers to use)
+- nCombo comes with default upload middleware and offers Valumn's uploader client-side - Creating an upload feature only takes a few lines of code

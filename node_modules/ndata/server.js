@@ -4,11 +4,10 @@ var HOST = '127.0.0.1';
 
 var initialized = {};
 
-var net = require('net');
-var formatter = require('./formatter');
+var com = require('./com');
 
 var send = function(socket, object) {
-	socket.write(formatter.stringify(object));
+	socket.write(object);
 }
 
 var isEmpty = function(object) {
@@ -160,7 +159,11 @@ var FlexiMap = function(object) {
 			return self._remove(keyChain[0]);
 		}
 		var parentMap = self._get(keyChain.slice(0, -1));
-		return parentMap._remove(keyChain[keyChain.length - 1]);
+		if(parentMap instanceof FlexiMap) {
+			return parentMap._remove(keyChain[keyChain.length - 1]);
+		} else {
+			return null;
+		}
 	}
 	
 	self.pop = function(keyPath) {
@@ -320,23 +323,20 @@ var genID = function() {
 	return curID++;
 }
 
-var server = net.createServer();
+var server = com.createServer();
 
 server.listen(PORT, HOST);
 
 server.on('connection', function(sock) {
 	sock.id = genID();
-	sock.on('data', function(commandBuffer) {
-		var commands = formatter.parse(commandBuffer, true);
-		var i;
-		for(i in commands) {
-			if(!SECRET_KEY || initialized.hasOwnProperty(sock.id) || commands[i].action == 'init') {
-				if(actions.hasOwnProperty(commands[i].action)) {
-					actions[commands[i].action](commands[i], sock);
-				}
-			} else {
-				send(sock, {id: commands[i].id, type: 'response', action: commands[i].action, error: 'nData Error - Cannot process command before init handshake'});
+	
+	sock.on('message', function(command) {
+		if(!SECRET_KEY || initialized.hasOwnProperty(sock.id) || command.action == 'init') {
+			if(actions.hasOwnProperty(command.action)) {
+				actions[command.action](command, sock);
 			}
+		} else {
+			send(sock, {id: command.id, type: 'response', action: command.action, error: 'nData Error - Cannot process command before init handshake'});
 		}
 	});
 	

@@ -2,22 +2,17 @@ var json = require('json');
 var cycle = require('json/cycle');
 
 module.exports.parse = function(buffer, skipRetrocycle)  {
-	var comString = buffer.toString();
-	var firstParse = json.parse('[' + comString.substring(0, comString.length - 1) + ']');
-	var secondParse = [];
+	var firstParse = json.parse(buffer.toString());
+	var secondParse;
 	var i;
 	if(skipRetrocycle) {
-		for(i in firstParse) {
-			secondParse[i] = firstParse[i];
-		}
+		secondParse = firstParse;
 	} else {
-		for(i in firstParse) {
-			secondParse[i] = cycle.retrocycle(firstParse[i]);
-		}
+		secondParse = cycle.retrocycle(firstParse);
 	}
 	return secondParse;
 }
 
 module.exports.stringify = function(object)  {
-	return json.stringify(cycle.decycle(object)) + ',';
+	return json.stringify(cycle.decycle(object));
 }

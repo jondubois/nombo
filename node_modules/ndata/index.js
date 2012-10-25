@@ -1,7 +1,6 @@
 var fork = require('child_process').fork;
 var EventEmitter = require('events').EventEmitter;
-var net = require('net');
-var formatter = require('./formatter');
+var ComSocket = require('./com').ComSocket;
 
 var DEFAULT_PORT = 9435;
 var HOST = '127.0.0.1';
@@ -45,7 +44,7 @@ var Client = function(port, host, secretKey, timeout) {
 	self._chanelWatchers = {};
 	self._commandMap = {};
 	
-	self._socket = new net.Socket();
+	self._socket = new ComSocket();//new net.Socket();
 	
 	self._curID = 1;
 	self.MAX_ID = Math.pow(2, 53) - 2;
@@ -80,31 +79,26 @@ var Client = function(port, host, secretKey, timeout) {
 		}		
 	});
 	
-	self._socket.on('data', function(responseBuffer) {
-		var responses = formatter.parse(responseBuffer);
-		var i, response, id, action, error, listeners;
-		for(i in responses) {
-			response = responses[i];
-			id = response.id;
-			error = response.error || null;
-			if(response.type == 'response') {
-				if(self._commandMap.hasOwnProperty(id)) {
-					clearTimeout(self._commandMap[id].timeout);
-					
-					action = response.action;
-					if(response.value) {
-						self._commandMap[id].callback(error, response.value);
-					} else if(action == 'watch' || action == 'unwatch') {
-						self._commandMap[id].callback(error);
-					} else {
-						self._commandMap[id].callback(error);
-					}
-					
-					delete self._commandMap[id];
+	self._socket.on('message', function(response) {
+		var id = response.id;
+		var error = response.error || null;
+		if(response.type == 'response') {
+			if(self._commandMap.hasOwnProperty(id)) {
+				clearTimeout(self._commandMap[id].timeout);
+				
+				var action = response.action;
+				if(response.value) {
+					self._commandMap[id].callback(error, response.value);
+				} else if(action == 'watch' || action == 'unwatch') {
+					self._commandMap[id].callback(error);
+				} else {
+					self._commandMap[id].callback(error);
 				}
-			} else if(response.type == 'event') {
-				self._broadcast(response.event, response.value);
+				
+				delete self._commandMap[id];
 			}
+		} else if(response.type == 'event') {
+			self._broadcast(response.event, response.value);
 		}
 	});
 	
@@ -125,7 +119,7 @@ var Client = function(port, host, secretKey, timeout) {
 			
 			request.timeout = timeout;
 		}
-		self._socket.write(formatter.stringify(command));
+		self._socket.write(command);
 	}
 	
 	self._pendingWatches = 0;

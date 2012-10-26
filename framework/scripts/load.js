@@ -20,9 +20,9 @@ var jLoad = {
 		jLoad._frameworkURL = settings.frameworkURL;
 		jLoad._loaderAnimText = [];
 		
-		var imgURL = jLoad._frameworkURL + 'assets/logo.png';
-		var textAnim = ['Loading nCombo App', 'Loading nCombo App.', 'Loading nCombo App..', 
-				'Loading nCombo App...', 'Loading nCombo App..', 'Loading nCombo App.'];
+		var imgURL = smartCacheManager.setURLCacheVersion(jLoad._frameworkURL + 'assets/logo.png');
+		var textAnim = ['Loading App', 'Loading App.', 'Loading App..', 
+				'Loading App...', 'Loading App..', 'Loading App.'];
 		
 		jLoad._load(imgURL, 'nCombo', 'http://ncombo.com/', textAnim);
 	},
@@ -31,6 +31,7 @@ var jLoad = {
 		jLoad._loader = document.createElement('div');
 		jLoad._loader.style.position = 'absolute';
 		jLoad._loader.style.visibility = 'hidden';
+		jLoad._loader.style.width = '80px';
 		
 		jLoad._loaderCounter = 0;
 		jLoad._imgLoaded = false;
@@ -49,12 +50,17 @@ var jLoad = {
 		linkEl.setAttribute('target', '_blank');
 		
 		var imgEl = document.createElement('img');
+		imgEl.style.width = '80px';
+		imgEl.style.height = '80px';
+		imgEl.style.display = 'block';
+		imgEl.style.marginRight = 'auto';
+		imgEl.style.marginLeft = 'auto';
 		imgEl.setAttribute('src', loadImageURL);
 		imgEl.setAttribute('alt', loadImageCaption);
 		imgEl.setAttribute('border', '0px');
 		
 		jLoad._loaderTextBox = document.createElement('div');
-		jLoad._loaderTextBox.style.marginTop = '2px';
+		jLoad._loaderTextBox.style.marginTop = '5px';
 		jLoad._loaderTextBox.style.fontFamily = 'Arial';
 		jLoad._loaderTextBox.style.fontSize = '12px';
 		jLoad._loaderTextBox.style.color = '#666';
@@ -68,7 +74,6 @@ var jLoad = {
 		
 		var img = new Image();
 		img.onload = jLoad._ready;
-		
 		img.src = loadImageURL;
 	},
 	

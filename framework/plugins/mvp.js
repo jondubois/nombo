@@ -498,17 +498,17 @@ $n.mvp = {
 
 $n.mvp.init();
 
-$n.res.hasView = function(name) {
-	return $n.res.hasTemplate(name);
+$n.res.app.hasView = function(name) {
+	return $n.res.app.hasTemplate(name);
 },
 
-$n.res.view = function(name) {
-	if(!$n.res.hasView(name)) {
+$n.res.app.view = function(name) {
+	if(!$n.res.app.hasView(name)) {
 		throw 'Exception: The ' + name + ' view is not available';
 	}
-	return new $n.mvp.View($n.res.template(name));
+	return new $n.mvp.View($n.res.app.template(name));
 }
 
-$n.grab.view = function(templateName) {
-	return new $n.mvp.View($n.grab.template(templateName));
+$n.grab.app.view = function(templateName) {
+	return new $n.mvp.View($n.grab.app.template(templateName));
 }

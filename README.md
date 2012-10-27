@@ -5,7 +5,10 @@ nCombo is an Open Source Node.js framework that allows you to easily build power
 nCombo is distributed under the MIT license. Please see license_mit.txt for details. Visit http://ncombo.com for more information.
 
 To install, run:
+
+```bash
 npm install -g ncombo
+```
 
 nCombo offers several ground-breaking features:
 

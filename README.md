@@ -2,14 +2,14 @@ nCombo
 ======
 
 nCombo is an Open Source Node.js framework that allows you to easily build powerful, data-driven Rich Internet Applications (RIAs).
-nCombo is distributed under the MIT license. Please see license_mit.txt for details. Please visit http://ncombo.com for more information.
+nCombo is distributed under the MIT license. Please see license_mit.txt for details. Visit http://ncombo.com for more information.
 
 To install, run:
 npm install -g ncombo
 
 nCombo offers several ground-breaking features:
 
-- It's fast
+- It's efficient with server resources
 - It dramatically reduces development time
 - It lets you program in a single language (JavaScript)
 - Full duplex client-server communication (thanks to socket.io)

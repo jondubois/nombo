@@ -509,6 +509,6 @@ $n.res.app.view = function(name) {
 	return new $n.mvp.View($n.res.app.template(name));
 }
 
-$n.grab.app.view = function(templateName) {
-	return new $n.mvp.View($n.grab.app.template(templateName));
+$n.grab.app.view = function(templateName, fresh) {
+	return new $n.mvp.View($n.grab.app.template(templateName, fresh));
 }

@@ -6,13 +6,38 @@ var initialized = {};
 
 var com = require('./com');
 
-var unflatten = function(str) {
-	return str.replace(/\\u001a/g, '.');
+var escapeStr = '\\u001b';
+var escapeArr = escapeStr.split('');
+var escapeRegex = new RegExp('\\+' + escapeStr, 'g');
+
+var unsimplifyFilter = function(str) {
+	return str.replace(/\\+u001a/g, '.');
 }
 
-var filters = [unflatten];
+var unescapeFilter = function(str) {
+	return str.replace(escapeRegex, '');
+}
+
+var unescape = function(value) {
+	if(typeof value == 'string') {
+		value = value.replace(escapeRegex, '');
+	} else {
+		if(value instanceof FlexiMap) {
+			value = value.getData();
+		}
+	}
+	return value;
+}
+
+var filters = [unsimplifyFilter, unescapeFilter];
 
 var send = function(socket, object) {
+	if(object.key) {
+		object.key = unescape(object.key);
+	}
+	if(object.value) {
+		object.value = unescape(object.value);
+	}
 	socket.write(object, filters);
 }
 
@@ -146,8 +171,12 @@ var FlexiMap = function(object) {
 		return value;
 	}
 	
+	self.escapeBackslashes = function(str) {
+		return str.replace(/([^\\])\\([^\\])/g, '$1\\\\$2');
+	}
+	
 	self.run = function(code) {
-		return Function('var DataMap = arguments[0]; return ' + code + ' || "";')(self);
+		return Function('var DataMap = arguments[0]; return ' + self.escapeBackslashes(code) + ' || "";')(self);
 	}
 	
 	self._remove = function(key) {
@@ -365,21 +394,27 @@ var server = com.createServer();
 
 server.listen(PORT, HOST);
 
-var flatten = function(str) {
-	return str.replace(/[.]/g, '\\u001a');
+var evaluate = function(str) {
+	return Function('return ' + DataMap.escapeBackslashes(str) + ' || null;')();
 }
 
 var substitute = function(str) {
 	return DataMap.get(str);
 }
 
-var evaluate = function(str) {
-	return Function('return ' + str + ' || null;')();
+var escape = function(str) {
+	return '"' + str.replace(/([()'"])/g, '\\u001b$1') + '"';
+}
+
+var simplify = function(str) {
+	return str.replace(/[.]/g, '\\u001a');
 }
 
 var convertToString = function(object) {
 	var str;
 	if(typeof object == 'string') {
+		str = object;
+	} else if(typeof object == 'number') {
 		str = object;
 	} else if(object == null) {
 		str = null;
@@ -403,6 +438,16 @@ var arrayToString = function(array) {
 	return str;
 }
 
+var matchesPrev = function(charArray, beforeIndex, matchCharArray) {
+	var i, j;
+	for(i=beforeIndex-matchCharArray.length, j=0; i<beforeIndex; i++, j++) {
+		if(!charArray[i] || charArray[i] != matchCharArray[j]) {
+			return false;
+		}
+	}
+	return true;
+}
+
 var compile = function(str, macroMap, macroName) {
 	var buffer = [];
 	var chars;
@@ -413,19 +458,18 @@ var compile = function(str, macroMap, macroName) {
 	}
 	var len = chars.length;
 	
-	var curMacroChar;
-	var i;
+	var i, j, curMacroChar, segment, numOpen, notEscaped, comp;
 	for(i=0; i<len; i++) {
-		if(macroMap.hasOwnProperty(chars[i]) && chars[i + 1] == '(' && chars[i - 1] != '\\') {
+		if(macroMap.hasOwnProperty(chars[i]) && chars[i + 1] == '(') {
 			curMacroChar = chars[i];
 			i += 2;
-			var segment = [];
-			var j;
-			var numOpen = 1;
+			segment = [];
+			numOpen = 1;
 			for(j=i; j<len; j++) {
-				if(chars[j] == '(' && chars[j - 1] != '\\') {
+				notEscaped = !matchesPrev(chars, j, escapeArr);
+				if(chars[j] == '(' && notEscaped) {
 					numOpen++;
-				} else if(chars[j] == ')' && chars[j - 1] != '\\') {
+				} else if(chars[j] == ')' && notEscaped) {
 					numOpen--;
 				}
 				
@@ -436,7 +480,11 @@ var compile = function(str, macroMap, macroName) {
 				}
 			}
 			i = j;
-			var comp = compile(segment, macroMap, curMacroChar);
+			if(curMacroChar == '#') {
+				comp = arrayToString(segment);
+			} else {
+				comp = compile(segment, macroMap, curMacroChar);
+			}
 			buffer.push(comp);
 		} else {
 			buffer.push(chars[i]);
@@ -450,9 +498,10 @@ var compile = function(str, macroMap, macroName) {
 }
 
 var macros = {
-	'!': evaluate,
+	'%': evaluate,
 	'$': substitute,
-	'#': flatten
+	'#': escape,
+	'~': simplify
 };
 
 server.on('connection', function(sock) {

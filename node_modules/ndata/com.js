@@ -50,7 +50,6 @@ var ComSocket = function(netSocket) {
 			for(i in filters) {
 				str = filters[i](str);
 			}
-			
 		}
 		socket.write(str + endSymbol);
 	}

@@ -190,6 +190,10 @@ var Client = function(port, host, secretKey, timeout) {
 		return str.replace(/[.]/g, '\\u001a');
 	}
 	
+	self.escapeCode = function(str) {
+		return str.replace(/([()'"])/g, '\\u001b$1');
+	}
+	
 	self.watch = function(event, handler, ackCallback) {
 		self._pendingWatches++;
 		

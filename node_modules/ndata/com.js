@@ -18,6 +18,10 @@ var ComSocket = function(netSocket) {
 		socket.connect.apply(socket, arguments);
 	}
 	
+	self.end = function() {
+		socket.end();
+	}
+	
 	self.on = function(event, callback) {
 		if(event == 'message') {
 			socket.on('data', function(data) {

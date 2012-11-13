@@ -56,7 +56,7 @@ var FlexiMap = function(object) {
 	self.length = 0;
 	self._data = [];
 	
-	self._isEmpty = function(object) {
+	self.isEmpty = function(object) {
 		var i;
 		var empty = true;
 		for(i in object) {
@@ -66,8 +66,40 @@ var FlexiMap = function(object) {
 		return empty;
 	}
 	
-	self._isIterable = function(object) {
-		return Object.prototype.toString.call(object) == "[object Object]" || object instanceof Array;
+	self.isIterable = function(object) {
+		return object && (object.constructor.name == 'Object' || object instanceof Array);
+	}
+	
+	self._getAllPaths = function(curPath, object) {
+		var paths = {};
+		var i, j, pth, nextPaths;
+		if (self.isIterable(object)) {
+			for (i in object) {
+				pth = curPath + '.' + i;
+				if (!paths[pth]) {
+					if (self.isIterable(object[i])) {
+						nextPaths = self._getAllPaths(pth, object[i]);
+						for(j in nextPaths) {
+							paths[j] = 1;
+						}
+					} else {
+						paths[pth] = 1;
+					}
+				}
+			}
+		}
+		paths[curPath] = 1;
+		return paths;
+	}
+	
+	self.getAllPaths = function(curPath, object) {
+		var paths = self._getAllPaths(curPath, object);
+		var arr = [];
+		var i;
+		for(i in paths) {
+			arr.push(i);
+		}
+		return arr;
 	}
 	
 	self.getLength = function() {
@@ -76,9 +108,9 @@ var FlexiMap = function(object) {
 	
 	if(object) {
 		var i;
-		if(self._isIterable(object)) {
+		if(self.isIterable(object)) {
 			for(i in object) {
-				if(self._isIterable(object[i])) {
+				if(self.isIterable(object[i])) {
 					self._data[i] = new FlexiMap(object[i]);
 				} else {
 					self._data[i] = object[i];
@@ -124,7 +156,11 @@ var FlexiMap = function(object) {
 	
 	self.get = function(keyPath) {
 		var keyChain = keyPath.split('.');
-		return self._get(keyChain);
+		var result = self._get(keyChain);
+		if(result instanceof FlexiMap) {
+			result = result.getData();
+		}
+		return result;
 	}
 	
 	self.hasImmediateKey = function(key) {
@@ -132,13 +168,13 @@ var FlexiMap = function(object) {
 	}
 	
 	self.hasKey = function(keyPath) {
-		return self.get(keyPath) ? true : false;
+		return (self.get(keyPath) === undefined) ? false : true;
 	}
 	
 	self._set = function(keyChain, value) {
 		var key = keyChain[0];
 		if(keyChain.length < 2) {
-			if(!(value instanceof FlexiMap) && self._isIterable(value)) {
+			if(!(value instanceof FlexiMap) && self.isIterable(value)) {
 				value = new FlexiMap(value);
 			}
 			self._setValue(key, value);
@@ -275,7 +311,70 @@ var FlexiMap = function(object) {
 }
 
 var DataMap = new FlexiMap();
-var watchMap = {};
+var EventMap = new FlexiMap();
+
+var addEvent = function(socket, event) {
+	EventMap.set('event.' + event + '.' + socket.id, socket);
+	EventMap.set('socket.' + socket.id + '.' + event, true);
+}
+
+var removeEvent = function(socket, event) {
+	var removedEvents = EventMap.remove('socket.' + socket.id + '.' + event);
+	var removePaths = EventMap.getAllPaths(event, removedEvents);
+	
+	var i, par;
+	for(i in removePaths) {
+		EventMap.remove('event.' + removePaths[i] + '.' + socket.id);
+		par = EventMap.get('event.' + removePaths[i]);
+		if(par !== undefined && EventMap.isEmpty(par)) {
+			EventMap.remove('event.' + removePaths[i]);
+		}
+		
+		EventMap.remove('socket.' + socket.id + '.' + removePaths[i]);
+	}
+	par = EventMap.get('socket.' + socket.id);
+	if(par !== undefined && EventMap.isEmpty(par)) {
+		EventMap.remove('socket.' + socket.id);
+	}
+}
+
+var getEvents = function(socket) {
+	return EventMap.get('socket.' + socket.id);
+}
+
+var removeAllEvents = function(socket) {
+	var events = getEvents(socket.id);
+	if(events) {
+		var i;
+		for(i in events) {
+			removeEvent(socket.id, i);
+		}
+	}
+}
+
+var countTreeLeaves = function(tree) {
+	var i;
+	var num = 0;
+	for(i in tree) {
+		if(EventMap.isIterable(tree[i])) {
+			num += countTreeLeaves(tree[i]);
+		} else {
+			num++;
+		}
+	}
+	return num;
+}
+
+var forEachSocket = function(socketMap, callback) {
+	var i;
+	for(i in socketMap) {
+		if(socketMap[i] instanceof com.ComSocket) {
+			callback(socketMap[i]);
+		} else if(EventMap.isIterable(socketMap[i])) {
+			forEachSocket(socketMap[i], callback);
+		}
+	}
+}
 
 var actions = {
 	init: function(command, socket) {	
@@ -305,18 +404,6 @@ var actions = {
 		send(socket, {id: command.id, type: 'response', action: 'run', value: result});
 	},
 	
-	update: function(command, socket) {
-		try {
-			var result = DataMap.update(command.key, command.value);
-			send(socket, {id: command.id, type: 'response', action: 'update', value: result});
-		} catch(e) {
-			if(e instanceof Error) {
-				e = e.toString();
-			}
-			send(socket, {id: command.id, type: 'response', action: 'update', value: null, error: e});
-		}
-	},
-	
 	remove: function(command, socket) {
 		var result = DataMap.remove(command.key);
 		send(socket, {id: command.id, type: 'response', action: 'remove', value: result});
@@ -332,11 +419,12 @@ var actions = {
 		send(socket, {id: command.id, type: 'response', action: 'pop', value: result});
 	},
 	
+	hasKey: function(command, socket) {
+		send(socket, {id: command.id, type: 'response', action: 'hasKey', value: DataMap.hasKey(command.key)});
+	},
+	
 	get: function(command, socket) {
 		var result = DataMap.get(command.key);
-		if(result instanceof FlexiMap) {
-			result = result.getData();
-		}
 		send(socket, {id: command.id, type: 'response', action: 'get', value: result});
 	},
 	
@@ -345,49 +433,48 @@ var actions = {
 	},
 	
 	watch: function(command, socket) {
-		if(!watchMap.hasOwnProperty(command.event)) {
-			watchMap[command.event] = {};
-		}
-		var exists = watchMap[command.event].hasOwnProperty(socket.id);
-		watchMap[command.event][socket.id] = socket;
+		addEvent(socket, command.event);
 		send(socket, {id: command.id, type: 'response', action: 'watch', event: command.event});
 	},
 	
 	unwatch: function(command, socket) {
 		if(command.event) {
-			if(watchMap.hasOwnProperty(command.event) && watchMap[command.event].hasOwnProperty(socket.id)) {
-				delete watchMap[command.event][socket.id];
-				if(isEmpty(watchMap[command.event])) {
-					delete watchMap[command.event];
-				}
-			}
-			send(socket, {id: command.id, type: 'response', action: 'unwatch', event: command.event});
+			removeEvent(socket, command.event);
 		} else {
-			watchMap = {};
-			send(socket, {id: command.id, type: 'response', action: 'unwatch', event: null});
+			removeAllEvents(socket);
 		}
+		send(socket, {id: command.id, type: 'response', action: 'unwatch', event: command.event});
 	},
 	
 	isWatching: function(command, socket) {
-		var result = watchMap.hasOwnProperty(command.event) && watchMap[command.event].hasOwnProperty(socket.id);
+		var result = EventMap.hasKey('event.' + command.event + '.' + socket.id);
 		send(socket, {id: command.id, type: 'response', action: 'isWatching', event: command.event});
 	},
 	
 	broadcast: function(command, socket) {
-		if(watchMap[command.event]) {
+		var sockets = EventMap.get('event.' + command.event);
+		
+		if(sockets) {
+			var sock;
 			var i;
-			for(i in watchMap[command.event]) {
-				send(watchMap[command.event][i], {type: 'event', event: command.event, value: command.value});
+			for(i in sockets) {
+				sock = sockets[i];
+				if(sock instanceof com.ComSocket) {
+					send(sock, {type: 'event', event: command.event, value: command.value});
+				}
 			}
 		}
 		send(socket, {id: command.id, type: 'response', action: 'broadcast', value: command.value, event: command.event});
 	}
 }
 
+var MAX_ID = Math.pow(2, 53) - 2;
 var curID = 1;
 
 var genID = function() {
-	return curID++;
+	curID++;
+	curID = curID % MAX_ID;
+	return curID;
 }
 
 var server = com.createServer();
@@ -403,7 +490,7 @@ var substitute = function(str) {
 }
 
 var escape = function(str) {
-	return '"' + str.replace(/([()'"])/g, '\\u001b$1') + '"';
+	return '"' + str.replace(/([()'".])/g, '\\u001b$1') + '"';
 }
 
 var simplify = function(str) {
@@ -507,7 +594,7 @@ var macros = {
 server.on('connection', function(sock) {
 	sock.id = genID();
 	
-	sock.on('message', function(command) {
+	sock.on('message', function(command) {		
 		if(!SECRET_KEY || initialized.hasOwnProperty(sock.id) || command.action == 'init') {
 			try {
 				if(!command.key || typeof command.key == 'string') {
@@ -521,6 +608,7 @@ server.on('connection', function(sock) {
 					if(actions.hasOwnProperty(command.action)) {
 						actions[command.action](command, sock);
 					}
+					
 				} else {
 					send(sock, {id: command.id, type: 'response', action: command.action, error: 'nData Error - The specified key was not a string'});
 				}
@@ -545,10 +633,11 @@ server.on('connection', function(sock) {
 		}
 	});
 	
-	sock.on('close', function() {
+	sock.on('end', function() {
 		if(initialized.hasOwnProperty(sock.id)) {
 			delete initialized[sock.id];
 		}
+		removeAllEvents(sock);
 	});
 });
 

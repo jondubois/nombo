@@ -49,6 +49,8 @@ var Client = function(port, host, secretKey, timeout) {
 	self._curID = 1;
 	self.MAX_ID = Math.pow(2, 53) - 2;
 	
+	self.setMaxListeners(0);
+	
 	self._genID = function() {
 		self._curID = (self._curID + 1) % self.MAX_ID;
 		return 'n' + self._curID;
@@ -87,7 +89,7 @@ var Client = function(port, host, secretKey, timeout) {
 				clearTimeout(self._commandMap[id].timeout);
 				
 				var action = response.action;
-				if(response.value) {
+				if(response.value !== undefined) {
 					self._commandMap[id].callback(error, response.value);
 				} else if(action == 'watch' || action == 'unwatch') {
 					self._commandMap[id].callback(error);
@@ -132,9 +134,9 @@ var Client = function(port, host, secretKey, timeout) {
 			callback();
 		} else {
 			var handler = function() {
+				self.removeListener('watch', handler);
+				self.removeListener('watchfail', handler);
 				if(--numActions <= 0) {
-					self.removeListener('watch', handler);
-					self.removeListener('watchfail', handler);
 					callback();
 				}
 			}
@@ -151,9 +153,9 @@ var Client = function(port, host, secretKey, timeout) {
 			callback();
 		} else {
 			var handler = function() {
+				self.removeListener('unwatch', handler);
+				self.removeListener('unwatchfail', handler);
 				if(--numActions <= 0) {
-					self.removeListener('unwatch', handler);
-					self.removeListener('unwatchfail', handler);
 					callback();
 				}
 			}
@@ -170,11 +172,11 @@ var Client = function(port, host, secretKey, timeout) {
 			callback();
 		} else {
 			var handler = function() {
+				self.removeListener('watch', handler);
+				self.removeListener('watchfail', handler);
+				self.removeListener('unwatch', handler);
+				self.removeListener('unwatchfail', handler);
 				if(--numActions <= 0) {
-					self.removeListener('watch', handler);
-					self.removeListener('watchfail', handler);
-					self.removeListener('unwatch', handler);
-					self.removeListener('unwatchfail', handler);
 					callback();
 				}
 			}
@@ -229,7 +231,9 @@ var Client = function(port, host, secretKey, timeout) {
 		if(!self._chanelWatchers[event]) {
 			self.watch(event, handler, ackCallback);
 		} else {
-			ackCallback();
+			if(ackCallback) {
+				ackCallback();
+			}
 		}
 	}
 	
@@ -303,7 +307,9 @@ var Client = function(port, host, secretKey, timeout) {
 							if(!err) {
 								self._chanelWatchers[event] = newWatchers;
 							}
-							ackCallback(err);
+							if(ackCallback) {
+								ackCallback(err);
+							}
 						}
 						
 						if(newWatchers.length < 1) {
@@ -319,18 +325,20 @@ var Client = function(port, host, secretKey, timeout) {
 							if(!err) {
 								delete self._chanelWatchers[event];
 							}
-							ackCallback(err);
+							if(ackCallback) {
+								ackCallback(err);
+							}
 						}
 						
 						self._unwatch(event, callback);
 					}
 				} else {
-					self._unwatch(event, null, ackCallback);
+					self._unwatch(event, ackCallback);
 				}
 			});
 		} else {
 			self._chanelWatchers = {};
-			self._unwatch(null, null, ackCallback);
+			self._unwatch(null, ackCallback);
 		}
 	}
 	
@@ -406,6 +414,14 @@ var Client = function(port, host, secretKey, timeout) {
 		}
 		self._exec(command, callback);
 	}
+	
+	self.hasKey = function(key, callback) {
+		var command = {
+			action: 'hasKey',
+			key: key
+		}
+		self._exec(command, callback);
+	}
 
 	self.get = function(key, callback) {
 		var command = {
@@ -420,6 +436,26 @@ var Client = function(port, host, secretKey, timeout) {
 			action: 'getAll'
 		}
 		self._exec(command, callback);
+	}
+	
+	self.end = function(callback) {
+		if(callback) {
+			var disconnectCallback = function() {
+				if(disconnectTimeout) {
+					clearTimeout(disconnectTimeout);
+				}
+				callback();
+				self._socket.removeListener('end', disconnectCallback);
+			}
+			
+			var disconnectTimeout = setTimeout(function() {
+				self._socket.removeListener('end', disconnectCallback);
+				callback('Disconnection timed out');
+			}, self._timeout);
+			
+			self._socket.on('end', disconnectCallback);
+		}
+		self._socket.end();
 	}
 }
 

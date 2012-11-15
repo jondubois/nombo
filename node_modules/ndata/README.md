@@ -1,7 +1,7 @@
 nData
 ======
 
-nData is a lightweight key-value store server.
+nData is a lightweight key-value store server and client pair.
 It is written entirely in node.js for maximum portability.
 
 ## Installation

@@ -66,7 +66,7 @@ var Client = function(port, host, secretKey, timeout) {
 		}
 	}
 	
-	self._socket.connect(port, host, function() {		
+	self._socket.connect(port, host, function() {
 		if(secretKey) {
 			var command = {
 				action: 'init',

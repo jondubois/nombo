@@ -8,7 +8,7 @@ var com = require('./com');
 
 var escapeStr = '\\u001b';
 var escapeArr = escapeStr.split('');
-var escapeRegex = new RegExp('\\+' + escapeStr, 'g');
+var escapeRegex = /\\+u001b/g;
 
 var unsimplifyFilter = function(str) {
 	return str.replace(/\\+u001a/g, '.');
@@ -211,8 +211,15 @@ var FlexiMap = function(object) {
 		return str.replace(/([^\\])\\([^\\])/g, '$1\\\\$2');
 	}
 	
+	self.validateQuery = function(str) {
+		return /^ *function *\([^)]*\) *\{(\n|.)*\} *$/.test(str);
+	}
+	
 	self.run = function(code) {
-		return Function('var DataMap = arguments[0]; return ' + self.escapeBackslashes(code) + ' || "";')(self);
+		if(!self.validateQuery(code)) {
+			throw "JavaScript query must be an anonymous function declaration";
+		}
+		return Function('return (' + self.escapeBackslashes(code) + ')(arguments[0]);')(self);
 	}
 	
 	self._remove = function(key) {
@@ -400,8 +407,14 @@ var actions = {
 	},
 	
 	run: function(command, socket) {
-		var result = DataMap.run(command.value);
-		send(socket, {id: command.id, type: 'response', action: 'run', value: result});
+		var ret = {id: command.id, type: 'response', action: 'run'};
+		try {
+			var result = DataMap.run(command.value);
+			ret.value = result;
+		} catch(e) {
+			ret.error = 'nData Error - Exception at run(): ' + e;
+		}
+		send(socket, ret);
 	},
 	
 	remove: function(command, socket) {
@@ -489,12 +502,14 @@ var substitute = function(str) {
 	return DataMap.get(str);
 }
 
-var escape = function(str) {
-	return '"' + str.replace(/([()'".])/g, '\\u001b$1') + '"';
-}
-
 var simplify = function(str) {
 	return str.replace(/[.]/g, '\\u001a');
+}
+
+var escapeReplacement = escapeStr + '$1';
+
+var escape = function(str) {
+	return simplify(str.replace(/([()'"])/g, escapeReplacement));
 }
 
 var convertToString = function(object) {
@@ -568,7 +583,7 @@ var compile = function(str, macroMap, macroName) {
 			}
 			i = j;
 			if(curMacroChar == '#') {
-				comp = arrayToString(segment);
+				comp = macroMap[curMacroChar](arrayToString(segment));
 			} else {
 				comp = compile(segment, macroMap, curMacroChar);
 			}
@@ -587,8 +602,7 @@ var compile = function(str, macroMap, macroName) {
 var macros = {
 	'%': evaluate,
 	'$': substitute,
-	'#': escape,
-	'~': simplify
+	'#': escape
 };
 
 server.on('connection', function(sock) {

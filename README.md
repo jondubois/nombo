@@ -10,6 +10,12 @@ To install, run:
 npm install -g ncombo
 ```
 
+Once installation is complete, to deploy a new app in the current directory run:
+
+```bash
+ncombo myapp
+```
+
 nCombo offers several ground-breaking features:
 
 - It's efficient with server resources

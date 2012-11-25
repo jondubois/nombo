@@ -6,7 +6,9 @@ It is written entirely in node.js for maximum portability.
 
 ## Installation
 
+```bash
 npm install ndata
+```
 
 ## Overview
 
@@ -33,11 +35,13 @@ The client exposes the following methods:
 (Please see the section on keys (below) to see how you can use keys in nData.
 Also, note that the callback argument in all of the following cases is optional.)
 
-- run(code, callback) - Run JavaScript code as a query on the nData server. The callback is in form: callback(err, data)
-Example:
-client.run('(function() { DataMap.set("main.message", "This is an important message"); return DataMap.get("main"); })()', function(err, data) {
+- run(code, callback) - Run a JavaScript function declaration as a query on the nData server - This function declaration accepts the DataMap as a parameter. The callback is in form: callback(err, data) Example:
+
+```js
+client.run('function(DataMap) { DataMap.set("main.message", "This is an important message"); return DataMap.get("main"); }', function(err, data) {
 	console.log(data); // outputs {message: "This is an important message"}
 });
+```
 
 - set(key, value, callback) - Set a key-value pair, when the operation has been completed, callback will be executed.
 The callback is in form: callback(err)
@@ -58,15 +62,15 @@ The callback is in form: callback(err)
 
 - getAll(callback) - Gets all the values in nData; callback is in form: callback(err, value)
 
-- watch(event, handler) - Watches for an event on nData, handler is a callback in the form handler(value) where value is a value sent with the event.
+- watch(event, handler, ackCallback) - Watches for an event on nData, handler is a callback in the form handler(value) where value is a value sent with the event.
 Note that you can watch the same event multiple times (even using the same handler).
 
-- watchOnce(event, handler) - As above except that the handler will only be executed a single time
+- watchOnce(event, handler, ackCallback) - As above except that it will only trigger a single handler (from the last call to watchOnce).
 
-- unwatch(event, handler) - Unwatch the specified event. If handler is not specified, it will remove handlers associated with the specified event.
+- unwatch(event, handler, ackCallback) - Unwatch the specified event. If handler is not specified, it will remove handlers associated with the specified event.
 If event is not specified, it will remove all nData events.
 
-- broadcast(event, value) - Broadcast an event with the specified associated value.
+- broadcast(event, value, callback) - Broadcast an event with the specified associated value.
 
 ## Keys
 

@@ -6,25 +6,24 @@ var ComSocket = function(netSocket) {
 	var dataBuffer = '';
 	var endSymbol = '\u0017';
 	var endSymbolRegex = new RegExp(endSymbol, 'g');
-	var socket = null;
 	
 	if(netSocket) {
-		socket = netSocket;
+		self.socket = netSocket;
 	} else {
-		socket = new net.Socket();
+		self.socket = new net.Socket();
 	}
 	
 	self.connect = function() {
-		socket.connect.apply(socket, arguments);
+		self.socket.connect.apply(self.socket, arguments);
 	}
 	
 	self.end = function() {
-		socket.end();
+		self.socket.end();
 	}
 	
 	self.on = function(event, callback) {
 		if(event == 'message') {
-			socket.on('data', function(data) {
+			self.socket.on('data', function(data) {
 				dataBuffer += data.toString();
 				var messages = dataBuffer.split(endSymbol);
 				var i;
@@ -35,16 +34,16 @@ var ComSocket = function(netSocket) {
 				dataBuffer = messages[num];				
 			});
 		} else {
-			socket.on(event, callback);
+			self.socket.on(event, callback);
 		}
 	}
 	
 	self.removeListener = function() {
-		socket.removeListener.apply(socket, arguments);
+		self.socket.removeListener.apply(self.socket, arguments);
 	}
 	
 	self.removeAllListeners = function() {
-		socket.removeAllListeners.apply(socket, arguments);
+		self.socket.removeAllListeners.apply(self.socket, arguments);
 	}
 	
 	self.write = function(data, filters) {
@@ -55,7 +54,7 @@ var ComSocket = function(netSocket) {
 				str = filters[i](str);
 			}
 		}
-		socket.write(str + endSymbol);
+		self.socket.write(str + endSymbol);
 	}
 }
 

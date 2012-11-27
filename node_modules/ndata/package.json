@@ -1,7 +1,7 @@
 {
   "name": "ndata",
   "description": "nData key-value store",
-  "version": "0.9.10",
+  "version": "0.9.11",
   "author": {
     "name": "JF Gros-Dubois",
     "email": "flashthink@gmail.com"
@@ -26,9 +26,6 @@
     "url": "git://github.com/topcloudsystems/ndata.git"
   },
   "main": "index",
-  "scripts": {
-    "prepublish": "npm prune"
-  },
   "engines": {
     "node": ">= 0.6.12"
   },

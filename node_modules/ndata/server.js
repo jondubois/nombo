@@ -11,34 +11,20 @@ var escapeStr = '\\u001b';
 var escapeArr = escapeStr.split('');
 var escapeRegex = /\\+u001b/g;
 
+var dotSubstitute = '\\u001a';
+var dotSubRegex = /\\+u001a/g;
+
 var unsimplifyFilter = function(str) {
-	return str.replace(/\\+u001a/g, '.');
+	return str.replace(dotSubRegex, '.');
 }
 
 var unescapeFilter = function(str) {
 	return str.replace(escapeRegex, '');
 }
 
-var unescape = function(value) {
-	if(typeof value == 'string') {
-		value = value.replace(escapeRegex, '');
-	} else {
-		if(value instanceof FlexiMap) {
-			value = value.getData();
-		}
-	}
-	return value;
-}
-
 var filters = [unsimplifyFilter, unescapeFilter];
 
 var send = function(socket, object) {
-	if(object.key) {
-		object.key = unescape(object.key);
-	}
-	if(object.value) {
-		object.value = unescape(object.value);
-	}
 	socket.write(object, filters);
 }
 
@@ -237,7 +223,7 @@ var substitute = function(str) {
 }
 
 var simplify = function(str) {
-	return str.replace(/[.]/g, '\\u001a');
+	return str.replace(/[.]/g, dotSubstitute);
 }
 
 var escapeReplacement = escapeStr + '$1';
@@ -342,7 +328,7 @@ var macros = {
 server.on('connection', function(sock) {
 	sock.id = genID();
 	
-	sock.on('message', function(command) {		
+	sock.on('message', function(command) {
 		if(!SECRET_KEY || initialized.hasOwnProperty(sock.id) || command.action == 'init') {
 			try {
 				if(!command.key || typeof command.key == 'string') {
@@ -352,11 +338,9 @@ server.on('connection', function(sock) {
 					if(command.value && typeof command.value == 'string') {
 						command.value = compile(command.value, macros);
 					}
-					
 					if(actions.hasOwnProperty(command.action)) {
 						actions[command.action](command, sock);
 					}
-					
 				} else {
 					send(sock, {id: command.id, type: 'response', action: command.action, error: 'nData Error - The specified key was not a string'});
 				}
@@ -370,7 +354,6 @@ server.on('connection', function(sock) {
 				if(e instanceof Error) {
 					e = e.toString();
 				}
-				
 				send(sock, {id: command.id, type: 'response', action:  command.action, error: 'nData Error - Failed to process command due to the following error: ' + e});
 			}
 			

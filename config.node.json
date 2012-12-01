@@ -1,0 +1,5 @@
+{
+	"webServiceEndpoint": "/ws",
+	"privateExtensionRegex": "[.](node[.]js|node[.]json)$",
+	"clientIncludes": ["./client/plugins/mvp.js"]
+}

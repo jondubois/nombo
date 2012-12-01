@@ -18,9 +18,10 @@ var jLoad = {
     
 	start: function(settings) {
 		jLoad._frameworkURL = settings.frameworkURL;
+		jLoad._frameworkClientURL = settings.frameworkClientURL;
 		jLoad._loaderAnimText = [];
 		
-		var imgURL = smartCacheManager.setURLCacheVersion(jLoad._frameworkURL + 'assets/logo.png');
+		var imgURL = smartCacheManager.setURLCacheVersion(jLoad._frameworkClientURL + 'assets/logo.png');
 		var textAnim = ['Loading App', 'Loading App.', 'Loading App..', 
 				'Loading App...', 'Loading App..', 'Loading App.'];
 		

@@ -1,6 +1,7 @@
 var http = require('http'),
 	https = require('https'),
 	path = require('path'),
+	pathmanager = require('ncombo/pathmanager'),
 	mime = require('mime'),
 	fs = require('fs'),
 	url = require('url'),
@@ -10,7 +11,7 @@ var http = require('http'),
 	nDataStore = require('socket.io-ndata'),
 	conf = require('ncombo/configmanager'),
 	gateway = require('ncombo/gateway'),
-	handlebars = require('../../framework/libs/handlebars'),
+	handlebars = require('./client/libs/handlebars'),
 	cache = require('ncombo/cache'),
 	ws = require('ncombo/webservice'),
 	portScanner = require('portscanner'),
@@ -257,14 +258,23 @@ var GlobalEmitter = function(namespace, socketManager, dataClient) {
 	}
 }
 
-var Global = function(socketManager, dataClient) {
+var Global = function(socketManager, dataClient, frameworkDirPath, appDirPath) {
 	var self = this;
+	var _frameworkDirPath = frameworkDirPath;
+	var _appDirPath = appDirPath;
+	
 	self.store = dataClient;
 	
 	self._emitterNamespace = new GlobalEmitter('__main', socketManager, dataClient);
 	self._namespaces = {'__main': self._emitterNamespace};
 	
-	self._data = {};
+	self.getFrameworkPath = function() {
+		return _frameworkDirPath;
+	}
+	
+	self.getAppPath = function() {
+		return _appDirPath;
+	}
 	
 	self.emit = function(sessionID, event, data) {
 		self._emitterNamespace.emit(sessionID, event, data);
@@ -346,7 +356,9 @@ var nCombo = new (function() {
 	self.MIDDLEWARE_SOCKET_IO_AUTH = 'socketIOAuth';
 	
 	// core middleware
-	self.MIDDLEWARE_ROUTER = 'router';
+	self.MIDDLEWARE_GET = 'get';
+	self.MIDDLEWARE_POST = 'post';
+	
 	self.MIDDLEWARE_LOCAL_CALL = 'localCall';
 	self.MIDDLEWARE_REMOTE_CALL = 'remoteCall';
 	self.MIDDLEWARE_LOCAL_EVENT = 'localEvent';
@@ -378,30 +390,38 @@ var nCombo = new (function() {
 	
 	self._connectedAddresses = {};
 	
-	self._frameworkURL = '/framework/';
-	self._appURL = '/app/';
+	self._frameworkURL = '/~framework/';
+	self._frameworkURLRegex = new RegExp('^' + self._frameworkURL);
+	
+	self._frameworkDirPath = __dirname;
+	self._frameworkClientDirPath = self._frameworkDirPath + '/client';
+	self._frameworkClientURL = self._frameworkURL + 'client/';
+	
+	self._frameworkModulesURL = self._frameworkURL + 'node_modules/';
+	
+	self._appDirPath = path.dirname(require.main.filename);
+	pathmanager.init(self._frameworkURL, self._frameworkDirPath, self._appDirPath);
+	
+	self._appURL = '/';
 	
 	self._retryTimeout = 10000;
 	
 	self._dataServer = null;
 	self._global = null;
 	
-	self._rootDirPath = path.resolve(__dirname + '/../../');
-	self._ncomboModulesURL = '/node_modules/ncombo/';
-	
 	self._config = conf.parseConfig(__dirname + '/config.node.json');
 	
-	self._prerouter = require(__dirname + '/router/prerouter.node.js');
-	self._cacheResponder = require(__dirname + '/router/cacheresponder.node.js');
-	self._router = require(__dirname + '/router/router.node.js');
-	self._preprocessor = require(__dirname + '/router/preprocessor.node.js');
-	self._compressor = require(__dirname + '/router/compressor.node.js');
-	self._responder = require(__dirname + '/router/responder.node.js');
+	self._prerouter = require('ncombo/router/prerouter.node.js');
+	self._cacheResponder = require('ncombo/router/cacheresponder.node.js');
+	self._router = require('ncombo/router/router.node.js');
+	self._preprocessor = require('ncombo/router/preprocessor.node.js');
+	self._compressor = require('ncombo/router/compressor.node.js');
+	self._responder = require('ncombo/router/responder.node.js');
 	
 	self._fileUploader = require('ncombo/fileuploader');
 	
-	self._rootTemplateURL = self._config.rootTemplateURL;
-	self._rootTemplateBody = fs.readFileSync(self._rootDirPath + self._rootTemplateURL, 'utf8');
+	self._rootTemplateURL = self._frameworkClientURL + 'index.html';
+	self._rootTemplateBody = fs.readFileSync(self._frameworkClientDirPath + '/index.html', 'utf8');
 	self._rootTemplate = handlebars.compile(self._rootTemplateBody);
 	
 	self._clientScriptMap = {};
@@ -421,16 +441,16 @@ var nCombo = new (function() {
 	
 	self._failedWorkerCleanups = {};
 	
-	self._spinJSURL = self._frameworkURL + 'libs/spin.js';
+	self._spinJSURL = self._frameworkClientURL + 'libs/spin.js';
 	
 	self._faviconHandler = function(req, res, next) {
-		var iconPath = self._urlToPath(self._appURL + 'assets/favicon.gif');
+		var iconPath = self._appDirPath + '/assets/favicon.gif';
 		
 		if(req.url == '/favicon.ico') {
 			fs.readFile(iconPath, function(err, data) {
 				if(err) {
 					if(err.code == 'ENOENT') {
-						iconPath = self._urlToPath(self._frameworkURL + 'assets/favicon.gif');
+						iconPath = self._frameworkClientDirPath + '/assets/favicon.gif';
 						fs.readFile(iconPath, function(err, data) {
 							if(err) {
 								if(err.code == 'ENOENT') {
@@ -498,10 +518,11 @@ var nCombo = new (function() {
 		var appDef = {};
 		appDef.frameworkURL = self._frameworkURL;
 		appDef.appURL = self._appURL;
-		appDef.jsLibsURL = self._frameworkURL + 'libs/';
-		appDef.pluginsURL = self._frameworkURL + 'plugins/';
-		appDef.frameworkScriptsURL = self._frameworkURL + 'scripts/';
-		appDef.frameworkStylesURL = self._frameworkURL + 'styles/';
+		appDef.frameworkClientURL = self._frameworkClientURL;
+		appDef.jsLibsURL = self._frameworkClientURL + 'libs/';
+		appDef.pluginsURL = self._frameworkClientURL + 'plugins/';
+		appDef.frameworkScriptsURL = self._frameworkClientURL + 'scripts/';
+		appDef.frameworkStylesURL = self._frameworkClientURL + 'styles/';
 		appDef.appScriptsURL = self._appURL + 'scripts/';
 		appDef.appStylesURL = self._appURL + 'styles/';
 		appDef.appTemplatesURL = self._appURL + 'templates/';
@@ -517,7 +538,7 @@ var nCombo = new (function() {
 	self._getLoaderCode = function() {
 		var appDef = self._getAppDef();
 		var routToScriptURL = self._appURL + 'scripts/index.js';
-		var loadScriptURL = self._frameworkURL + 'scripts/load.js';
+		var loadScriptURL = self._frameworkClientURL + 'scripts/load.js';
 			
 		var resources = [];
 		
@@ -537,6 +558,7 @@ var nCombo = new (function() {
 		}
 		
 		var resString = JSON.stringify(resources);
+		
 		var appString = JSON.stringify(appDef);
 		var loaderCode = '$loader.init("' + self._frameworkURL + '","' + routToScriptURL + '","' +
 				loadScriptURL + '",' + resString + ',' + appString + ',' + (self._options.release ? 'false' : 'true') + ');';
@@ -571,11 +593,11 @@ var nCombo = new (function() {
 		if(self._options.release && cache.has(cacheKey)) {
 			self._respond(req, res, cache.get(cacheKey), 'text/html');
 		} else {
-			var includeString = self._getScriptTag(self._ncomboModulesURL + 'smartcachemanager.js', 'text/javascript') + "\n";
+			var includeString = self._getScriptTag(self._frameworkURL + 'smartcachemanager.js', 'text/javascript') + "\n";
 			includeString += self._getScriptTag('/~timecache', 'text/javascript') + "\n";
 			includeString += self._getScriptTag(self._spinJSURL, 'text/javascript') + "\n";
-			includeString += self._getScriptTag('/node_modules/socket.io-client/dist/socket.io.min.js', 'text/javascript') + "\n";
-			includeString += self._getScriptTag(self._ncomboModulesURL + 'session.js', 'text/javascript');
+			includeString += self._getScriptTag(self._frameworkModulesURL + 'socket.io-client/dist/socket.io.min.js', 'text/javascript') + "\n";
+			includeString += self._getScriptTag(self._frameworkURL + 'session.js', 'text/javascript');
 			
 			var html = self._rootTemplate({title: self._options.title, includes: new handlebars.SafeString(includeString)});
 			self._respond(req, res, html, 'text/html');
@@ -630,7 +652,7 @@ var nCombo = new (function() {
 				url = req.url;
 			}
 			
-			var filePath = self._urlToPath(url);
+			var filePath = pathmanager.urlToPath(url);
 			
 			if(url == self._rootTemplateURL) {
 				self._writeSessionStartScreen(req, res);
@@ -638,9 +660,9 @@ var nCombo = new (function() {
 				var encoding = self._getReqEncoding(req);
 				var cacheKey = encoding + ':' + url;
 				
-				var skipCache = (url == self._ncomboModulesURL + 'smartcachemanager.js');
+				var skipCache = (url == self._frameworkURL + 'smartcachemanager.js');
 				
-				if(skipCache || url == '/node_modules/socket.io-client/dist/socket.io.min.js' || url == self._ncomboModulesURL + 'session.js'
+				if(skipCache || url == self._frameworkURL + 'node_modules/socket.io-client/dist/socket.io.min.js' || url == self._frameworkURL + 'session.js'
 						|| self.isFullAuthResource(url)) {
 					
 					if(self._options.release && cache.has(cacheKey)) {
@@ -651,13 +673,13 @@ var nCombo = new (function() {
 								res.writeHead(500);
 								res.end('Failed to start session');
 							} else {						
-								if(url == self._ncomboModulesURL + 'smartcachemanager.js') {
+								if(url == self._frameworkURL + 'smartcachemanager.js') {
 									var template = handlebars.compile(data.toString());
 									data = template({cacheVersion: '*/ = ' + self._cacheVersion + ' /*'});
-								} else if(url == self._ncomboModulesURL + 'session.js') {
+								} else if(url == self._frameworkURL + 'session.js') {
 									var template = handlebars.compile(data.toString());
 									data = template({endpoint: self._wsEndpoint, port: self._options.port,
-											ncomboModulesURL: self._ncomboModulesURL, frameworkURL: self._frameworkURL, 
+											frameworkURL: self._frameworkURL, frameworkClientURL: self._frameworkClientURL, 
 											autoSession: self._options.autoSession ? 1 : 0, timeout: self._options.timeout});
 								}
 								self._respond(req, res, data, null, skipCache);
@@ -696,14 +718,13 @@ var nCombo = new (function() {
 		return req && res && !res.finished;
 	}
 	
-	self._backRoutStepper = stepper.create();
-	self._backRoutStepper.addFunction(self._fileUploader.upload);
-	self._backRoutStepper.addFunction(self._prerouter.run);
-	self._backRoutStepper.addFunction(self._cacheResponder.run);
-	self._backRoutStepper.addFunction(self._router.run);
-	self._backRoutStepper.addFunction(self._preprocessor.run);
-	self._backRoutStepper.addFunction(self._compressor.run);
-	self._backRoutStepper.setTail(self._responder.run);
+	self._tailGetStepper = stepper.create();
+	self._tailGetStepper.addFunction(self._prerouter.run);
+	self._tailGetStepper.addFunction(self._cacheResponder.run);
+	self._tailGetStepper.addFunction(self._router.run);
+	self._tailGetStepper.addFunction(self._preprocessor.run);
+	self._tailGetStepper.addFunction(self._compressor.run);
+	self._tailGetStepper.setTail(self._responder.run);
 	
 	self._respond = function(req, res, data, mimeType, skipCache) {
 		if(!req.hasOwnProperty('rout')) {
@@ -724,7 +745,7 @@ var nCombo = new (function() {
 			req.rout.skipCache = 1;
 		}
 		
-		self._backRoutStepper.run(req, res);
+		self._tailGetStepper.run(req, res);
 	}
 	
 	self.cacheEscapeHandler = function(req, res, next) {
@@ -734,18 +755,29 @@ var nCombo = new (function() {
 		next();
 	}
 	
-	self._backRoutStepper.setValidator(self._responseNotSentValidator);
+	self._httpMethodJunction = function(req, res) {
+		if(req.method == 'POST') {
+			self._middleware[self.MIDDLEWARE_POST].run(req, res)
+		} else {
+			self._middleware[self.MIDDLEWARE_GET].run(req, res)
+		}
+	}
 	
-	self._middleware[self.MIDDLEWARE_ROUTER] = stepper.create();
-	self._middleware[self.MIDDLEWARE_ROUTER].addFunction(self.cacheEscapeHandler);
-	self._middleware[self.MIDDLEWARE_ROUTER].setTail(self._backRoutStepper);
-	self._middleware[self.MIDDLEWARE_ROUTER].setValidator(self._responseNotSentValidator);
+	self._tailGetStepper.setValidator(self._responseNotSentValidator);
+	
+	self._middleware[self.MIDDLEWARE_GET] = stepper.create();
+	self._middleware[self.MIDDLEWARE_GET].addFunction(self.cacheEscapeHandler);
+	self._middleware[self.MIDDLEWARE_GET].setTail(self._tailGetStepper);
+	self._middleware[self.MIDDLEWARE_GET].setValidator(self._responseNotSentValidator);
 	
 	self._routStepper = stepper.create();
 	self._routStepper.addFunction(self._faviconHandler);
 	self._routStepper.addFunction(self._getParamsHandler);
 	self._routStepper.addFunction(self._sessionHandler);
-	self._routStepper.setTail(self._middleware[self.MIDDLEWARE_ROUTER]);
+	self._routStepper.setTail(self._httpMethodJunction);
+	
+	self._middleware[self.MIDDLEWARE_POST] = stepper.create();
+	self._middleware[self.MIDDLEWARE_POST].setTail(self._fileUploader.upload);
 	
 	self._middleware[self.MIDDLEWARE_HTTP].setTail(self._routStepper);
 	
@@ -815,12 +847,12 @@ var nCombo = new (function() {
 		self._clientStyles.push(obj);
 	}
 	
-	self.useScript(self._frameworkURL + 'libs/jquery.js');
-	self.useScript(self._frameworkURL + 'libs/handlebars.js');
-	self.useScript(self._frameworkURL + 'libs/json2.js');
+	self.useScript(self._frameworkClientURL + 'libs/jquery.js');
+	self.useScript(self._frameworkClientURL + 'libs/handlebars.js');
+	self.useScript(self._frameworkClientURL + 'libs/json2.js');
 	
-	self.useScript(self._ncomboModulesURL + 'ncombo-client.js');
-	self.useScript(self._ncomboModulesURL + 'init.js');
+	self.useScript(self._frameworkURL + 'ncombo-client.js');
+	self.useScript(self._frameworkURL + 'init.js');
 	
 	var i, nurl;
 	for(i in self._clientIncludes) {
@@ -846,10 +878,6 @@ var nCombo = new (function() {
 		}
 		
 		res.setHeader('Content-Type', mimeType);
-	}
-	
-	self._urlToPath = function(url) {
-		return self._rootDirPath + url;
 	}
 	
 	self._getScriptCodeTag = function(code, type) {
@@ -1004,24 +1032,25 @@ var nCombo = new (function() {
 		
 		self._validateOptions(self._options, optionValidationMap);
 		
-		self._options.rootDirPath = self._rootDirPath;
+		self._options.appDirPath = self._appDirPath;
 		var appDef = self._getAppDef();
-		self._options.minifyURLs = [appDef.appScriptsURL, appDef.frameworkURL + 'scripts/load.js', self._ncomboModulesURL + 'ncombo-client.js', 
-				self._ncomboModulesURL + 'loader.js'];
+		self._options.minifyURLs = [appDef.appScriptsURL, appDef.frameworkClientURL + 'scripts/load.js', self._frameworkURL + 'ncombo-client.js', 
+				self._frameworkURL + 'loader.js'];
 		
 		if(self._options.maxConnectionsPerAddress != 0) {
 			self._options.sessionTimeoutRandomness = 0;
 		}
 		
 		self.allowFullAuthResource(self._spinJSURL);
-		self.allowFullAuthResource(self._frameworkURL + 'assets/logo.png');
-		self.allowFullAuthResource(self._frameworkURL + 'scripts/failedconnection.js');
-		self.allowFullAuthResource(self._frameworkURL + 'styles/ncombo.css');
-		self.allowFullAuthResource(self._ncomboModulesURL + 'loader.js');
+		self.allowFullAuthResource(self._frameworkClientURL + 'assets/logo.png');
+		self.allowFullAuthResource(self._frameworkClientURL + 'scripts/failedconnection.js');
+		self.allowFullAuthResource(self._frameworkClientURL + 'styles/ncombo.css');
+		self.allowFullAuthResource(self._frameworkURL + 'loader.js');
 		
-		var begin = function() {			
+		var begin = function() {
 			self._options.cacheVersion = self._cacheVersion;
 			self._prerouter.init(self._options);
+			self._router.init(self._privateExtensionRegex);
 			self._preprocessor.init(self._options);
 			
 			self._dataClient = ndata.createClient(dataPort, dataKey);
@@ -1041,12 +1070,12 @@ var nCombo = new (function() {
 				self._io.set('log level', self._options.logLevel);
 				
 				self._io.set('origins', self._options.origins);
-				self._io.set('polling duration', self._options.pollingDuration);
-				self._io.set('close timeout', self._options.timeout);
+				self._io.set('polling duration', Math.round(self._options.pollingDuration / 1000));
+				self._io.set('close timeout', Math.round(self._options.timeout / 1000));
 				self._io.set('match origin protocol', self._options.matchOriginProtocol);
 				
 				self._wsSocks = self._io.of(self._wsEndpoint);
-				self._global = new Global(self._wsSocks, self._dataClient);
+				self._global = new Global(self._wsSocks, self._dataClient, pathmanager.getFrameworkPath(), pathmanager.getAppPath());
 				
 				var handleHandshake = function(handshakeData, callback) {
 					setAuthData(handshakeData);
@@ -1291,7 +1320,7 @@ var nCombo = new (function() {
 					});
 				});
 				
-				gateway.init(__dirname + '/../..' + self._appURL + 'sims/', self._dataClient, self._privateExtensionRegex);
+				gateway.init(self._appDirPath + '/sims/', self._dataClient, self._privateExtensionRegex);
 				process.send({action: 'ready'});
 			});
 		}
@@ -1301,60 +1330,74 @@ var nCombo = new (function() {
 				process.stdin.resume();
 				process.stdin.setEncoding('utf8');
 			}
-			
-			if(self._options.cacheVersion == null) {
-				self._cacheVersion = (new Date()).getTime();
-			} else {
-				self._cacheVersion = self._options.cacheVersion;
-			}
-			
-			portScanner.findAPortNotInUse(self._options.port + 1, self._options.port + 1000, 'localhost', function(error, datPort) {
-				dataPort = datPort;
-				var pass = crypto.randomBytes(32).toString('hex');
-				
-				self._dataServer = ndata.createServer(dataPort, pass);
-				self._dataServer.on('ready', function() {
-					var i;
-					var worker = null;
-					var activeWorkers = 0;
-					
-					self._dataClient = ndata.createClient(dataPort, pass);
-					
-					var workerHandler = function(data) {
-						if(data.action == 'ready') {
-							if(++activeWorkers >= self._options.workers) {
-								console.log('   nCombo server started on port ' + self._options.port + ' - Number of workers: ' + self._options.workers);
-							}
-						}
+			portScanner.checkPortStatus(self._options.port, 'localhost', function(err, status) {
+				if(err || status == 'open') {
+					console.log('   nCombo Error - Port ' + self._options.port + ' is already taken');
+					process.exit();
+				} else {
+					if(self._options.cacheVersion == null) {
+						self._cacheVersion = (new Date()).getTime();
+					} else {
+						self._cacheVersion = self._options.cacheVersion;
 					}
 					
-					var launchWorker = function() {
-						var i;
-						for(i=0; i<self._options.workers; i++) {
-							worker = cluster.fork();
-							worker.send({action: 'init', dataPort: dataPort, dataKey: pass, cacheVersion: self._cacheVersion});
-							worker.on('message', workerHandler);
-						}
-					}
-					
-					cluster.on('exit', function(worker, code, signal) {
-						console.log('   Worker ' + worker.process.pid + ' died');
-						self._cleanupWorker(worker.process.pid);
+					portScanner.findAPortNotInUse(self._options.port + 1, self._options.port + 1000, 'localhost', function(error, datPort) {
+						dataPort = datPort;
+						var pass = crypto.randomBytes(32).toString('hex');
 						
-						activeWorkers--;
-						if(self._options.release) {
-							console.log('   Respawning worker');
-							launchWorker();
-						} else {
-							if(activeWorkers <= 0) {
-								console.log('   All workers are dead - nCombo is shutting down');
-								process.exit();
+						self._dataServer = ndata.createServer(dataPort, pass);
+						self._dataServer.on('ready', function() {
+							var i;
+							var worker = null;
+							var activeWorkers = 0;
+							
+							self._dataClient = ndata.createClient(dataPort, pass);
+							
+							var workerReadyHandler = function(data) {
+								if(++activeWorkers >= self._options.workers) {
+									console.log('   nCombo server started on port ' + self._options.port + ' - Number of workers: ' + self._options.workers);
+								}
 							}
-						}
+							
+							var launchWorker = function() {
+								worker = cluster.fork();
+								worker.send({action: 'init', dataPort: dataPort, dataKey: pass, cacheVersion: self._cacheVersion});
+								return worker;
+							}
+							
+							var launchWorkers = function() {
+								var i;
+								for(i=0; i<self._options.workers; i++) {
+									worker = launchWorker();
+									worker.on('message', function workerHandler(data) {
+										worker.removeListener('message', workerHandler);
+										if(data.action == 'ready') {
+											workerReadyHandler(data);
+										}
+									});
+								}
+							}
+							
+							cluster.on('exit', function(worker, code, signal) {
+								console.log('   Worker ' + worker.process.pid + ' died');
+								self._cleanupWorker(worker.process.pid);
+								
+								activeWorkers--;
+								if(self._options.release) {
+									console.log('   Respawning worker');
+									launchWorker();
+								} else {
+									if(activeWorkers <= 0) {
+										console.log('   All workers are dead - nCombo is shutting down');
+										process.exit();
+									}
+								}
+							});
+							
+							launchWorkers();
+						});
 					});
-					
-					launchWorker();
-				});
+				}
 			});
 		} else {
 			var secure = false;

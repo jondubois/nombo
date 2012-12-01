@@ -93,43 +93,47 @@ var $n = {
 	*/
 	mixin: function(mainClass) {
 		var mixinHolder = function() {
-			this._internalMixinArgs = {};
+			this.__internalMixinMethods = {};
 			
-			this.initMixin = function(mixinClass, args) {
-				if(args && !(args instanceof Array)) {
-					throw 'Exception: The args parameter of the initMixin function must be an Array';
-				}
-				this._internalMixinArgs[mixinClass] = args;
+			this.initMixin = function(MixinClass) {
+				var args = Array.prototype.slice.call(arguments, 1);
 				
 				if(args) {
-					mixinClass.apply(this, args);
+					MixinClass.apply(this, args);
 				} else {
-					mixinClass.apply(this);
+					MixinClass.apply(this);
 				}
-			}
-			
-			this.callMixinMethod = function(mixinClass, method, args) {
-				if(args && !(args instanceof Array)) {
-					throw 'Exception: The args parameter of the callMixinMethod function must be an Array';
-				}
-				var mixedIn = new mixinClass(this._internalMixinArgs[mixinClass]);
-				var methodToCall = mixedIn[method];
+				
+				var mixedInInstance = {};
+				this.__internalMixinMethods[MixinClass] = mixedInInstance;
 				
 				var value, index;
 				for(index in this) {
 					value = this[index];
-					if((!(value instanceof Function) || !(mixedIn[index] instanceof Function) || mixedIn[index].toString() != value.toString())) {
-						mixedIn[index] = value;
+					if(value instanceof Function) {
+						mixedInInstance[index] = value;
 					}
 				}
-				var result = methodToCall.apply(mixedIn, args);
-				delete mixedIn;
-				
-				return result;
+			}
+			
+			this.callMixinMethod = function(MixinClass, method) {
+				var args = Array.prototype.slice.call(arguments, 2);
+				if(args) {
+					return this.__internalMixinMethods[MixinClass][method].apply(this, args);
+				} else {
+					return this.__internalMixinMethods[MixinClass][method].apply(this);
+				}
+			}
+			
+			this.applyMixinMethod = function(MixinClass, method, args) {
+				if(args && !(args instanceof Array)) {
+					throw 'Exception: The args parameter of the callMixinMethod function must be an Array';
+				}
+				return this.__internalMixinMethods[MixinClass][method].apply(this, args);
 			}
 			
 			this.instanceOf = function(classReference) {
-				return this instanceof classReference || this._internalMixinArgs.hasOwnProperty(classReference);
+				return this instanceof classReference || this.__internalMixinMethods.hasOwnProperty(classReference);
 			}
 		}
 		mixinHolder.apply(mainClass.prototype);
@@ -698,7 +702,7 @@ $n.Template = $n.mixin(function() {
 		if(self._extRegex.test(name)) {
 			var url = tmplDirURL + name;
 		} else {
-			var url = tmplDirURL + name + '.handlebars';
+			var url = tmplDirURL + name + '.html';
 		}
 		
 		$n.grab._loadDeepResourceToCache(url, fresh, function(err, result) {
@@ -737,7 +741,7 @@ $n.Template = $n.mixin(function() {
 		if((event == 'load' || event == 'error') && self._loaded) {
 			listener(self);
 		} else {
-			self.callMixinMethod($n.EventEmitter, 'on', [event, listener]);
+			self.callMixinMethod($n.EventEmitter, 'on', event, listener);
 		}
 	}
 	

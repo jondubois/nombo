@@ -123,7 +123,13 @@ var $loader = {
 	},
 	
 	_startLoading: function() {
-		$loader.emit('ready', {frameworkURL: $loader._frameworkURL, resources: $loader._resources});
+		var settings = {};
+		var i;
+		for(i in $loader._appDefinition) {
+			settings[i] = $loader._appDefinition[i];
+		}
+		settings.resources = $loader._resources;
+		$loader.emit('ready', settings);
 	},
 	
 	_globalEval: function(src) {

@@ -1,0 +1,1 @@
+alert("Failed to connect");

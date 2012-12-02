@@ -39,6 +39,8 @@ var warningMessage = function(message) {
 var showCorrectUsage = function() {
 	console.log('Usage: ncombo [PROJECT_NAME] [OPTIONS]');
 	console.log('Create a new nCombo project\n');
+	console.log('Usage: ncombo [OPTIONS]');
+	console.log('Install nCombo in current directory\n');
 	console.log('Available options:');
 	console.log('--help               Get info on how to use this command');
 	console.log('--force              Force all necessary directory modifications without prompts');
@@ -89,7 +91,7 @@ var rmdirRecursive = function(dirname) {
 
 var createFrameworkDir = function(destDir, callback) {
 	var nComboSrcDir = __dirname + '/../../ncombo';
-	var progressMessage = 'Installing nCombo module...';
+	var progressMessage = 'Installing nCombo module... This may take a few minutes.';
 	var finishedMessage = 'Done';
 	var success = true;
 	var proceed = function(confirm) {
@@ -160,10 +162,6 @@ var createAppDir = function(destDir, callback) {
 if(argv.help) {
 	showCorrectUsage();
 	process.exit();
-} else if(!appName) {
-	errorMessage('Command invoked incorrectly');
-	showCorrectUsage();
-	process.exit();
 }
 
 var wd = process.cwd();
@@ -171,19 +169,23 @@ var wd = process.cwd();
 var nodeModulesDir = wd + '/node_modules';
 var nComboDestDir = nodeModulesDir + '/ncombo';
 
-var appDestDir = path.normalize(wd + '/' + appName);
-
 if(!fs.existsSync(nodeModulesDir)) {
 	fs.mkdirSync(nodeModulesDir);
 }
 
 createFrameworkDir(nComboDestDir, function(frameworkSuccess) {
 	if(frameworkSuccess) {
-		createAppDir(appDestDir, function(appSuccess) {
-			if(appSuccess) {
-				successMessage("Install process is complete. Run 'node " + appName + "/server' to launch. Access at http://localhost:8000/");
-			}
+		if(appName) {
+			var appDestDir = path.normalize(wd + '/' + appName);
+			createAppDir(appDestDir, function(appSuccess) {
+				if(appSuccess) {
+					successMessage("Install process is complete. Run 'node " + appName + "/server' to launch. Access at http://localhost:8000/");
+				}
+				process.exit();
+			});
+		} else {
+			successMessage('nCombo framework core has been installed. nCombo apps which are placed within the ' + wd + ' directory (including subdirectories) will use this framework core.');
 			process.exit();
-		});
+		}
 	}
 });

@@ -329,9 +329,7 @@ var NCOMBO_IE_VERSION = IE_VERSION;
 		NCOMBO_SOCKET.removeListener('connect', connectHandler);
 		clearTimeout(timeoutCallback);	
 		NCOMBO_SESSION_MANAGER._setCookies(NCOMBO_SOCKET.socket.sessionid);
-		NCOMBO_SOCKET.on('ready', function() {
-			ncBegin();
-		});
+		ncBegin();
 	}
 	
 	var timeoutCallback = null;

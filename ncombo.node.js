@@ -1167,8 +1167,6 @@ var nCombo = new (function() {
 								socket.disconnect();
 								console.log('   nCombo Error - Failed to initiate socket');
 							}
-						} else {
-							socket.emit('ready');
 						}
 					});
 					

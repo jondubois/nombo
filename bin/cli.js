@@ -91,7 +91,7 @@ var rmdirRecursive = function(dirname) {
 
 var createFrameworkDir = function(destDir, callback) {
 	var nComboSrcDir = __dirname + '/../../ncombo';
-	var progressMessage = 'Installing nCombo module... This may take a few minutes.';
+	var progressMessage = 'Installing nCombo module... This may take a while.';
 	var finishedMessage = 'Done';
 	var success = true;
 	var proceed = function(confirm) {

@@ -26,8 +26,6 @@ var $n = {
 	initIO: function() {
 		$n.socketIO = NCOMBO_SOCKET;
 		if($n.socketIO) {
-			$n.socketIO.removeListener('return', $n._callReturn);
-			$n.socketIO.removeListener('event', $n._eventReceived);
 			$n.socketIO.on('return', $n._callReturn);
 			$n.socketIO.on('event', $n._eventReceived);
 		}
@@ -55,6 +53,10 @@ var $n = {
 		$n.initIO();
 		
 		$n.local.init();
+	},
+	
+	getAuthData: function() {
+		return NCOMBO_SESSION_MANAGER.getAuthData.apply(NCOMBO_SESSION_MANAGER, arguments);
 	},
 	
 	startSession: function() {

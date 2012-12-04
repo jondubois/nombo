@@ -9,6 +9,7 @@ var http = require('http'),
 	ndata = require('ndata'),
 	io = require('socket.io'),
 	nDataStore = require('socket.io-ndata'),
+	nmix = require('nmix'),
 	conf = require('ncombo/configmanager'),
 	gateway = require('ncombo/gateway'),
 	handlebars = require('./client/libs/handlebars'),
@@ -22,6 +23,49 @@ var http = require('http'),
 
 var cluster = require('cluster');
 var numCPUs = require('os').cpus().length;
+
+var AbstractDataClient = function(dataClient, keyTransformFunction) {
+	var self = this;
+	
+	self.set = function() {
+		arguments[0] = keyTransformFunction(arguments[0]);
+		dataClient.set.apply(dataClient, arguments);
+	}
+	
+	self.add = function() {
+		arguments[0] = keyTransformFunction(arguments[0]);
+		dataClient.add.apply(dataClient, arguments);
+	}
+	
+	self.get = function() {
+		arguments[0] = keyTransformFunction(arguments[0]);
+		dataClient.get.apply(dataClient, arguments);
+	}
+	
+	self.count = function() {
+		arguments[0] = keyTransformFunction(arguments[0]);
+		dataClient.count.apply(dataClient, arguments);
+	}
+	
+	self.remove = function() {
+		arguments[0] = keyTransformFunction(arguments[0]);
+		dataClient.remove.apply(dataClient, arguments);
+	}
+	
+	self.pop = function() {
+		arguments[0] = keyTransformFunction(arguments[0]);
+		dataClient.pop.apply(dataClient, arguments);
+	}
+	
+	self.hasKey = function() {
+		arguments[0] = keyTransformFunction(arguments[0]);
+		dataClient.hasKey.apply(dataClient, arguments);
+	}
+	
+	self.run = function() {
+		dataClient.run.apply(dataClient, arguments);
+	}
+}
 
 var SessionEmitter = function(sessionID, namespace, socketManager, dataClient, retryTimeout) {
 	var self = this;
@@ -51,18 +95,8 @@ var SessionEmitter = function(sessionID, namespace, socketManager, dataClient, r
 	}
 }
 
-var Session = function(sessionID, socketManager, dataClient, retryTimeout) {
+var Session = nmix(function(sessionID, socketManager, dataClient, retryTimeout) {
 	var self = this;
-	self.EVENT_DESTROY = 'destroy';
-	
-	self.id = sessionID;
-	
-	self._emitterNamespace = new SessionEmitter(self.id, '__main', socketManager, dataClient, retryTimeout);
-	self._namespaces = {'__main': self._emitterNamespace};
-	
-	self.emit = function(event, data) {
-		self._emitterNamespace.emit(event, data);
-	}
 	
 	self._getDataKey = function(key) {
 		if(key) {
@@ -78,6 +112,19 @@ var Session = function(sessionID, socketManager, dataClient, retryTimeout) {
 		} else {
 			return '__sessionevent.' + self.id;
 		}
+	}
+	
+	self.initMixin(AbstractDataClient, dataClient, self._getDataKey);
+	
+	self.EVENT_DESTROY = 'destroy';
+	
+	self.id = sessionID;
+	
+	self._emitterNamespace = new SessionEmitter(self.id, '__main', socketManager, dataClient, retryTimeout);
+	self._namespaces = {'__main': self._emitterNamespace};
+	
+	self.emit = function(event, data) {
+		self._emitterNamespace.emit(event, data);
 	}
 	
 	self._emit = function(event, data, callback) {
@@ -153,18 +200,6 @@ var Session = function(sessionID, socketManager, dataClient, retryTimeout) {
 		removeSessionSocket();
 	}
 	
-	self.get = function(key, callback) {
-		dataClient.get(self._getDataKey(key), callback);
-	}
-	
-	self.set = function(key, value, callback) {
-		dataClient.set(self._getDataKey(key), value, callback);
-	}
-	
-	self.remove = function(key, callback) {
-		dataClient.remove(self._getDataKey(key), callback);
-	}
-	
 	self._destroy = function(callback) {
 		var destroySessionDataCallback = function(err) {
 			if(err) {
@@ -216,7 +251,7 @@ var Session = function(sessionID, socketManager, dataClient, retryTimeout) {
 		
 		emitSessionDestroy();
 	}
-}
+});
 
 var GlobalEmitter = function(namespace, socketManager, dataClient) {
 	var self = this;
@@ -258,8 +293,15 @@ var GlobalEmitter = function(namespace, socketManager, dataClient) {
 	}
 }
 
-var Global = function(socketManager, dataClient, frameworkDirPath, appDirPath) {
+var Global = nmix(function(socketManager, dataClient, frameworkDirPath, appDirPath) {
 	var self = this;
+	
+	self._getDataKey = function(key) {
+		return '__globaldata.' + key;
+	}
+	
+	self.initMixin(AbstractDataClient, dataClient, self._getDataKey);
+	
 	var _frameworkDirPath = frameworkDirPath;
 	var _appDirPath = appDirPath;
 	
@@ -290,19 +332,7 @@ var Global = function(socketManager, dataClient, frameworkDirPath, appDirPath) {
 		}
 		return self._namespaces[namespace];
 	}
-	
-	self.get = function(key, callback) {
-		dataClient.get('global.' + key, callback);
-	}
-	
-	self.set = function(key, value, callback) {
-		dataClient.set('global.' + key, value, callback);
-	}
-	
-	self.remove = function(key, callback) {
-		dataClient.remove('global.' + key, callback);
-	}
-}
+});
 
 var ServerRequest = function(socket, session, global, remoteAddress, secure) {
 	var self = this;
@@ -372,6 +402,7 @@ var nCombo = new (function() {
 		title: 'nCombo App',
 		protocol: 'http',
 		protocolOptions: {},
+		transports: ['websocket', 'htmlfile', 'xhr-polling', 'jsonp-polling'],
 		logLevel: 1,
 		workers: numCPUs,
 		timeout: 10000,
@@ -988,6 +1019,9 @@ var nCombo = new (function() {
 			protocol: function() {
 				return (arguments[0] == 'http' || arguments[0] == 'https') ? null : "must be either 'http' or 'https'";
 			},
+			transports: function() {
+				return arguments[0] instanceof Array ? null : 'expecting an array';
+			},
 			logLevel: function() {
 				return isInt(arguments[0]) ? null : 'expecting an integer';
 			},
@@ -1059,23 +1093,14 @@ var nCombo = new (function() {
 			var setAuthData = function(handshakeData) {
 				if(handshakeData.query.data) {
 					handshakeData.data = json.parse(handshakeData.query.data);
+				} else {
+					handshakeData.data = {};
 				}
 			}
 			
 			self._dataClient.on('ready', function() {
 				self._server.listen(self._options.port);
 				self._io = io.listen(self._server);
-				
-				self._io.set('store', nStore);
-				self._io.set('log level', self._options.logLevel);
-				
-				self._io.set('origins', self._options.origins);
-				self._io.set('polling duration', Math.round(self._options.pollingDuration / 1000));
-				self._io.set('close timeout', Math.round(self._options.timeout / 1000));
-				self._io.set('match origin protocol', self._options.matchOriginProtocol);
-				
-				self._wsSocks = self._io.of(self._wsEndpoint);
-				self._global = new Global(self._wsSocks, self._dataClient, pathmanager.getFrameworkPath(), pathmanager.getAppPath());
 				
 				var handleHandshake = function(handshakeData, callback) {
 					setAuthData(handshakeData);
@@ -1104,8 +1129,16 @@ var nCombo = new (function() {
 							}
 						});
 					});
+					
 					self._middleware[self.MIDDLEWARE_SOCKET_IO_AUTH].run(handshakeData);
 				}
+				
+				self._io.set('store', nStore);
+				self._io.set('log level', self._options.logLevel);
+				self._io.set('transports', self._options.transports);
+				self._io.set('origins', self._options.origins);
+				self._io.set('polling duration', Math.round(self._options.pollingDuration / 1000));
+				self._io.set('match origin protocol', self._options.matchOriginProtocol);
 				
 				if(self._options.maxConnectionsPerAddress > 0) {
 					var remoteAddr;
@@ -1124,6 +1157,9 @@ var nCombo = new (function() {
 						handleHandshake(handshakeData, callback);
 					});
 				}
+				
+				self._wsSocks = self._io.of(self._wsEndpoint);
+				self._global = new Global(self._wsSocks, self._dataClient, pathmanager.getFrameworkPath(), pathmanager.getAppPath());
 			
 				gateway.setReleaseMode(self._options.release);
 				ws.setReleaseMode(self._options.release);

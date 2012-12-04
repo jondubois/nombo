@@ -84,7 +84,7 @@ var Client = function(port, host, secretKey, timeout) {
 		self._pendingActions = [];
 	}
 	
-	self._socket.connect(port, host, function() {
+	self._connectHandler = function() {
 		if(secretKey) {
 			var command = {
 				action: 'init',
@@ -100,21 +100,22 @@ var Client = function(port, host, secretKey, timeout) {
 			self._execPending();
 			self.emit('ready');
 		}		
-		
-		var handleError = function() {
-			self._connected = false;
-			self._socket.removeListener('error', handleError);
-			if(++retryCount <= maxRetries) {
-				setTimeout(function() {
-					self._socket.connect.apply(self, arguments);
-				}, retryInterval);
-			} else {
-				self.emit('connect_fail');
-			}
+	}
+	
+	self._connect = function() {
+		self._socket.connect(port, host, self._connectHandler);
+	}
+	
+	var handleError = function() {
+		self._connected = false;
+		if(++retryCount <= maxRetries) {
+			setTimeout(self._connect, retryInterval);
+		} else {
+			self.emit('connect_failed');
 		}
-		
-		self._socket.on('error', handleError);
-	});
+	}
+	
+	self._socket.on('error', handleError);
 	
 	self._socket.on('message', function(response) {
 		var id = response.id;
@@ -138,6 +139,8 @@ var Client = function(port, host, secretKey, timeout) {
 			self._broadcast(response.event, response.value);
 		}
 	});
+	
+	self._connect();
 	
 	self._exec = function(command, callback) {
 		if(self._connected) {

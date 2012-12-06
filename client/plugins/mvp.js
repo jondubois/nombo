@@ -487,7 +487,7 @@ $n.mvp = {
 	*/
 	Component: $n.mixin(function(template) {
 		var self = this;
-		self.initMixin($n.mvp.View, [template]);
+		self.initMixin($n.mvp.View, template);
 		self.jComboMVPComponent = true;
 	
 		self.getComponentName = function() {

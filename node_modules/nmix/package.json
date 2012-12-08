@@ -1,7 +1,7 @@
 {
   "name": "nmix",
   "description": "A simple mixin module which facilitates multiple inheritance in JavaScript.",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "author": {
     "name": "JF Gros-Dubois",
     "email": "flashthink@gmail.com"

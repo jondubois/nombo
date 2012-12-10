@@ -101,3 +101,50 @@ dataClient.get('this.is.a.0', function(value) {
 
 The output here will be 'foo'.
 You can also add entire JSON-compatible objects as value. Objects with circular references are also valid.
+
+
+## Special Macros
+
+Special macros serve to extend the capabilities of nData - They can be applied within both the key and the value arguments supplied to any nData method (basically any string supplied to nData).
+
+In nData, the dot (.) character is special - By default it serves to delimit different depths in the key chain.
+There may be cases where you want a dot character to be interpreted literally - In this case, you should use the #() macro.
+For example, if you have:
+
+```js
+dataClient.set('#(this.is.a.shallow.key)', 'Hello world');
+```
+
+If you tried running this:
+
+```js
+dataClient.get('this.is.a', function(value) {
+	console.log(value);
+});
+```
+
+Value would be undefined.
+To actually retrieve the value, you would need to do it like this:
+
+```js
+dataClient.get('#(this.is.a.shallow.key)', function(value) {
+	console.log(value);
+});
+```
+
+You need to be consistent in how you escape the chain.
+
+To evaluate expressions, you may use the %() macro.
+
+Example:
+
+```js
+dataClient.set('value', 'Number: %(8 + 2)'); // This would store the string 'Number: 10'
+```
+
+Sometimes you may want to substitute the value of an object that is already stored within nData, in this case, use the $() macro.
+
+Example (also using evaluation macro):
+dataClient.set('valueA', 1, function(err) {
+	dataClient.set('valueB', '%($(valueA) + 1)'); // This would set valueB to the number 2
+});

@@ -522,7 +522,11 @@ var $loader = {
 			if(fresh) {
 				img.src = smartCacheManager.setCacheKiller(url);
 			} else {
-				img.src = smartCacheManager.setURLCacheVersion(url);
+				if($loader.grab._options.releaseMode) {
+					img.src = smartCacheManager.setURLCacheVersion(url);
+				} else {
+					img.src = url;
+				}
 			}
 			return img;
 		},
@@ -622,7 +626,7 @@ var $loader = {
 			
 			var ck = null;
 			if(fresh) {
-				ck = smartCacheManager.getCacheKillerParam()
+				ck = smartCacheManager.getCacheKillerParam();
 			}
 			
 			var tagData = {type: 'script', url: url, callback: callback, error: null, ready: false, query: ck};
@@ -649,7 +653,7 @@ var $loader = {
 			
 			var ck = null;
 			if(fresh) {
-				ck = smartCacheManager.getCacheKillerParam()
+				ck = smartCacheManager.getCacheKillerParam();
 			}
 			
 			var tagData = {type: 'link', url: url, callback: callback, error: null, ready: false, query: ck}
@@ -714,7 +718,11 @@ var $loader = {
 			if(query) {
 				script.src = url + '?' + query;
 			} else {
-				script.src = smartCacheManager.setURLCacheVersion(url);
+				if($loader.grab._options.releaseMode) {
+					script.src = smartCacheManager.setURLCacheVersion(url);
+				} else {
+					script.src = url;
+				}
 			}
 			
 			head.appendChild(script);
@@ -751,7 +759,11 @@ var $loader = {
 			if(query) {
 				link.href = url + '?' + query;
 			} else {
-				link.href = smartCacheManager.setURLCacheVersion(url);
+				if($loader.grab._options.releaseMode) {
+					link.href = smartCacheManager.setURLCacheVersion(url);
+				} else {
+					link.href = url;
+				}
 			}
 			
 			if(firstScript) {
@@ -825,19 +837,28 @@ var $loader = {
 					};
 					
 					var tempURL;
-					if(fresh) {
-						tempURL = smartCacheManager.setCacheKillerParam(url, fresh);
+					
+					if($loader.grab._options.releaseMode) {
+						if(fresh) {
+							tempURL = smartCacheManager.setCacheKillerParam(url, fresh);
+						} else {
+							tempURL = smartCacheManager.setURLCacheVersion(url);
+						}
 					} else {
-						tempURL = smartCacheManager.setURLCacheVersion(url);
+						tempURL = url;
 					}
 					
 					img.src = tempURL;
 				} else {
 					var tempURL;
-					if(fresh) {
-						tempURL = smartCacheManager.setCacheKillerParam(url, fresh);
+					if($loader.grab._options.releaseMode) {
+						if(fresh) {
+							tempURL = smartCacheManager.setCacheKillerParam(url, fresh);
+						} else {
+							tempURL = smartCacheManager.setURLCacheVersion(url);
+						}
 					} else {
-						tempURL = smartCacheManager.setURLCacheVersion(url);
+						tempURL = url;
 					}
 					
 					// all text-based files

@@ -145,6 +145,9 @@ dataClient.set('value', 'Number: %(8 + 2)'); // This would store the string 'Num
 Sometimes you may want to substitute the value of an object that is already stored within nData, in this case, use the $() macro.
 
 Example (also using evaluation macro):
+
+```js
 dataClient.set('valueA', 1, function(err) {
 	dataClient.set('valueB', '%($(valueA) + 1)'); // This would set valueB to the number 2
 });
+```

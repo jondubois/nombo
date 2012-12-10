@@ -55,29 +55,43 @@ var $n = {
 		$n.local.init();
 	},
 	
-	getAuthData: function() {
-		return NCOMBO_SESSION_MANAGER.getAuthData.apply(NCOMBO_SESSION_MANAGER, arguments);
-	},
-	
-	startSession: function() {
-		var data = null;
-		var callback = null;
-		if(arguments[0] instanceof Function) {
-			callback = arguments[0];
-		} else {
-			data = arguments[0];
-			callback = arguments[1];
-		}
-		NCOMBO_SESSION_MANAGER.startSession(data, function(err, ssid) {
-			$n.initIO();
-			if(callback) {
-				callback(err, ssid);
+	session: {
+		start: function() {
+			var data = null;
+			var callback = null;
+			if(arguments[0] instanceof Function) {
+				callback = arguments[0];
+			} else {
+				data = arguments[0];
+				callback = arguments[1];
 			}
-		});
-	},
-	
-	endSession: function(callback) {
-		NCOMBO_SESSION_MANAGER.endSession(callback);
+			NCOMBO_SESSION_MANAGER.startSession(data, function(err, ssid) {
+				$n.initIO();
+				if(callback) {
+					callback(err, ssid);
+				}
+			});
+		},
+		
+		set: function() {
+			return NCOMBO_SESSION_MANAGER.set.apply(NCOMBO_SESSION_MANAGER, arguments);
+		},
+		
+		get: function() {
+			return NCOMBO_SESSION_MANAGER.get.apply(NCOMBO_SESSION_MANAGER, arguments);
+		},
+		
+		setAuthData: function() {
+			return NCOMBO_SESSION_MANAGER.setAuthData.apply(NCOMBO_SESSION_MANAGER, arguments);
+		},
+		
+		getAuthData: function() {
+			return NCOMBO_SESSION_MANAGER.getAuthData.apply(NCOMBO_SESSION_MANAGER, arguments);
+		},
+		
+		end: function(callback) {
+			NCOMBO_SESSION_MANAGER.endSession(callback);
+		}
 	},
 	
 	_genID: function() {

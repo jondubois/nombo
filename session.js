@@ -196,6 +196,14 @@ var NCOMBO_IE_VERSION = IE_VERSION;
 			return timeout;
 		}
 		
+		self.set = function(name, value) {
+			setCookie('ncdata_' + name, io.JSON.stringify(value));
+		}
+		
+		self.get = function(name) {
+			getCookie('ncdata_' + name);
+		}
+		
 		self.setAuthData = function(data) {
 			setCookie('ncauth', io.JSON.stringify(data));
 		}

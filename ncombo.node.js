@@ -357,10 +357,15 @@ var ServerRequest = function(socket, session, global, remoteAddress, secure) {
 	}
 	
 	self.error = function(data, fatal) {
-		if(fatal) {
-			self._emitReturn({cid: self.cid, error: data, close: 1});
+		if(data instanceof Error) {
+			err = {name: data.name, message: data.message, stack: data.stack};			
 		} else {
-			self._emitReturn({cid: self.cid, error: data});
+			err = data;
+		}
+		if(fatal) {
+			self._emitReturn({cid: self.cid, error: err, close: 1});
+		} else {
+			self._emitReturn({cid: self.cid, error: err});
 		}
 	}
 	
@@ -389,6 +394,7 @@ var nCombo = function() {
 	self.EVENT_SESSION_DESTROY = 'sessiondestroy';
 	self.EVENT_SOCKET_CONNECT = 'socketconnect';
 	self.EVENT_SOCKET_DISCONNECT = 'socketdisconnect';
+	self.EVENT_SOCKET_FAIL = 'socketfail';
 	self.EVENT_FAIL = 'fail';
 	
 	self._cacheVersion = 0;
@@ -1179,7 +1185,7 @@ var nCombo = function() {
 					
 					self._dataClient.set('__workers.' + cluster.worker.process.pid + '.sockets.' + socket.id, 1, function(err) {
 						if(err && !failFlag) {
-							self.emit(self.EVENT_FAIL, socket);
+							self.emit(self.EVENT_SOCKET_FAIL, socket);
 							failFlag = true;
 							socket.disconnect();
 							console.log('   nCombo Error - Failed to initiate socket');
@@ -1187,7 +1193,7 @@ var nCombo = function() {
 					});
 					self._dataClient.set('__workers.' + cluster.worker.process.pid + '.sessions.' + sid, 1, function(err) {
 						if(err && !failFlag) {
-							self.emit(self.EVENT_FAIL, socket);
+							self.emit(self.EVENT_SOCKET_FAIL, socket);
 							failFlag = true;
 							socket.disconnect();
 							console.log('   nCombo Error - Failed to initiate socket');
@@ -1196,7 +1202,7 @@ var nCombo = function() {
 					self._dataClient.set('__opensockets.' + socket.id, 1, function(err) {
 						if(err) {
 							if(!failFlag) {
-								self.emit(self.EVENT_FAIL, socket);
+								self.emit(self.EVENT_SOCKET_FAIL, socket);
 								failFlag = true;
 								socket.disconnect();
 								console.log('   nCombo Error - Failed to initiate socket');
@@ -1211,7 +1217,7 @@ var nCombo = function() {
 					
 					session._addSocket(socket, function(err) {
 						if(err && !failFlag) {
-							self.emit(self.EVENT_FAIL, socket);
+							self.emit(self.EVENT_SOCKET_FAIL, socket);
 							failFlag = true;
 							socket.disconnect();
 							console.log('   nCombo Error - Failed to initiate session');
@@ -1479,6 +1485,15 @@ var nCombo = function() {
 			self._middleware[type].remove(callback);
 		}
 	}
+	
+	process.on('uncaughtException', function(err) {
+		self.emit(self.EVENT_FAIL, err);
+		if(err.stack) {
+			console.log(err.stack);
+		} else {
+			console.log(err);
+		}
+	});
 }
 
 nCombo.prototype.__proto__ = EventEmitter.prototype;

@@ -28,6 +28,6 @@ nCombo offers several ground-breaking features:
 - Makes efficient use of caching (in release mode) - Restarting an nCombo server causes browsers to refresh their cache - So clients stay up to date
 - A Session object which uniquely identifies each client is appended to all requests - The session object can be manipulated to store data unique to each client
 - A Global object can be used to store data that can be shared between all clients - It also gives you access to all connected clients and lets you selectively exchange data between them
-- Comes with all the standard middleware for session management, routing and the like - nCombo lets you add custom middleware to do tasks such as user authorization (such as controlling who has access to a file or server interface or who can listen to specific server events) - Middleware comes in several varieties; 'router', 'localCall', 'remoteCall', 'localEvent' and 'remoteEvent' each one allows you to filter requests relating to specific types of actions
+- Comes with all the standard middleware for session management, routing and the like - nCombo lets you add custom middleware to do tasks such as user authorization (such as controlling who has access to a file or server interface or who can listen to specific server events)
 - Makes use of all available CPU cores for maximum efficiency and concurrency (or you can optionally specify the number of workers to use)
 - Comes with default upload middleware and offers Valumn's uploader client-side - Creating an upload feature only takes a few lines of code

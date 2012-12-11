@@ -326,7 +326,7 @@ var Global = nmix(function(socketManager, dataClient, frameworkDirPath, appDirPa
 	}
 });
 
-var ServerRequest = function(socket, session, global, remoteAddress, secure) {
+var AbstractIORequest = function(socket, session, global, remoteAddress, secure) {
 	var self = this;
 	self.session = session;
 	self.global = global;
@@ -341,7 +341,7 @@ var ServerRequest = function(socket, session, global, remoteAddress, secure) {
 		if(self.open) {
 			self.socket.emit('return', data);
 		} else {
-			throw "Exception: The current ServerRequest has already been closed";
+			throw new Error("Exception: The current IO request has already been closed");
 		}
 		if(data.close) {
 			self.open = false;
@@ -356,17 +356,24 @@ var ServerRequest = function(socket, session, global, remoteAddress, secure) {
 		self._emitReturn({cid: self.cid, value: data, close: 1});
 	}
 	
-	self.error = function(data, fatal) {
+	self.warn = function(data) {
+		var err;
 		if(data instanceof Error) {
 			err = {name: data.name, message: data.message, stack: data.stack};			
 		} else {
 			err = data;
 		}
-		if(fatal) {
-			self._emitReturn({cid: self.cid, error: err, close: 1});
+		self._emitReturn({cid: self.cid, error: err});
+	}
+	
+	self.error = function(data) {
+		var err;
+		if(data instanceof Error) {
+			err = {name: data.name, message: data.message, stack: data.stack};			
 		} else {
-			self._emitReturn({cid: self.cid, error: err});
+			err = data;
 		}
+		self._emitReturn({cid: self.cid, error: err, close: 1});
 	}
 	
 	self.kill = function() {
@@ -1226,41 +1233,41 @@ var nCombo = function() {
 					
 					// handle local server interface call
 					socket.on('localCall', function(request) {
-						ServerRequest.call(request, socket, session, self._global, remoteAddress, secure);
+						AbstractIORequest.call(request, socket, session, self._global, remoteAddress, secure);
 						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_CALL]);
 						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(request);
 					});
 					
 					// handle remote interface call
 					socket.on('remoteCall', function(request) {
-						ServerRequest.call(request, socket, session, self._global, remoteAddress, request.secure);
+						AbstractIORequest.call(request, socket, session, self._global, remoteAddress, request.secure);
 						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_CALL]);
 						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(request);
 					});
 					
 					// watch local server events
 					socket.on('watchLocal', function(request) {
-						ServerRequest.call(request, socket, session, self._global, remoteAddress, secure);
+						AbstractIORequest.call(request, socket, session, self._global, remoteAddress, secure);
 						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_EVENT]);
 						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(request);
 					});
 					
 					// unwatch local server events
 					socket.on('unwatchLocal', function(request) {
-						ServerRequest.call(request, socket, session, self._global, remoteAddress, secure);
+						AbstractIORequest.call(request, socket, session, self._global, remoteAddress, secure);
 						gateway.unwatch(request);
 					});
 					
 					// watch remote server events
 					socket.on('watchRemote', function(request) {
-						ServerRequest.call(request, socket, session, self._global, remoteAddress, request.secure);
+						AbstractIORequest.call(request, socket, session, self._global, remoteAddress, request.secure);
 						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_EVENT]);
 						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(request);
 					});
 					
 					// unwatch remote server events
 					socket.on('unwatchRemote', function(request) {
-						ServerRequest.call(request, socket, session, self._global, remoteAddress, secure);
+						AbstractIORequest.call(request, socket, session, self._global, remoteAddress, secure);
 						ws.unwatch(request);
 					});
 					

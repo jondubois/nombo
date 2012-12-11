@@ -109,6 +109,8 @@ Special macros serve to extend the capabilities of nData - They can be applied w
 
 In nData, the dot (.) character is special - By default it serves to delimit different depths in the key chain.
 There may be cases where you want a dot character to be interpreted literally - In this case, you should use the #() macro.
+Any text placed within a #() macro will be treated as a literal - Dots and other special symbols (including other macros) will be escaped.
+
 For example, if you have:
 
 ```js

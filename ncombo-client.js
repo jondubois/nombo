@@ -406,9 +406,9 @@ $n.NS = function(namespace, wsSocket) {
 		}
 		
 		var request = {
+			id: id,
 			ns: self._namespace,
-			event: event,
-			id: id
+			event: event
 		};
 		
 		if(self._serverWatchMap[event].length < 2) {
@@ -558,14 +558,14 @@ $n.RemoteNS = function(host, port, secure, wsEndpoint, namespace, wsSocket) {
 		}
 		
 		var request = {
+			id: id,
 			remote: true,
 			host: host,
 			port: port,
 			secure: secure,
 			wsEndpoint: wsEndpoint,
 			ns: self._namespace,
-			event: event,
-			id: id
+			event: event
 		};
 		
 		if(self._serverWatchMap[event].length < 2) {
@@ -815,19 +815,29 @@ $n.remote = function(host, port, secure, wsEndpoint) {
 			self.exec = function() {
 				var serverInterface = arguments[0];
 				var method = arguments[1];
-				var data = null;
 				var id = $n._genID();
 				var callback = null;
 				var timeout = null;
 				
+				var request = {
+					id: id,
+					remote: true,
+					host: host,
+					port: port,
+					secure: secure,
+					wsEndpoint: wsEndpoint,
+					sim: serverInterface,
+					method: method
+				};
+				
 				if(arguments[3]) {
-					data = arguments[2];
+					request.data = arguments[2];
 					callback = arguments[3];
-				} else if(arguments[2]) {
+				} else if(arguments[2] !== undefined) {
 					if(arguments[2] instanceof Function) {
 						callback = arguments[2];
 					} else {
-						data = arguments[2];
+						request.data = arguments[2];
 					}
 				}
 				if(callback) {
@@ -842,18 +852,6 @@ $n.remote = function(host, port, secure, wsEndpoint) {
 				}
 				
 				$n._callTracker[id] = {callback: callback, timeout: timeout};
-				
-				var request = {
-					remote: true,
-					host: host,
-					port: port,
-					secure: secure,
-					wsEndpoint: wsEndpoint,
-					sim: serverInterface,
-					method: method,
-					data: data,
-					id: id
-				};
 				
 				$n.socketIO.emit('remoteCall', request);
 			}
@@ -890,19 +888,24 @@ $n.local = new (function($n) {
 	self.exec = function() {
 		var serverInterface = arguments[0];
 		var method = arguments[1];
-		var data = null;
 		var id = $n._genID();
 		var callback = null;
 		var timeout = null;
 		
+		var request = {
+			id: id,
+			sim: serverInterface,
+			method: method
+		};
+		
 		if(arguments[3]) {
-			data = arguments[2];
+			request.data = arguments[2];
 			callback = arguments[3];
-		} else if(arguments[2]) {
+		} else if(arguments[2] !== undefined) {
 			if(arguments[2] instanceof Function) {
 				callback = arguments[2];
 			} else {
-				data = arguments[2];
+				request.data = arguments[2];
 			}
 		}
 		if(callback) {
@@ -917,13 +920,6 @@ $n.local = new (function($n) {
 		}
 		
 		$n._callTracker[id] = {callback: callback, timeout: timeout};
-		
-		var request = {
-			sim: serverInterface,
-			method: method,
-			data: data,
-			id: id
-		};
 		
 		$n.socketIO.emit('localCall', request);
 	}

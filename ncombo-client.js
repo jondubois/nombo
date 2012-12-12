@@ -73,22 +73,6 @@ var $n = {
 			});
 		},
 		
-		set: function() {
-			return NCOMBO_SESSION_MANAGER.set.apply(NCOMBO_SESSION_MANAGER, arguments);
-		},
-		
-		get: function() {
-			return NCOMBO_SESSION_MANAGER.get.apply(NCOMBO_SESSION_MANAGER, arguments);
-		},
-		
-		setAuthData: function() {
-			return NCOMBO_SESSION_MANAGER.setAuthData.apply(NCOMBO_SESSION_MANAGER, arguments);
-		},
-		
-		getAuthData: function() {
-			return NCOMBO_SESSION_MANAGER.getAuthData.apply(NCOMBO_SESSION_MANAGER, arguments);
-		},
-		
 		end: function(callback) {
 			NCOMBO_SESSION_MANAGER.endSession(callback);
 		}
@@ -347,23 +331,23 @@ var $n = {
 	serverInterfaceDescription: {},
 	
 	_callReturn: function(data) {
-		var cid = data.cid;
-		if($n._callTracker[cid]) {
-			if($n._callTracker[cid].timeout) {
-				clearTimeout($n._callTracker[cid].timeout);
+		var id = data.id;
+		if($n._callTracker[id]) {
+			if($n._callTracker[id].timeout) {
+				clearTimeout($n._callTracker[id].timeout);
 			}
-			if(!data.noValue && $n._callTracker[cid].callback) {
+			if(!data.noValue && $n._callTracker[id].callback) {
 				var finish = data.close ? true : false;
-				$n._callTracker[cid].callback(data.error, data.value, finish);
+				$n._callTracker[id].callback(data.error, data.value, finish);
 			}
 			if(data.close) {
-				delete $n._callTracker[cid];
+				delete $n._callTracker[id];
 			}
 		}
 	},
 	
-	trackRequest: function(cid, callback) {
-		$n._callTracker[cid] = {callback: callback};
+	trackRequest: function(id, callback) {
+		$n._callTracker[id] = {callback: callback};
 	},
 	
 	_eventReceived: function(event) {
@@ -408,7 +392,7 @@ $n.NS = function(namespace, wsSocket) {
 			}
 		}
 		
-		var cid = $n._genID();
+		var id = $n._genID();
 		if(!self._serverWatchMap.hasOwnProperty(event)) {
 			self._serverWatchMap[event] = [];
 		}
@@ -424,11 +408,11 @@ $n.NS = function(namespace, wsSocket) {
 		var request = {
 			ns: self._namespace,
 			event: event,
-			cid: cid
+			id: id
 		};
 		
 		if(self._serverWatchMap[event].length < 2) {
-			$n.trackRequest(cid, ackHandler);
+			$n.trackRequest(id, ackHandler);
 			$n.socketIO.emit('watchLocal', request);
 		} else {
 			cb();
@@ -453,8 +437,8 @@ $n.NS = function(namespace, wsSocket) {
 		}
 		
 		var i;
-		var cid = $n._genID();
-		var unwatchRequest = {cid: cid, requests: []};
+		var id = $n._genID();
+		var unwatchRequest = {id: id, requests: []};
 		
 		if(!event) {
 			for(i in self._serverWatchMap) {
@@ -462,7 +446,7 @@ $n.NS = function(namespace, wsSocket) {
 			}
 			self._serverWatchMap = {};
 			if(unwatchRequest.requests.length > 0) {
-				$n.trackRequest(cid, cb);
+				$n.trackRequest(id, cb);
 				self.socketIO.emit('unwatchLocal', unwatchRequest);
 			} else {
 				cb();
@@ -472,7 +456,7 @@ $n.NS = function(namespace, wsSocket) {
 				unwatchRequest.requests.push({ns: self._namespace, event: event});
 				delete self._serverWatchMap[event];
 				if(unwatchRequest.requests.length > 0) {
-					$n.trackRequest(cid, cb);
+					$n.trackRequest(id, cb);
 					self.socketIO.emit('unwatchLocal', unwatchRequest);
 				} else {
 					cb();
@@ -488,7 +472,7 @@ $n.NS = function(namespace, wsSocket) {
 					return true;
 				});
 				if(unwatchRequest.requests.length > 0 && self._serverWatchMap[event].length < 1) {
-					$n.trackRequest(cid, cb);
+					$n.trackRequest(id, cb);
 					self.socketIO.emit('unwatchLocal', unwatchRequest);
 				} else {
 					cb();
@@ -558,7 +542,7 @@ $n.RemoteNS = function(host, port, secure, wsEndpoint, namespace, wsSocket) {
 			}
 		}
 		
-		var cid = $n._genID();
+		var id = $n._genID();
 		
 		if(!self._serverWatchMap.hasOwnProperty(event)) {
 			self._serverWatchMap[event] = [];
@@ -581,11 +565,11 @@ $n.RemoteNS = function(host, port, secure, wsEndpoint, namespace, wsSocket) {
 			wsEndpoint: wsEndpoint,
 			ns: self._namespace,
 			event: event,
-			cid: cid
+			id: id
 		};
 		
 		if(self._serverWatchMap[event].length < 2) {
-			$n.trackRequest(cid, ackHandler);
+			$n.trackRequest(id, ackHandler);
 			self.socketIO.emit('watchRemote', request);
 		} else {
 			cb();
@@ -610,8 +594,8 @@ $n.RemoteNS = function(host, port, secure, wsEndpoint, namespace, wsSocket) {
 		}
 	
 		var i;
-		var cid = $n._genID();
-		var unwatchRequest = {cid: cid, requests: []};
+		var id = $n._genID();
+		var unwatchRequest = {id: id, requests: []};
 		
 		if(!event) {
 			for(i in self._serverWatchMap) {
@@ -627,7 +611,7 @@ $n.RemoteNS = function(host, port, secure, wsEndpoint, namespace, wsSocket) {
 			}
 			self._serverWatchMap = {};
 			if(unwatchRequest.requests.length > 0) {
-				$n.trackRequest(cid, cb);
+				$n.trackRequest(id, cb);
 				self.socketIO.emit('unwatchRemote', unwatchRequest);
 			} else {
 				cb()
@@ -645,7 +629,7 @@ $n.RemoteNS = function(host, port, secure, wsEndpoint, namespace, wsSocket) {
 				});
 				delete self._serverWatchMap[event];
 				if(unwatchRequest.requests.length > 0) {
-					$n.trackRequest(cid, cb);
+					$n.trackRequest(id, cb);
 					self.socketIO.emit('unwatchRemote', unwatchRequest);
 				} else {
 					cb();
@@ -670,7 +654,7 @@ $n.RemoteNS = function(host, port, secure, wsEndpoint, namespace, wsSocket) {
 					return true;
 				});
 				if(unwatchRequest.requests.length > 0 && self._serverWatchMap[event].length < 1) {
-					$n.trackRequest(cid, cb);
+					$n.trackRequest(id, cb);
 					self.socketIO.emit('unwatchRemote', unwatchRequest);
 				} else {
 					cb();
@@ -832,7 +816,7 @@ $n.remote = function(host, port, secure, wsEndpoint) {
 				var serverInterface = arguments[0];
 				var method = arguments[1];
 				var data = null;
-				var cid = $n._genID();
+				var id = $n._genID();
 				var callback = null;
 				var timeout = null;
 				
@@ -848,8 +832,8 @@ $n.remote = function(host, port, secure, wsEndpoint) {
 				}
 				if(callback) {
 					timeout = setTimeout(function() {
-						if($n._callTracker[cid]) {
-							delete $n._callTracker[cid];
+						if($n._callTracker[id]) {
+							delete $n._callTracker[id];
 						}
 						if(callback) {
 							callback('Remote exec call timed out', null, true);
@@ -857,7 +841,7 @@ $n.remote = function(host, port, secure, wsEndpoint) {
 					}, $n._timeout);
 				}
 				
-				$n._callTracker[cid] = {callback: callback, timeout: timeout};
+				$n._callTracker[id] = {callback: callback, timeout: timeout};
 				
 				var request = {
 					remote: true,
@@ -865,10 +849,10 @@ $n.remote = function(host, port, secure, wsEndpoint) {
 					port: port,
 					secure: secure,
 					wsEndpoint: wsEndpoint,
-					si: serverInterface,
+					sim: serverInterface,
 					method: method,
 					data: data,
-					cid: cid
+					id: id
 				};
 				
 				$n.socketIO.emit('remoteCall', request);
@@ -907,7 +891,7 @@ $n.local = new (function($n) {
 		var serverInterface = arguments[0];
 		var method = arguments[1];
 		var data = null;
-		var cid = $n._genID();
+		var id = $n._genID();
 		var callback = null;
 		var timeout = null;
 		
@@ -923,8 +907,8 @@ $n.local = new (function($n) {
 		}
 		if(callback) {
 			timeout = setTimeout(function() {
-				if($n._callTracker[cid]) {
-					delete $n._callTracker[cid];
+				if($n._callTracker[id]) {
+					delete $n._callTracker[id];
 				}
 				if(callback) {
 					callback('Local exec call timed out', null, true);
@@ -932,13 +916,13 @@ $n.local = new (function($n) {
 			}, $n._timeout);
 		}
 		
-		$n._callTracker[cid] = {callback: callback, timeout: timeout};
+		$n._callTracker[id] = {callback: callback, timeout: timeout};
 		
 		var request = {
-			si: serverInterface,
+			sim: serverInterface,
 			method: method,
 			data: data,
-			cid: cid
+			id: id
 		};
 		
 		$n.socketIO.emit('localCall', request);

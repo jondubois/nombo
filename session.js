@@ -182,7 +182,7 @@ var NCOMBO_IE_VERSION = IE_VERSION;
 		var timeout = NCOMBO_TIMEOUT;
 		var sessionID = null;
 	
-		self._setCookies = function(soid) {
+		self._setIDCookies = function(soid) {
 			var ssid = getCookie('ncssid');
 			if(!ssid) {
 				ssid = soid;
@@ -194,30 +194,6 @@ var NCOMBO_IE_VERSION = IE_VERSION;
 		
 		self.getTimeout = function(millis) {
 			return timeout;
-		}
-		
-		self.set = function(name, value) {
-			setCookie('ncdata_' + name, io.JSON.stringify(value));
-		}
-		
-		self.get = function(name) {
-			getCookie('ncdata_' + name);
-		}
-		
-		self.setAuthData = function(data) {
-			setCookie('ncauth', io.JSON.stringify(data));
-		}
-		
-		self.clearAuthData = function() {
-			setCookie('ncauth', '');
-		}
-		
-		self.getAuthData = function() {
-			var authCookie = getCookie('ncauth');
-			if(authCookie) {
-				return io.JSON.parse(authCookie);
-			}
-			return null;
 		}
 		
 		self.startSession = function() {
@@ -258,10 +234,9 @@ var NCOMBO_IE_VERSION = IE_VERSION;
 				
 				var connectCallback = function() {
 					clearTimeout(timeoutCallback);
-					self.setAuthData(data);
 					NCOMBO_SOCKET.removeListener('connect', connectCallback);
 					NCOMBO_SOCKET.removeListener('error', errorCallback);
-					sessionID = self._setCookies(NCOMBO_SOCKET.socket.sessionid);
+					sessionID = self._setIDCookies(NCOMBO_SOCKET.socket.sessionid);
 				
 					callback(null, sessionID);
 				}
@@ -280,7 +255,6 @@ var NCOMBO_IE_VERSION = IE_VERSION;
 		}
 		
 		self.endSession = function(callback) {
-			self.clearAuthData();
 			var timeoutCallback = null;
 			if(callback) {
 				var disconnectCallback = function() {
@@ -357,7 +331,7 @@ var NCOMBO_IE_VERSION = IE_VERSION;
 			NCOMBO_SOCKET.removeListener('error', handshakeErrorHandler);
 			NCOMBO_SOCKET.removeListener('connect', connectHandler);
 			clearTimeout(timeoutCallback);	
-			NCOMBO_SESSION_MANAGER._setCookies(NCOMBO_SOCKET.socket.sessionid);
+			NCOMBO_SESSION_MANAGER._setIDCookies(NCOMBO_SOCKET.socket.sessionid);
 			ncBegin();
 		}
 	

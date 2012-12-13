@@ -1026,7 +1026,7 @@ var nCombo = function() {
 		var dataPort, dataKey;
 		
 		var isInt = function(input) {
-			return typeof input == 'number';
+			return /^[0-9]+$/.test(input);
 		}
 		
 		var optionValidationMap = {

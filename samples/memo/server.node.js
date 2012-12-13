@@ -19,5 +19,16 @@ ncombo.addMiddleware(ncombo.MIDDLEWARE_SOCKET_IO, function(req, res, next) {
 	}
 });
 
+// These styles will be included as part of preload process
+ncombo.useStyle('/~framework/client/styles/bootstrap.css');
+ncombo.useStyle('/~framework/client/styles/jqueryui/ui-lightness/jquery.ui.core.css');
+ncombo.useStyle('/~framework/client/styles/jqueryui/ui-lightness/jquery.ui.dialog.css');
+ncombo.useStyle('/~framework/client/styles/jqueryui/ui-lightness/jquery.ui.resizable.css');
+ncombo.useStyle('/~framework/client/styles/jqueryui/ui-lightness/jquery.ui.selectable.css');
+ncombo.useStyle('/~framework/client/styles/jqueryui/ui-lightness/jquery.ui.theme.css');
+ncombo.useScript('/~framework/client/libs/jquery/ui.js');
+
+ncombo.useScript('/styles/main.css');
+
 // Session will be destroyed if all windows relating to it are closed for 2 seconds
-ncombo.start({port: port, release: false, sessionTimeout: 2000, title: 'Notes App'});
+ncombo.start({port: port, release: true, sessionTimeout: 2000, title: 'Notes App'});

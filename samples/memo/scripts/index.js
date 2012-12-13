@@ -4,7 +4,7 @@
 	In a practical setting, you may want to split your code into several files and include them into one another using 
 	$n.grab.app.script().
 */
-
+/*
 $n.grab.framework.style('bootstrap');
 
 $n.grab.framework.style('jqueryui/ui-lightness/jquery.ui.core.css');
@@ -15,7 +15,7 @@ $n.grab.framework.style('jqueryui/ui-lightness/jquery.ui.theme.css');
 $n.grab.framework.lib('jquery/ui');
 
 $n.grab.app.style('main');
-
+*/
 var loginTemplate = $n.grab.app.template('login');
 var mainTemplate = $n.grab.app.template('main');
 var notesTableTemplate = $n.grab.app.template('notes_table');

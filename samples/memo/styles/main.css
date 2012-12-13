@@ -1,0 +1,25 @@
+.main {
+	padding: 20px;
+}
+
+.login-screen {
+	position: absolute;
+	width: 220px;
+	height: 160px;
+	left: 50%;
+	top: 50%;
+	margin-left: -110px;
+	margin-top: -80px;
+}
+
+.main {
+	padding: 20px;
+}
+
+.error-text {
+	color: #e00;
+}
+
+.dialog {
+	display: none;
+}

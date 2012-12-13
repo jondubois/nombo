@@ -438,7 +438,8 @@ var nCombo = function() {
 		autoSession: true,
 		matchOriginProtocol: true,
 		maxConnectionsPerAddress: 0,
-		pollingDuration: 30000
+		pollingDuration: 30000,
+		heartbeatInterval: 25000
 	}
 	
 	self._retryOptions = {
@@ -552,7 +553,7 @@ var nCombo = function() {
 	
 	self._parseSID = function(cookieString) {
 		if(cookieString) {
-			var result = cookieString.match(/(ncssid=)([^;]*)/);
+			var result = cookieString.match(/(__ncssid=)([^;]*)/);
 			if(result) {
 				return result[2]
 			}
@@ -562,7 +563,7 @@ var nCombo = function() {
 	
 	self._parseSocketID = function(cookieString) {
 		if(cookieString) {
-			var result = cookieString.match(/(ncsoid=)([^;]*)/);
+			var result = cookieString.match(/(__ncsoid=)([^;]*)/);
 			if(result) {
 				return result[2]
 			}
@@ -696,7 +697,7 @@ var nCombo = function() {
 			var now = (new Date()).getTime();
 			var expiry = new Date(now + self._options.cacheLife);
 			res.setHeader('Content-Type', 'text/javascript');
-			res.setHeader('Set-Cookie', 'nccached=0;');
+			res.setHeader('Set-Cookie', '__nccached=0;');
 			res.setHeader('Cache-Control', 'private');
 			res.setHeader('Pragma', 'private');
 			res.setHeader('Expires', expiry.toUTCString());
@@ -1063,18 +1064,23 @@ var nCombo = function() {
 				return (arguments[0] == 'private' || arguments[0] == 'public') ? null : "must be either 'private' or 'public'";
 			},
 			cacheVersion: function() {
-				return (isInt(arguments[0]) || arguments[0] == null) ? null : 'expecting an integer';
+				return isInt(arguments[0]) ? null : 'expecting an integer';
 			},
 			origins: function() {
 				return (typeof arguments[0] == 'string') ? null : 'expecting a string';
 			},
 			maxConnectionsPerAddress: function() {
-				return (isInt(arguments[0]) || arguments[0] == null) ? null : 'expecting an integer';
+				return isInt(arguments[0]) ? null : 'expecting an integer';
 			},
 			pollingDuration: function() {
-				return (isInt(arguments[0]) || arguments[0] == null) ? null : 'expecting an integer';
+				return isInt(arguments[0]) ? null : 'expecting an integer';
+			},
+			heartbeatInterval: function() {
+				return isInt(arguments[0]) ? null : 'expecting an integer';
 			}
 		}
+		
+		self._validateOptions(options, optionValidationMap);
 		
 		if(options) {
 			var i;
@@ -1082,8 +1088,6 @@ var nCombo = function() {
 				self._options[i] = options[i];
 			}
 		}
-		
-		self._validateOptions(self._options, optionValidationMap);
 		
 		self._options.appDirPath = self._appDirPath;
 		var appDef = self._getAppDef();
@@ -1161,6 +1165,8 @@ var nCombo = function() {
 				self._io.set('transports', self._options.transports);
 				self._io.set('origins', self._options.origins);
 				self._io.set('polling duration', Math.round(self._options.pollingDuration / 1000));
+				self._io.set('heartbeat interval', Math.round(self._options.heartbeatInterval / 1000));
+				self._io.set('heartbeat timeout', Math.round(self._options.heartbeatInterval / 500) + 10);
 				self._io.set('match origin protocol', self._options.matchOriginProtocol);
 				
 				if(self._options.maxConnectionsPerAddress > 0) {

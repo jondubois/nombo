@@ -171,24 +171,24 @@ var NCOMBO_IE_VERSION = IE_VERSION;
 		xmlhttp.send(null);
 	}
 
-	var ncCacheCookieName = 'nccached';
+	var ncCacheCookieName = '__nccached';
 	var ncCacheCookie = getCookie(ncCacheCookieName);
 
 	NCOMBO_IS_FRESH = (ncCacheCookie && ncCacheCookie > 0) ? false : true;
 	setCookie(ncCacheCookieName, '1', 31536000);
-
+	
 	NCOMBO_SESSION_MANAGER = new (function() {
 		var self = this;
 		var timeout = NCOMBO_TIMEOUT;
 		var sessionID = null;
 	
 		self._setIDCookies = function(soid) {
-			var ssid = getCookie('ncssid');
+			var ssid = getCookie('__ncssid');
 			if(!ssid) {
 				ssid = soid;
-				setCookie('ncssid', ssid);
+				setCookie('__ncssid', ssid);
 			}
-			setCookie('ncsoid', soid);
+			setCookie('__ncsoid', soid);
 			return ssid;
 		}
 		

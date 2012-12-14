@@ -311,25 +311,13 @@ var $loader = {
 		},
 		
 		app: {
-			script: function() {
-				var name = arguments[0];
-				var callback = null;
-				var fresh = false;
-				if(arguments[1] instanceof Function) {
-					callback = arguments[1];
-				} else {
-					fresh = arguments[1];
-					if(arguments[2]) {
-						callback = arguments[2];
-					}
-				}
-				
+			script: function(name, callback) {				
 				if($loader.grab._extRegex.test(name)) {
 					var resourceName = $loader.grab._options.appScriptsURL + name;
 				} else {
 					var resourceName = $loader.grab._options.appScriptsURL + name + '.js';
 				}
-				$loader.grab.script(resourceName, fresh, callback);
+				$loader.grab.script(resourceName, callback);
 			},
 			
 			style: function() {
@@ -363,25 +351,13 @@ var $loader = {
 		},
 		
 		framework: {
-			lib: function() {
-				var name = arguments[0];
-				var callback = null;
-				var fresh = false;
-				if(arguments[1] instanceof Function) {
-					callback = arguments[1];
-				} else {
-					fresh = arguments[1];
-					if(arguments[2]) {
-						callback = arguments[2];
-					}
-				}
-				
+			lib: function(name, callback) {				
 				if($loader.grab._extRegex.test(name)) {
 					var resourceName = $loader.grab._options.jsLibsURL + name;
 				} else {
 					var resourceName = $loader.grab._options.jsLibsURL + name + '.js';
 				}
-				$loader.grab.script(resourceName, fresh, callback);
+				$loader.grab.script(resourceName, callback);
 			},
 			
 			style: function() {
@@ -405,64 +381,28 @@ var $loader = {
 				$loader.grab.style(resourceName, fresh, callback);
 			},
 			
-			plugin: function() {
-				var name = arguments[0];
-				var callback = null;
-				var fresh = false;
-				if(arguments[1] instanceof Function) {
-					callback = arguments[1];
-				} else {
-					fresh = arguments[1];
-					if(arguments[2]) {
-						callback = arguments[2];
-					}
-				}
-				
+			plugin: function(name, callback) {
 				if($loader.grab._extRegex.test(name)) {
 					var resourceName = $loader.grab._options.pluginsURL + name;
 				} else {
 					var resourceName = $loader.grab._options.pluginsURL + name + '.js';
 				}
-				$loader.grab.script(resourceName, fresh, callback);
+				$loader.grab.script(resourceName, callback);
 			},
 			
-			script: function() {
-				var name = arguments[0];
-				var callback = null;
-				var fresh = false;
-				if(arguments[1] instanceof Function) {
-					callback = arguments[1];
-				} else {
-					fresh = arguments[1];
-					if(arguments[2]) {
-						callback = arguments[2];
-					}
-				}
-				
+			script: function(name, callback) {
 				if($loader.grab._extRegex.test(name)) {
 					var resourceName = $loader.grab._options.frameworkScriptsURL + name;
 				} else {
 					var resourceName = $loader.grab._options.frameworkScriptsURL + name + '.js';
 				}
-				$loader.grab.script(resourceName, fresh, callback);
+				$loader.grab.script(resourceName, callback);
 			}
 		},
 		
-		script: function() {
-			var resourceName = arguments[0];
-			var callback = null;
-			var fresh = false;
-			if(arguments[1] instanceof Function) {
-				callback = arguments[1];
-			} else {
-				fresh = arguments[1];
-				if(arguments[2]) {
-					callback = arguments[2];
-				}
-			}
-			
-			if(!$loader.grab._activeScripts[resourceName] || fresh) {
-				$loader.grab.loadAndEmbedScript(resourceName, fresh, callback);
+		script: function(resourceName, callback) {			
+			if(!$loader.grab._activeScripts[resourceName]) {
+				$loader.grab.loadAndEmbedScript(resourceName, callback);
 				$loader.grab._activeScripts[resourceName] = true;
 			}
 		},
@@ -611,27 +551,10 @@ var $loader = {
 			return true;
 		},
 		
-		loadAndEmbedScript: function() {
-			var url = arguments[0];
-			var callback = null;
-			var fresh = false;
-			if(arguments[1] instanceof Function) {
-				callback = arguments[1];
-			} else {
-				fresh = arguments[1];
-				if(arguments[2]) {
-					callback = arguments[2];
-				}
-			}
-			
-			var ck = null;
-			if(fresh) {
-				ck = smartCacheManager.getCacheKillerParam();
-			}
-			
-			var tagData = {type: 'script', url: url, callback: callback, error: null, ready: false, query: ck};
+		loadAndEmbedScript: function(url, callback) {			
+			var tagData = {type: 'script', url: url, callback: callback, error: null, ready: false};
 			$loader.grab._embedQueue.push(tagData);
-			$loader.grab._loadDeepResourceToCache(url, ck, function(err) {
+			$loader.grab._loadDeepResourceToCache(url, false, function(err) {
 				tagData.ready = true;
 				tagData.error = err;
 				$loader.grab._processEmbedQueue();

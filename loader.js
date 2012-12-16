@@ -1,51 +1,9 @@
-var EventDispatcher = function() {
-	var self = this;
-	self._listeners = {};
-	
-	self.on = function(event, listener) {
-		if(!self._listeners.hasOwnProperty(event)) {
-			self._listeners[event] = {};
-		}
-		self._listeners[event][listener] = listener;
-	}
-	
-	self.hasListener = function(event, listener) {
-		return self._listeners.hasOwnProperty(event) && self._listeners[event].hasOwnProperty(listener);
-	}
-	
-	self.removeListener = function(event, listener) {
-		if(self.willTrigger(event, listener)) {
-			delete self._listeners[event][listener];
-		}
-	}
-	
-	self.emit = function(event, eventData) {
-		if(self._listeners.hasOwnProperty(event)) {
-			var eventListeners = self._listeners[event];
-			var i;
-			for(i in eventListeners) {
-				eventListeners[i](eventData);
-			}
-		}
-	}
-	
-	self.numListeners = function(event) {
-		if(self._listeners[event]) {
-			var count = 0;
-			var i;
-			for(i in self._listeners[event]) {
-				count++;
-			}
-			return count;
-		}
-		return 0;
-	}
-}
-
 var $loader = {
 	_ie: false,
 	_ieVersion: null,
 	_embedCounter: null,
+	
+	_modules: {},
 	
 	_loaderStart: null,
 	_frameworkURL: null,
@@ -81,7 +39,6 @@ var $loader = {
 		$loader._routToScriptURL = routToScriptURL;
 		
 		$loader._appDefinition = appDefinition;
-		
 		$loader._resources = resources;
 		$loader._resources.push($loader._routToScriptURL);
 		
@@ -96,6 +53,149 @@ var $loader = {
 			$loader._waitForReadyInterval = setInterval($loader._waitForReady, 20);
 		} else {
 			$loader.grab.scriptTag(loadScriptURL, 'text/javascript');
+		}
+	},
+	
+	mixin: function(MainClass) {
+		var proto = MainClass.prototype;
+		proto.__internalMixinMethods = {};
+		
+		proto.initMixin = function(MixinClass) {
+			var args = Array.prototype.slice.call(arguments, 1);
+			var i, value;
+			
+			var protoClone = {};
+			for(i in proto) {
+				protoClone[i] = proto[i];
+			}
+			
+			for(i in MixinClass.prototype) {
+				this[i] = MixinClass.prototype[i];
+			}
+			
+			// Using different calls for browser compatibility reasons
+			if(args) {
+				MixinClass.apply(this, args);
+			} else {
+				MixinClass.apply(this);
+			}
+			
+			var mixinMethods = {};
+			
+			for(i in this) {
+				value = this[i];
+				if(value instanceof Function) {
+					mixinMethods[i] = value;
+				}
+			}
+			
+			for(i in protoClone) {
+				value = protoClone[i];
+				if(i != '__internalMixinMethods') {
+					this[i] = value;
+				}
+			}
+			
+			this.__internalMixinMethods[MixinClass] = mixinMethods;
+		}
+		
+		proto.callMixinMethod = function(MixinClass, method) {
+			var args = Array.prototype.slice.call(arguments, 2);
+			if(args) {
+				return this.__internalMixinMethods[MixinClass][method].apply(this, args);
+			} else {
+				return this.__internalMixinMethods[MixinClass][method].apply(this);
+			}
+		}
+		
+		proto.applyMixinMethod = function(MixinClass, method, args) {
+			if(args && !(args instanceof Array)) {
+				throw 'Exception: The args parameter of the applyMixinMethod function must be an Array';
+			}
+			return this.__internalMixinMethods[MixinClass][method].apply(this, args);
+		}
+		
+		proto.instanceOf = function(classReference) {
+			return this instanceof classReference || this.__internalMixinMethods.hasOwnProperty(classReference);
+		}
+		
+		return MainClass;
+	},
+	
+	EventEmitter: function() {
+		var self = this;		
+		self._eventMap = {};
+		
+		self.on = function() {
+			var event = arguments[0];
+			var handler = arguments[1];
+			
+			if(!self._eventMap.hasOwnProperty(event)) {
+				self._eventMap[event] = [];
+			}
+			self._eventMap[event].push(handler);
+		}
+		
+		self.off = function() {
+			var event = arguments[0];
+			var handler = arguments[1];
+			
+			if(self._eventMap[event]) {
+				if(handler) {
+					var i;
+					var newArray = [];
+					for(i in self._eventMap[event]) {
+						if(self._eventMap[event][i] != handler) {
+							newArray.push(self._eventMap[event][i]);
+						}
+					}
+					if(newArray.length > 0) {
+						self._eventMap[event] = newArray;
+					} else {
+						delete self._eventMap[event];
+					}
+				} else {
+					delete self._eventMap[event];
+				}
+			}
+		}
+		
+		self.once = function() {
+			var event = arguments[0];
+			var handler = arguments[1];
+			
+			var hdlr = function(data) {
+				self.off(event, hdlr);
+				handler(data);
+			}
+			
+			self.on(event, hdlr);
+		}
+		
+		self.emit = function() {
+			var event = arguments[0];
+			var data = arguments[1];
+			
+			if(self._eventMap[event]) {
+				var events = self._eventMap[event].slice();
+				var i;
+				var len = events.length;
+				for(i=0; i<len; i++) {
+					events[i](data);
+				}
+			}
+		}
+		
+		self.numListeners = function(event) {
+			if(self._eventMap[event]) {
+				var count = 0;
+				var i;
+				for(i in self._eventMap[event]) {
+					count++;
+				}
+				return count;
+			}
+			return 0;
 		}
 	},
 	
@@ -245,6 +345,7 @@ var $loader = {
 		_deepResources: [],
 		_deepResourcesLoaded: [],
 		_resourcesLoadedMap: {},
+		_loadableResourceMap: {},
 		_deepResources: {},
 		_deepResourcesLoaded: {},
 		_scriptCodes: {},
@@ -311,13 +412,13 @@ var $loader = {
 		},
 		
 		app: {
-			script: function(name, callback) {				
+			script: function(name) {
 				if($loader.grab._extRegex.test(name)) {
 					var resourceName = $loader.grab._options.appScriptsURL + name;
 				} else {
 					var resourceName = $loader.grab._options.appScriptsURL + name + '.js';
 				}
-				$loader.grab.script(resourceName, callback);
+				return $loader.grab.script(resourceName);
 			},
 			
 			style: function() {
@@ -341,6 +442,18 @@ var $loader = {
 				$loader.grab.style(resourceName, fresh, callback);
 			},
 			
+			template: function(name, fresh) {
+				var tmplDirURL = $loader._appDefinition.appTemplatesURL;
+				
+				if($loader.grab._extRegex.test(name)) {
+					var resourceName = tmplDirURL + name;
+				} else {
+					var resourceName = tmplDirURL + name + '.html';
+				}
+				
+				return $loader.grab.template(resourceName, fresh);
+			},
+			
 			assetURL: function(nameWithExtension) {
 				return $loader.grab._options.appAssetsURL + nameWithExtension;
 			},
@@ -357,7 +470,7 @@ var $loader = {
 				} else {
 					var resourceName = $loader.grab._options.jsLibsURL + name + '.js';
 				}
-				$loader.grab.script(resourceName, callback);
+				$loader.grab.lib(resourceName, callback);
 			},
 			
 			style: function() {
@@ -387,24 +500,46 @@ var $loader = {
 				} else {
 					var resourceName = $loader.grab._options.pluginsURL + name + '.js';
 				}
-				$loader.grab.script(resourceName, callback);
+				$loader.grab.lib(resourceName, callback);
 			},
 			
-			script: function(name, callback) {
+			script: function(name) {
 				if($loader.grab._extRegex.test(name)) {
 					var resourceName = $loader.grab._options.frameworkScriptsURL + name;
 				} else {
 					var resourceName = $loader.grab._options.frameworkScriptsURL + name + '.js';
 				}
-				$loader.grab.script(resourceName, callback);
+				return $loader.grab.script(resourceName);
 			}
 		},
 		
-		script: function(resourceName, callback) {			
-			if(!$loader.grab._activeScripts[resourceName]) {
+		script: function(resourceName) {
+			if($loader.grab._loadableResourceMap.hasOwnProperty(resourceName)) {
+				return $loader.grab._loadableResourceMap[resourceName];
+			}
+			var scr = new $loader.Script(resourceName);
+			scr.loader.grab();
+			$loader.grab._loadableResourceMap[resourceName] = scr;
+			return scr;
+		},
+		
+		lib: function(resourceName, callback) {			
+			if($loader.grab._activeScripts[resourceName]) {
+				callback(null, resourceName);
+			} else {
 				$loader.grab.loadAndEmbedScript(resourceName, callback);
 				$loader.grab._activeScripts[resourceName] = true;
 			}
+		},
+		
+		template: function(resourceName, fresh) {
+			if($loader.grab._loadableResourceMap.hasOwnProperty(resourceName)) {
+				return $loader.grab._loadableResourceMap[resourceName];
+			}
+			var templ = new $loader.Template(resourceName);
+			templ.loader.grab(fresh);
+			$loader.grab._loadableResourceMap[resourceName] = templ;
+			return templ;
 		},
 		
 		style: function() {
@@ -420,7 +555,9 @@ var $loader = {
 				}
 			}
 			
-			if(!$loader.grab._activeCSS[resourceName] || fresh) {
+			if($loader.grab._activeCSS[resourceName] && !fresh) {
+				callback(null, resourceName);
+			} else {
 				$loader.grab.loadAndEmbedCSS(resourceName, fresh, callback);
 				$loader.grab._activeCSS[resourceName] = true;
 			}
@@ -551,7 +688,7 @@ var $loader = {
 			return true;
 		},
 		
-		loadAndEmbedScript: function(url, callback) {			
+		loadAndEmbedScript: function(url, callback) {		
 			var tagData = {type: 'script', url: url, callback: callback, error: null, ready: false};
 			$loader.grab._embedQueue.push(tagData);
 			$loader.grab._loadDeepResourceToCache(url, false, function(err) {
@@ -912,4 +1049,118 @@ var $loader = {
 	}
 }
 
-EventDispatcher.apply($loader);
+$loader.EventEmitter.apply($loader);
+
+$loader.ResourceLoader = $loader.mixin(function(resourceName, resourceWrapper) {
+	var self = this;
+	self.initMixin($loader.EventEmitter);
+	
+	self.name = resourceName;
+	self.loaded = false;
+	
+	self.load = function(listener)	{
+		if(self.loaded) {
+			listener(self);
+		} else {
+			self.on('load', listener);
+		}
+		return resourceWrapper;
+	}
+	
+	self.error = function(listener)	{
+		self.on('error', listener);
+		return resourceWrapper;
+	}
+});
+
+$loader.Script = function(resourceName) {
+	var self = this;
+	self.loader = new $loader.ResourceLoader(resourceName, self);
+	
+	if(!$loader._modules.hasOwnProperty(resourceName)) {
+		$loader._modules[resourceName] = self;
+	}
+	
+	self.loader.grab = function() {
+		var moduleLoaded = function(err) {
+			if(err) {
+				self.loader.emit('error', self);
+			} else {				
+				if(!self.loader.loaded) {
+					self.loader.emit('load');
+					self.loader.loaded = true;
+				}
+			}
+		}
+		
+		if($loader.grab._activeScripts[self.loader.name]) {
+			moduleLoaded();
+		} else {
+			$loader.grab.loadAndEmbedScript(self.loader.name, moduleLoaded);
+			$loader.grab._activeScripts[self.loader.name] = true;
+		}
+	}
+}
+
+$loader.Template = function(resourceName) {
+	var self = this;
+	self.loader = new $loader.ResourceLoader(resourceName, self);
+	
+	self.loader.renderer = null;
+	self.loader.text = null;
+	self.loader.extRegex = /[.][^\/\\]*$/;
+	
+	self.getName = function() {
+		return self.loader.name;
+	}
+	
+	self.isLoaded = function() {
+		return self.loader.loaded;
+	}
+	
+	self.loader.grab = function(fresh) {		
+		$loader.grab._loadDeepResourceToCache(self.loader.name, fresh, function(err, result) {
+			if(err) {
+				self.loader.emit('error', self);
+			} else {
+				$loader.grab._resourcesGrabbed.push(self.loader.name);
+				self.loader.loaded = true;
+				self.loader.text = result.data;
+				self.loader.renderer = Handlebars.compile(self.loader.text);
+				
+				self.loader.emit('load', self);
+				
+				if(!$loader.grab.isGrabbing()) {
+					$loader.grab._triggerReady();
+				}
+			}
+		});
+	}
+	
+	self.make = function(content) {
+		self.loader.text = content;
+		self.loader.renderer = Handlebars.compile(self.loader.text);
+		self.loader.loaded = true;
+	}
+	
+	self.clone = function() {
+		var templ = new $loader.Template(self.loader.name);
+		templ.make(self.loader.text);
+		return templ;
+	}
+	
+	self.render = function(data) {
+		if(!self.loader.loaded) {
+			throw 'The template has not been loaded';
+		}
+		return self.loader.renderer(data);
+	}
+	
+	self.getText = function() {
+		return self.loader.text;
+	}
+	
+	self.getRenderer = function() {
+		return self.loader.renderer;
+	}
+}

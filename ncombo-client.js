@@ -17,7 +17,6 @@ var $n = {
 	_appStylesURL: null,
 	_appAssetsURL: null,
 	_appFilesURL: null,
-	_appTemplatesURL: null,
 	_cacheSeverCalls: false,
 	_cacheVersion: null,
 	_callbacks: {},
@@ -39,7 +38,6 @@ var $n = {
 		$n._scriptsRouterURL = location.href.replace(/\?.*/, '');
 		$n._appScriptsURL = appDefinition.appScriptsURL;
 		$n._appStylesURL = appDefinition.appStylesURL;
-		$n._appTemplatesURL = appDefinition.appTemplatesURL;
 		$n._appAssetsURL = appDefinition.appAssetsURL;
 		$n._appFilesURL = appDefinition.appFilesURL;
 		$n._wsEndpoint = appDefinition.wsEndpoint;
@@ -91,71 +89,9 @@ var $n = {
 		initMixin(MixinClass, args) method and a callMixinMethod(MixinClass, method, arg1, ...argn) which will allow the current
 		class to manipulate base mixins.
 	*/
-	mixin: function(MainClass) {
-		var proto = MainClass.prototype;
-		proto.__internalMixinMethods = {};
-		
-		proto.initMixin = function(MixinClass) {
-			var args = Array.prototype.slice.call(arguments, 1);
-			var i, value;
-			
-			var protoClone = {};
-			for(i in proto) {
-				protoClone[i] = proto[i];
-			}
-			
-			for(i in MixinClass.prototype) {
-				this[i] = MixinClass.prototype[i];
-			}
-			
-			// Using different calls for browser compatibility reasons
-			if(args) {
-				MixinClass.apply(this, args);
-			} else {
-				MixinClass.apply(this);
-			}
-			
-			var mixinMethods = {};
-			
-			for(i in this) {
-				value = this[i];
-				if(value instanceof Function) {
-					mixinMethods[i] = value;
-				}
-			}
-			
-			for(i in protoClone) {
-				value = protoClone[i];
-				if(i != '__internalMixinMethods') {
-					this[i] = value;
-				}
-			}
-			
-			this.__internalMixinMethods[MixinClass] = mixinMethods;
-		}
-		
-		proto.callMixinMethod = function(MixinClass, method) {
-			var args = Array.prototype.slice.call(arguments, 2);
-			if(args) {
-				return this.__internalMixinMethods[MixinClass][method].apply(this, args);
-			} else {
-				return this.__internalMixinMethods[MixinClass][method].apply(this);
-			}
-		}
-		
-		proto.applyMixinMethod = function(MixinClass, method, args) {
-			if(args && !(args instanceof Array)) {
-				throw 'Exception: The args parameter of the applyMixinMethod function must be an Array';
-			}
-			return this.__internalMixinMethods[MixinClass][method].apply(this, args);
-		}
-		
-		proto.instanceOf = function(classReference) {
-			return this instanceof classReference || this.__internalMixinMethods.hasOwnProperty(classReference);
-		}
-		
-		return MainClass;
-	},
+	mixin: $loader.mixin,
+	
+	EventEmitter: $loader.EventEmitter,
 	
 	getBasicType: function(variable) {
 		var classType = {}.toString
@@ -175,93 +111,12 @@ var $n = {
 	*/
 	fail:  $loader.grab.fail,
 	
-	EventEmitter: function() {
-		var self = this;		
-		self._eventMap = {};
-		
-		self.on = function() {
-			var event = arguments[0];
-			var handler = arguments[1];
-			
-			if(!self._eventMap.hasOwnProperty(event)) {
-				self._eventMap[event] = [];
-			}
-			self._eventMap[event].push(handler);
-		}
-		
-		self.off = function() {
-			var event = arguments[0];
-			var handler = arguments[1];
-			
-			if(self._eventMap[event]) {
-				if(handler) {
-					var i;
-					var newArray = [];
-					for(i in self._eventMap[event]) {
-						if(self._eventMap[event][i] != handler) {
-							newArray.push(self._eventMap[event][i]);
-						}
-					}
-					if(newArray.length > 0) {
-						self._eventMap[event] = newArray;
-					} else {
-						delete self._eventMap[event];
-					}
-				} else {
-					delete self._eventMap[event];
-				}
-			}
-		}
-		
-		self.once = function() {
-			var event = arguments[0];
-			var handler = arguments[1];
-			
-			var hdlr = function(data) {
-				self.off(event, hdlr);
-				handler(data);
-			}
-			
-			self.on(event, hdlr);
-		}
-		
-		self.emit = function() {
-			var event = arguments[0];
-			var data = arguments[1];
-			
-			if(self._eventMap[event]) {
-				var events = self._eventMap[event].slice();
-				var i;
-				var len = events.length;
-				for(i=0; i<len; i++) {
-					events[i](data);
-				}
-			}
-		}
-		
-		self.numListeners = function(event) {
-			if(self._eventMap[event]) {
-				var count = 0;
-				var i;
-				for(i in self._eventMap[event]) {
-					count++;
-				}
-				return count;
-			}
-			return 0;
-		}
-	},
-	
 	/**
 		This object holds error functions to handle various client-side error types that can occur within the system.
 		Each function handles a specific type of error and can accept any suitable number of parameters
 		in order to generate the appropriate error message.
 	*/
-	errors: {	
-		loadTemplateError: function(message) {
-			return "LoadTemplateError: Could not load one or more templates because of the following AJAX error: " + message;
-		},
-		
+	errors: {
 		serverInterfaceError: function(message) {
 			return "ServerInterfaceError: " + message;
 		},
@@ -292,33 +147,6 @@ var $n = {
 		*/
 		cacheServerCalls: function(bool) {
 			$n._cacheSeverCalls = bool;
-		}
-	},
-	
-	res: {
-		app: {
-			_templates: {},
-		
-			template: function(name) {
-				if(!$n.res.app.hasTemplate(name)) {
-					throw 'Exception: The ' + name + ' template is not available';
-				}
-				return $n.res.app._templates[name].clone();
-			},
-		
-			hasTemplate: function(name) {
-				return $n.res.app._templates.hasOwnProperty(name);
-			},
-		
-			addTemplate: function(name, template) {
-				$n.res.app._templates[name] = template;
-			},
-		
-			removeTemplate: function() {
-				if($n.res.app._templates.hasOwnProperty(name)) {
-					delete $n.res.app._templates[name];
-				}
-			}
 		}
 	},
 	
@@ -697,98 +525,6 @@ $n.RemoteNS = function(host, port, secure, wsEndpoint, namespace, wsSocket) {
 	}
 }
 
-$n.Template = $n.mixin(function() {
-	var self = this;
-	self.initMixin($n.EventEmitter);
-	self._renderer = null;
-	self._text = null;
-	self._loaded = false;
-	self._name = null;
-	self._extRegex = /[.][^\/\\]*$/;
-	
-	self.getName = function() {
-		return self._name;
-	}
-	
-	self.grab = function(name, fresh) {
-		self._name = name;
-		
-		var tmplDirURL = $n._appTemplatesURL;
-		
-		if(self._extRegex.test(name)) {
-			var url = tmplDirURL + name;
-		} else {
-			var url = tmplDirURL + name + '.html';
-		}
-		
-		$n.grab._loadDeepResourceToCache(url, fresh, function(err, result) {
-			if(err) {
-				self.emit('error', self);
-			} else {
-				$n.grab._resourcesGrabbed.push(url);
-				self._loaded = true;
-				self._text = result.data;
-				self._renderer = Handlebars.compile(self._text);
-				
-				$n.res.app.addTemplate(name, self);
-				self.emit('load', self);
-				
-				if(!$n.grab.isGrabbing()) {
-					$n.grab._triggerReady();
-				}
-			}
-		});
-	}
-	
-	self.make = function(name, content) {
-		self._name = name;
-		self._text = content;
-		self._renderer = Handlebars.compile(self._text);
-		self._loaded = true;
-	}
-	
-	self.clone = function() {
-		var templ = new $n.Template();
-		templ.make(self._name, self._text);
-		return templ;
-	}
-	
-	self.on = function(event, listener) {
-		if((event == 'load' || event == 'error') && self._loaded) {
-			listener(self);
-		} else {
-			self.callMixinMethod($n.EventEmitter, 'on', event, listener);
-		}
-	}
-	
-	self.load = function(listener)	{
-		self.on('load', listener);
-	}
-	
-	self.error = function(listener)	{
-		self.on('error', listener);
-	}
-	
-	self.render = function(data) {
-		if(!self._loaded) {
-			throw 'The template has not been loaded';
-		}
-		return self._renderer(data);
-	}
-	
-	self.getText = function() {
-		return self._text;
-	}
-	
-	self.getRenderer = function() {
-		return self._renderer;
-	}
-	
-	self.isLoaded = function() {
-		return self._loaded;
-	}
-});
-
 $n.remote = function(host, port, secure, wsEndpoint) {
 	if(!wsEndpoint) {
 		wsEndpoint = $n._wsEndpoint;
@@ -951,15 +687,4 @@ if(!Array.prototype.indexOf) {
 		}
 		return -1;
 	}
-}
-
-$n.grab.app.template = function(name, fresh) {
-	if($n.res.app.hasTemplate(name)) {
-		return $n.res.app.template(name);
-	}
-	
-	var templ = new $n.Template();
-	templ.grab(name, fresh);
-	
-	return templ;
 }

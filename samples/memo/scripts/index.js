@@ -53,8 +53,7 @@ $n.ready(function() {
 });
 
 function main() {
-	console.log(arguments);
-	console.log('user is logged in');
+	console.log('User is logged in');
 	screens.loginScreen && screens.loginScreen.remove();
 	
 	// Render all templates to the stage and get references to all major view components

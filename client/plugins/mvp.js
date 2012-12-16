@@ -118,9 +118,7 @@ $n.mvp = {
 				}
 			} else {
 				self._rebindEvents.push(args);
-				//if(self.isInDOM()) {
-					jObject.on.apply(jObject, args);
-				//}
+				jObject.on.apply(jObject, args);
 			}
 		}
 		
@@ -191,11 +189,11 @@ $n.mvp = {
 				}
 			});
 			
-			self._defaultTemplate.load(function() {
+			self._defaultTemplate.loader.load(function() {
 				self._triggerLoad();
 			});
 			
-			self._defaultTemplate.error(function() {
+			self._defaultTemplate.loader.error(function() {
 				self._triggerError();
 			});
 		}
@@ -497,17 +495,6 @@ $n.mvp = {
 };
 
 $n.mvp.init();
-
-$n.res.app.hasView = function(name) {
-	return $n.res.app.hasTemplate(name);
-},
-
-$n.res.app.view = function(name) {
-	if(!$n.res.app.hasView(name)) {
-		throw 'Exception: The ' + name + ' view is not available';
-	}
-	return new $n.mvp.View($n.res.app.template(name));
-}
 
 $n.grab.app.view = function(templateName, fresh) {
 	return new $n.mvp.View($n.grab.app.template(templateName, fresh));

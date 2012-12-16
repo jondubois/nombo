@@ -421,6 +421,15 @@ var $loader = {
 				return $loader.grab.script(resourceName);
 			},
 			
+			lib: function(name, callback) {				
+				if($loader.grab._extRegex.test(name)) {
+					var resourceName = $loader.grab._options.appLibsURL + name;
+				} else {
+					var resourceName = $loader.grab._options.appLibsURL + name + '.js';
+				}
+				$loader.grab.lib(resourceName, callback);
+			},
+			
 			style: function() {
 				var name = arguments[0];
 				var callback = null;
@@ -466,9 +475,9 @@ var $loader = {
 		framework: {
 			lib: function(name, callback) {				
 				if($loader.grab._extRegex.test(name)) {
-					var resourceName = $loader.grab._options.jsLibsURL + name;
+					var resourceName = $loader.grab._options.frameworkLibsURL + name;
 				} else {
-					var resourceName = $loader.grab._options.jsLibsURL + name + '.js';
+					var resourceName = $loader.grab._options.frameworkLibsURL + name + '.js';
 				}
 				$loader.grab.lib(resourceName, callback);
 			},

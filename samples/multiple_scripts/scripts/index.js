@@ -4,6 +4,7 @@
 	You can also grab styles (CSS), libs (JS) and templates (HTML).
 */
 var a = $n.grab.app.script('a');
+$n.grab.app.lib('test');
 
 /*
 	This code gets executed immediately after the request for script a has been made - Since this is asynchronous, the following code 

@@ -411,7 +411,8 @@ var nCombo = function() {
 	self.MIDDLEWARE_LOCAL_EVENT = 'localEvent';
 	self.MIDDLEWARE_REMOTE_EVENT = 'remoteEvent';
 	
-	self.EVENT_SESSION_DESTROY = 'sessiondestroy';
+	self.MIDDLEWARE_SESSION_DESTROY = 'sessionDestroy';
+	
 	self.EVENT_SOCKET_CONNECT = 'socketconnect';
 	self.EVENT_SOCKET_DISCONNECT = 'socketdisconnect';
 	self.EVENT_SOCKET_FAIL = 'socketfail';
@@ -856,6 +857,8 @@ var nCombo = function() {
 	self._middleware[self.MIDDLEWARE_REMOTE_EVENT] = stepper.create();
 	self._middleware[self.MIDDLEWARE_REMOTE_EVENT].setTail(ws.watch);
 	
+	self._middleware[self.MIDDLEWARE_SESSION_DESTROY] = stepper.create();
+	
 	self._clientIncludes = self._config.clientIncludes;
 	
 	mime.define({
@@ -1092,7 +1095,7 @@ var nCombo = function() {
 		
 		self._options.appDirPath = self._appDirPath;
 		var appDef = self._getAppDef();
-		self._options.minifyURLs = [appDef.appScriptsURL, appDef.frameworkClientURL + 'scripts/load.js', self._frameworkURL + 'ncombo-client.js', 
+		self._options.minifyURLs = [appDef.appScriptsURL, appDef.appLibsURL, appDef.frameworkClientURL + 'scripts/load.js', self._frameworkURL + 'ncombo-client.js', 
 				self._frameworkURL + 'loader.js'];
 		
 		self.allowFullAuthResource(self._spinJSURL);
@@ -1244,9 +1247,6 @@ var nCombo = function() {
 					});
 					
 					var session = new Session(sid, self._wsSocks, self._dataClient, self._retryTimeout);
-					session.once(session.EVENT_DESTROY, function() {
-						self.emit(self.EVENT_SESSION_DESTROY, session);
-					});
 					
 					if(auth !== undefined) {
 						session.setAuth(auth, function(err) {
@@ -1358,19 +1358,23 @@ var nCombo = function() {
 								}
 								
 								if(data < 1) {
-									var destroySessionOp = retry.operation(self._retryOptions);
-									destroySessionOp.attempt(function() {
-										session._destroy(function(err) {
-											_extendRetryOperation(destroySessionOp);
-											if(destroySessionOp.retry(err)) {
-												return;
-											}
-											
-											gateway.unwatchAll(session);
-											ws.destroy(session);
-											removeWorkerSession();
+									self._middleware[self.MIDDLEWARE_SESSION_DESTROY].setTail(function() {
+										console.log('de');
+										var destroySessionOp = retry.operation(self._retryOptions);
+										destroySessionOp.attempt(function() {
+											session._destroy(function(err) {
+												_extendRetryOperation(destroySessionOp);
+												if(destroySessionOp.retry(err)) {
+													return;
+												}
+												
+												gateway.unwatchAll(session);
+												ws.destroy(session);
+												removeWorkerSession();
+											});
 										});
 									});
+									self._middleware[self.MIDDLEWARE_SESSION_DESTROY].run(session);
 								}
 							});
 						});

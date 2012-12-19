@@ -22,7 +22,7 @@ var NCOMBO_IE_VERSION = IE_VERSION;
 	if(head) {
 		head = head[0];
 	}
-
+	
 	var nComboStyle = document.createElement('link');
 	nComboStyle.rel = 'stylesheet';
 	nComboStyle.type = 'text/css';

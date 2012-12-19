@@ -1,7 +1,7 @@
 var http = require('http'),
 	https = require('https'),
 	path = require('path'),
-	pathmanager = require('ncombo/pathmanager'),
+	pathManager = require('ncombo/pathmanager'),
 	mime = require('mime'),
 	fs = require('fs'),
 	url = require('url'),
@@ -20,6 +20,12 @@ var http = require('http'),
 	json = require('json'),
 	crypto = require('crypto'),
 	stepper = require('stepper'),
+	jsp = require("uglify-js").parser,
+	pro = require("uglify-js").uglify,
+	browserify = require('browserify'),
+	scriptManager = require('ncombo/scriptmanager'),
+	cssBundler = require('css-bundler'),
+	SmartCacheManager = require("./smartcachemanager").SmartCacheManager,
 	retry = require('retry');
 
 var _maxTimeout = 120000;
@@ -463,7 +469,7 @@ var nCombo = function() {
 	self._frameworkModulesURL = self._frameworkURL + 'node_modules/';
 	
 	self._appDirPath = path.dirname(require.main.filename);
-	pathmanager.init(self._frameworkURL, self._frameworkDirPath, self._appDirPath);
+	pathManager.init(self._frameworkURL, self._frameworkDirPath, self._appDirPath);
 	
 	self._appURL = '/';
 	
@@ -503,6 +509,7 @@ var nCombo = function() {
 	self._prepareCallbacks = [];
 	
 	self._failedWorkerCleanups = {};
+	self._minifiedScripts = null;
 	
 	self._spinJSURL = self._frameworkClientURL + 'libs/spin.js';
 	
@@ -581,10 +588,14 @@ var nCombo = function() {
 		var appDef = {};
 		appDef.frameworkURL = self._frameworkURL;
 		appDef.appURL = self._appURL;
+		appDef.appdataURL = self._appURL + 'appdata/';
+		appDef.appScriptBundleURL = appDef.appdataURL + 'bundle.js';
+		appDef.appStyleBundleURL = appDef.appdataURL + 'bundle.css';
 		appDef.frameworkClientURL = self._frameworkClientURL;
 		appDef.frameworkLibsURL = self._frameworkClientURL + 'libs/';
 		appDef.pluginsURL = self._frameworkClientURL + 'plugins/';
 		appDef.frameworkScriptsURL = self._frameworkClientURL + 'scripts/';
+		appDef.loadScriptURL = appDef.frameworkScriptsURL + 'load.js';
 		appDef.frameworkStylesURL = self._frameworkClientURL + 'styles/';
 		appDef.appScriptsURL = self._appURL + 'scripts/';
 		appDef.appLibsURL = self._appURL + 'libs/';
@@ -601,32 +612,9 @@ var nCombo = function() {
 	
 	self._getLoaderCode = function() {
 		var appDef = self._getAppDef();
-		var routToScriptURL = self._appURL + 'scripts/index.js';
-		var loadScriptURL = self._frameworkClientURL + 'scripts/load.js';
-			
 		var resources = [];
-		
-		var len = self._clientStyles.length;
-		var i, j, resURL, cur, count;
-		for(i=0; i<len; i++) {
-			cur = self._clientStyles[i];
-			resURL = cur.path;
-			resources.push(resURL);
-		}
-		
-		var len = self._clientScripts.length;
-		for(i=0; i<len; i++) {
-			cur = self._clientScripts[i];
-			resURL = cur.path;
-			resources.push(resURL);
-		}
-		
-		var resString = JSON.stringify(resources);
-		
 		var appString = JSON.stringify(appDef);
-		var loaderCode = '$loader.init("' + self._frameworkURL + '","' + routToScriptURL + '","' +
-				loadScriptURL + '",' + resString + ',' + appString + ',' + (self._options.release ? 'false' : 'true') + ');';
-		
+		var loaderCode = '$loader.init(' + appString + ',null,' + (self._options.release ? 'false' : 'true') + ');';
 		return loaderCode;
 	}
 	
@@ -716,7 +704,7 @@ var nCombo = function() {
 				url = req.url;
 			}
 			
-			var filePath = pathmanager.urlToPath(url);
+			var filePath = pathManager.urlToPath(url);
 			
 			if(url == self._rootTemplateURL) {
 				self._writeSessionStartScreen(req, res);
@@ -878,30 +866,36 @@ var nCombo = function() {
 		return url.replace(/\\/g, '/');
 	}
 	
-	self.useScript = function(pathFromRoot, type) {
-		var normalPath = self._normalizeURL(pathFromRoot);
+	self.useScript = function(url, type) {
+		var normalURL = self._normalizeURL(url);
+		var filePath = pathManager.urlToPath(normalURL);
 		var obj = {};
-		if(!self._clientScriptMap[normalPath]) {
-			if(self._extRegex.test(pathFromRoot)) {
-				obj['path'] = normalPath;
+		if(!self._clientScriptMap[normalURL]) {
+			if(self._extRegex.test(url)) {
+				obj['url'] = normalURL;
+				obj['path'] = filePath;
 			} else {
-				obj['path'] = pathFromRoot + '.js';
+				obj['url'] = url + '.js';
+				obj['path'] = filePath + '.js';
 			}
 			if(type) {
 				obj['type'] = type;
 			}
 			self._clientScripts.push(obj);
-			self._clientScriptMap[normalPath] = true;
+			self._clientScriptMap[normalURL] = true;
 		}
 	}
 	
-	self.useStyle = function(pathFromRoot, type, rel) {
-		var normalPath = self._normalizeURL(pathFromRoot);
+	self.useStyle = function(url, type, rel) {
+		var normalURL = self._normalizeURL(url);
+		var filePath = pathManager.urlToPath(normalURL);
 		var obj = {};
-		if(self._extRegex.test(normalPath)) {
-			obj['path'] = normalPath;
+		if(self._extRegex.test(normalURL)) {
+			obj['url'] = normalURL;
+			obj['path'] = filePath;
 		} else {
-			obj['path'] = normalPath + '.css';
+			obj['url'] = url + '.css';
+			obj['path'] = filePath + '.css';
 		}
 		
 		if(type) {
@@ -1095,7 +1089,7 @@ var nCombo = function() {
 		
 		self._options.appDirPath = self._appDirPath;
 		var appDef = self._getAppDef();
-		self._options.minifyURLs = [appDef.appScriptsURL, appDef.appLibsURL, appDef.frameworkClientURL + 'scripts/load.js', self._frameworkURL + 'ncombo-client.js', 
+		self._options.minifyURLs = [appDef.appScriptsURL, appDef.appLibsURL, appDef.appScriptBundleURL, appDef.frameworkClientURL + 'scripts/load.js', self._frameworkURL + 'ncombo-client.js', 
 				self._frameworkURL + 'loader.js'];
 		
 		self.allowFullAuthResource(self._spinJSURL);
@@ -1107,6 +1101,9 @@ var nCombo = function() {
 		var begin = function() {
 			self._options.cacheVersion = self._cacheVersion;
 			self._prerouter.init(self._options);
+			if(self._options.release) {
+				self._cacheResponder.cacheMap(self._minifiedScripts);
+			}
 			self._router.init(self._privateExtensionRegex);
 			self._preprocessor.init(self._options);
 			
@@ -1192,7 +1189,7 @@ var nCombo = function() {
 				}
 				
 				self._wsSocks = self._io.of(self._wsEndpoint);
-				self._global = new Global(self._wsSocks, self._dataClient, pathmanager.getFrameworkPath(), pathmanager.getAppPath());
+				self._global = new Global(self._wsSocks, self._dataClient, pathManager.getFrameworkPath(), pathManager.getAppPath());
 			
 				gateway.setReleaseMode(self._options.release);
 				ws.setReleaseMode(self._options.release);
@@ -1359,7 +1356,6 @@ var nCombo = function() {
 								
 								if(data < 1) {
 									self._middleware[self.MIDDLEWARE_SESSION_DESTROY].setTail(function() {
-										console.log('de');
 										var destroySessionOp = retry.operation(self._retryOptions);
 										destroySessionOp.attempt(function() {
 											session._destroy(function(err) {
@@ -1432,17 +1428,82 @@ var nCombo = function() {
 				process.stdin.resume();
 				process.stdin.setEncoding('utf8');
 			}
+			
+			if(self._options.cacheVersion == null) {
+				self._cacheVersion = (new Date()).getTime();
+			} else {
+				self._cacheVersion = self._options.cacheVersion;
+			}
+			
+			var i;
+			var stylePaths = [];
+			
+			for(i in self._clientStyles) {
+				stylePaths.push(self._clientStyles[i].path);
+			}
+			
+			var styleBundle = cssBundler({files: stylePaths, watch: !self._options.release});
+			var smartCacheManager = new SmartCacheManager(self._cacheVersion);
+			
+			var newPath;
+			var appDirRegex = new RegExp('^' + self._appDirPath.replace(/\\/g, '/'));
+			var frameworkStylesPath = pathManager.urlToPath(appDef.frameworkStylesURL);
+			var frameworkStylesDirRegex = new RegExp('^' + frameworkStylesPath.replace(/\\/g, '/'));
+			
+			var cssURLFilter = function(url, rootDir) {
+				rootDir = rootDir.replace(/\\/g, '/');
+				if(appDirRegex.test(rootDir)) {
+					newPath = path.relative(path.dirname(appDef.appStyleBundleURL), appDef.appStylesURL) + '/' + url;
+				} else {
+					newPath = path.relative(path.dirname(appDef.appStyleBundleURL), appDef.frameworkStylesURL) + '/' + rootDir.replace(frameworkStylesDirRegex, '') + '/' + url;
+				}
+				newPath = path.normalize(newPath).replace(/\\/g, '/');
+				return newPath;
+			}
+			
+			var updateCSSBundle = function() {
+				var cssBundle = styleBundle.bundle(cssURLFilter);
+				fs.writeFileSync(self._appDirPath + appDef.appStyleBundleURL, cssBundle);
+			}
+			
+			updateCSSBundle();
+			
+			if(!self._options.release) {
+				// The master process does not handle requests so it's OK to do sync operations at runtime
+				styleBundle.on('bundle', updateCSSBundle);
+			}
+			
+			var bundleOptions = {};
+			bundleOptions.watch = !self._options.release;
+			bundleOptions.debug = !self._options.release;
+			bundleOptions.exports = 'require';
+			
+			var scriptBundle = browserify(bundleOptions);
+			var jsLibs = [];
+			for(i in self._clientScripts) {
+				jsLibs.push(fs.readFileSync(self._clientScripts[i].path, 'utf8'));
+			}
+			scriptBundle.prepend(jsLibs.join('\n'));
+			scriptBundle.addEntry(self._appDirPath + appDef.appScriptsURL + 'index.js');
+			
+			var updateJSBundle = function() {
+				var jsBundle = scriptBundle.bundle();
+				fs.writeFileSync(self._appDirPath + appDef.appScriptBundleURL, jsBundle);
+			}
+			
+			updateJSBundle();
+			
+			if(!self._options.release) {
+				scriptBundle.on('bundle', updateJSBundle);
+			}
+			
+			var minifiedScripts = scriptManager.minifyScripts(self._options.minifyURLs);			
+			
 			portScanner.checkPortStatus(self._options.port, 'localhost', function(err, status) {
 				if(err || status == 'open') {
 					console.log('   nCombo Error - Port ' + self._options.port + ' is already taken');
 					process.exit();
-				} else {
-					if(self._options.cacheVersion == null) {
-						self._cacheVersion = (new Date()).getTime();
-					} else {
-						self._cacheVersion = self._options.cacheVersion;
-					}
-					
+				} else {					
 					portScanner.findAPortNotInUse(self._options.port + 1, self._options.port + 1000, 'localhost', function(error, datPort) {
 						dataPort = datPort;
 						var pass = crypto.randomBytes(32).toString('hex');
@@ -1463,7 +1524,7 @@ var nCombo = function() {
 							
 							var launchWorker = function() {
 								worker = cluster.fork();
-								worker.send({action: 'init', dataPort: dataPort, dataKey: pass, cacheVersion: self._cacheVersion});
+								worker.send({action: 'init', dataPort: dataPort, dataKey: pass, cacheVersion: self._cacheVersion, minifiedScripts: minifiedScripts});
 								return worker;
 							}
 							
@@ -1522,6 +1583,7 @@ var nCombo = function() {
 					process.removeListener('message', handler);
 					dataPort = data.dataPort;
 					dataKey = data.dataKey;
+					self._minifiedScripts = data.minifiedScripts;
 					self._cacheVersion = data.cacheVersion;
 					begin();
 				}

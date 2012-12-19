@@ -6,8 +6,6 @@ var $loader = {
 	_modules: {},
 	
 	_loaderStart: null,
-	_frameworkURL: null,
-	_routToScriptURL: null,
 	_cacheVersion: NCOMBO_CACHE_VERSION,
 	
 	_appDefinition: null,
@@ -34,13 +32,11 @@ var $loader = {
 		}
 	},
 	
-	init: function(frameworkURL, routToScriptURL, loadScriptURL, resources, appDefinition, skipPreload) {
-		$loader._frameworkURL = frameworkURL;
-		$loader._routToScriptURL = routToScriptURL;
-		
+	init: function(appDefinition, resources, skipPreload) {		
 		$loader._appDefinition = appDefinition;
-		$loader._resources = resources;
-		$loader._resources.push($loader._routToScriptURL);
+		$loader._resources = resources ? resources : [];
+		$loader._resources.push($loader._appDefinition.appStyleBundleURL);
+		$loader._resources.push($loader._appDefinition.appScriptBundleURL);
 		
 		if(/MSIE (\d+\.\d+);/.test(navigator.userAgent)) {
 			$loader._ie = true;
@@ -52,7 +48,7 @@ var $loader = {
 		if(skipPreload) {
 			$loader._waitForReadyInterval = setInterval($loader._waitForReady, 20);
 		} else {
-			$loader.grab.scriptTag(loadScriptURL, 'text/javascript');
+			$loader.grab.scriptTag($loader._appDefinition.loadScriptURL, 'text/javascript');
 		}
 	},
 	
@@ -349,6 +345,7 @@ var $loader = {
 		_deepResources: {},
 		_deepResourcesLoaded: {},
 		_scriptCodes: {},
+		_styleCodes: {},
 		_embedQueue: [],
 		_extRegex: /[.][^\/\\]*$/,
 		_lessExtRegex: /[.]less$/,
@@ -413,12 +410,19 @@ var $loader = {
 		
 		app: {
 			script: function(name) {
-				if($loader.grab._extRegex.test(name)) {
-					var resourceName = $loader.grab._options.appScriptsURL + name;
-				} else {
-					var resourceName = $loader.grab._options.appScriptsURL + name + '.js';
+				var scriptName = name;
+				if(!$loader.grab._extRegex.test(name)) {
+					scriptName += '.js';
 				}
-				return $loader.grab.script(resourceName);
+				
+				var requireName = '/' + scriptName;
+				
+				if(require.modules.hasOwnProperty(requireName)) {
+					return require(requireName);
+				} else {
+					var resourceName = $loader.grab._options.appScriptsURL + scriptName;
+					return $loader.grab.script(resourceName);
+				}
 			},
 			
 			lib: function(name, callback) {				
@@ -624,7 +628,11 @@ var $loader = {
 				if(curTag.ready) {
 					$loader.grab._embedQueue.shift();
 					if(curTag.type == 'link') {
-						$loader.grab.linkTag(curTag.url, 'text/css', 'stylesheet', curTag.query);
+						if(curTag.url == $loader._appDefinition.appStyleBundleURL && (!$loader._ie || $loader._ieVersion > 8)) {
+							$loader.grab.styleTag($loader.grab._styleCodes[curTag.url], 'text/css');
+						} else {
+							$loader.grab.linkTag(curTag.url, 'text/css', 'stylesheet', curTag.query);
+						}
 						$loader.grab._resourcesGrabbed.push(curTag.url);
 						if(curTag.callback) {
 							curTag.callback(curTag.error, curTag.url);
@@ -862,6 +870,58 @@ var $loader = {
 			}
 		},
 		
+		styleTag: function(code, type, id) {
+			var head = document.getElementsByTagName('head')[0];
+			
+			var curScripts = document.getElementsByTagName('script');
+			var firstScript = null;
+			var firstIndex = 0;
+			
+			if(curScripts) {
+				var len = curScripts.length;
+				while(firstIndex < len && curScripts[firstIndex].parentNode != head) {
+					firstIndex++;
+				}
+				if(firstIndex < len) {
+					firstScript = curScripts[firstIndex];
+				}
+			}
+			
+			var style = document.createElement('style');
+			
+			if(id) {
+				style.id = id;
+			}
+			style.type = type;
+			style.innerHTML = code;
+			
+			if(firstScript) {
+				head.insertBefore(style, firstScript);
+			} else {
+				var curStyles = document.getElementsByTagName('style');
+				var lastStyle = null;
+				var lastIndex = curStyles.length - 1;
+				if(curStyles) {
+					while(lastIndex >= 0 && curStyles[lastIndex].parentNode != head) {
+						lastIndex--;
+					}
+					if(lastIndex >= 0) {
+						lastStyle = curStyles[lastIndex];
+					}
+				}
+				
+				if(lastStyle) {
+					if(lastStyle.nextSibling) {
+						head.insertBefore(style, lastStyle.nextSibling);
+					} else {
+						head.appendChild(style);
+					}
+				} else {
+					head.appendChild(style);
+				}
+			}
+		},
+		
 		isGrabbing: function() {
 			return $loader.grab._resourcesGrabbed.length < $loader.grab._resources.length;
 		},
@@ -965,6 +1025,7 @@ var $loader = {
 								for(i=0; i<len; i++) {
 									$loader.grab._loadDeepResourceToCache(nonLoadedURLs[i], fresh, callback, rootURL);
 								}
+								$loader.grab._styleCodes[url] = data;
 							} else if(/[.]js$/.test(url)) {	
 								$loader.grab._scriptCodes[url] = data;
 							}

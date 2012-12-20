@@ -26,6 +26,7 @@ var http = require('http'),
 	scriptManager = require('ncombo/scriptmanager'),
 	cssBundler = require('css-bundler'),
 	SmartCacheManager = require("./smartcachemanager").SmartCacheManager,
+	chokidar = require('chokidar'),
 	retry = require('retry');
 
 var _maxTimeout = 120000;
@@ -510,6 +511,7 @@ var nCombo = function() {
 	
 	self._failedWorkerCleanups = {};
 	self._minifiedScripts = null;
+	self._bundles = null;
 	
 	self._spinJSURL = self._frameworkClientURL + 'libs/spin.js';
 	
@@ -588,9 +590,10 @@ var nCombo = function() {
 		var appDef = {};
 		appDef.frameworkURL = self._frameworkURL;
 		appDef.appURL = self._appURL;
-		appDef.appdataURL = self._appURL + 'appdata/';
-		appDef.appScriptBundleURL = appDef.appdataURL + 'bundle.js';
-		appDef.appStyleBundleURL = appDef.appdataURL + 'bundle.css';
+		appDef.appDataURL = self._appURL + 'app_data/';
+		appDef.appLibBundleURL = appDef.appDataURL + 'libs.js';
+		appDef.appScriptBundleURL = appDef.appDataURL + 'scripts.js';
+		appDef.appStyleBundleURL = appDef.appDataURL + 'styles.css';
 		appDef.frameworkClientURL = self._frameworkClientURL;
 		appDef.frameworkLibsURL = self._frameworkClientURL + 'libs/';
 		appDef.pluginsURL = self._frameworkClientURL + 'plugins/';
@@ -1089,7 +1092,7 @@ var nCombo = function() {
 		
 		self._options.appDirPath = self._appDirPath;
 		var appDef = self._getAppDef();
-		self._options.minifyURLs = [appDef.appScriptsURL, appDef.appLibsURL, appDef.appScriptBundleURL, appDef.frameworkClientURL + 'scripts/load.js', self._frameworkURL + 'ncombo-client.js', 
+		self._options.minifyURLs = [appDef.appScriptsURL, appDef.appLibsURL, appDef.frameworkClientURL + 'scripts/load.js', self._frameworkURL + 'ncombo-client.js', 
 				self._frameworkURL + 'loader.js'];
 		
 		self.allowFullAuthResource(self._spinJSURL);
@@ -1104,6 +1107,9 @@ var nCombo = function() {
 			if(self._options.release) {
 				self._cacheResponder.cacheMap(self._minifiedScripts);
 			}
+			
+			self._cacheResponder.cacheMap(self._bundles, true);
+			
 			self._router.init(self._privateExtensionRegex);
 			self._preprocessor.init(self._options);
 			
@@ -1224,6 +1230,7 @@ var nCombo = function() {
 							console.log('   nCombo Error - Failed to initiate socket');
 						}
 					});
+					
 					self._dataClient.set('__workers.' + cluster.worker.process.pid + '.sessions.' + sid, 1, function(err) {
 						if(err && !failFlag) {
 							self.emit(self.EVENT_SOCKET_FAIL, socket);
@@ -1232,6 +1239,7 @@ var nCombo = function() {
 							console.log('   nCombo Error - Failed to initiate socket');
 						}
 					});
+					
 					self._dataClient.set('__opensockets.' + socket.id, 1, function(err) {
 						if(err) {
 							if(!failFlag) {
@@ -1435,6 +1443,8 @@ var nCombo = function() {
 				self._cacheVersion = self._options.cacheVersion;
 			}
 			
+			var bundles = {};
+			
 			var i;
 			var stylePaths = [];
 			
@@ -1446,31 +1456,63 @@ var nCombo = function() {
 			var smartCacheManager = new SmartCacheManager(self._cacheVersion);
 			
 			var newPath;
-			var appDirRegex = new RegExp('^' + self._appDirPath.replace(/\\/g, '/'));
-			var frameworkStylesPath = pathManager.urlToPath(appDef.frameworkStylesURL);
-			var frameworkStylesDirRegex = new RegExp('^' + frameworkStylesPath.replace(/\\/g, '/'));
+			var appDirRegex = new RegExp('^' + pathManager.toUnixSep(self._appDirPath));
+			var frameworkStylesPath = pathManager.toUnixSep(pathManager.urlToPath(appDef.frameworkStylesURL)).replace(/\/*$/, '');
+			var frameworkStylesDirRegex = new RegExp('^' + frameworkStylesPath);
 			
 			var cssURLFilter = function(url, rootDir) {
-				rootDir = rootDir.replace(/\\/g, '/');
+				rootDir = pathManager.toUnixSep(rootDir);
 				if(appDirRegex.test(rootDir)) {
 					newPath = path.relative(path.dirname(appDef.appStyleBundleURL), appDef.appStylesURL) + '/' + url;
 				} else {
 					newPath = path.relative(path.dirname(appDef.appStyleBundleURL), appDef.frameworkStylesURL) + '/' + rootDir.replace(frameworkStylesDirRegex, '') + '/' + url;
 				}
-				newPath = path.normalize(newPath).replace(/\\/g, '/');
+				newPath = pathManager.toUnixSep(path.normalize(newPath));
 				return newPath;
 			}
 			
-			var updateCSSBundle = function() {
+			var updateCSSBundle = function(workers) {
+				var filePath = self._appDirPath + appDef.appStyleBundleURL;
+				var fileURL = pathManager.pathToURL(filePath);
 				var cssBundle = styleBundle.bundle(cssURLFilter);
-				fs.writeFileSync(self._appDirPath + appDef.appStyleBundleURL, cssBundle);
+				if(workers) {
+					var i;
+					for(i in workers) {
+						workers[i].send({action: 'update', url: fileURL, content: cssBundle});
+					}
+				}
+				bundles[fileURL] = cssBundle;
 			}
 			
-			updateCSSBundle();
+			var libPaths = [];
+			var jsLibCodes = {};
 			
-			if(!self._options.release) {
-				// The master process does not handle requests so it's OK to do sync operations at runtime
-				styleBundle.on('bundle', updateCSSBundle);
+			for(i in self._clientScripts) {
+				libPaths.push(self._clientScripts[i].path);
+				jsLibCodes[self._clientScripts[i].path] = fs.readFileSync(self._clientScripts[i].path, 'utf8');
+			}
+			
+			var makeLibBundle = function(workers) {
+				var filePath = self._appDirPath + appDef.appLibBundleURL;
+				var fileURL = pathManager.pathToURL(filePath);
+				var libArray = [];
+				var i;
+				for(i in jsLibCodes) {
+					libArray.push(jsLibCodes[i]);
+				}
+				var libBundle = libArray.join('\n');
+				bundles[fileURL] = libBundle;
+				
+				if(workers) {
+					for(i in workers) {
+						workers[i].send({action: 'update', url: fileURL, content: libBundle});
+					}
+				}
+			}
+			
+			var updateLibBundle = function(filePath, workers) {
+				jsLibCodes[filePath] = fs.readFileSync(filePath, 'utf8');
+				makeLibBundle(workers);
 			}
 			
 			var bundleOptions = {};
@@ -1478,23 +1520,46 @@ var nCombo = function() {
 			bundleOptions.debug = !self._options.release;
 			bundleOptions.exports = 'require';
 			
-			var scriptBundle = browserify(bundleOptions);
-			var jsLibs = [];
-			for(i in self._clientScripts) {
-				jsLibs.push(fs.readFileSync(self._clientScripts[i].path, 'utf8'));
-			}
-			scriptBundle.prepend(jsLibs.join('\n'));
+			var scriptBundle = browserify(bundleOptions);			
 			scriptBundle.addEntry(self._appDirPath + appDef.appScriptsURL + 'index.js');
 			
-			var updateJSBundle = function() {
+			var updateJSBundle = function(workers) {
+				var filePath = self._appDirPath + appDef.appScriptBundleURL;
+				var fileURL = pathManager.pathToURL(filePath);
 				var jsBundle = scriptBundle.bundle();
-				fs.writeFileSync(self._appDirPath + appDef.appScriptBundleURL, jsBundle);
+				bundles[fileURL] = jsBundle;
+				
+				if(workers) {
+					var i;
+					for(i in workers) {
+						workers[i].send({action: 'update', url: fileURL, content: jsBundle});
+					}
+				}
 			}
 			
-			updateJSBundle();
+			var initBundles = function() {
+				updateCSSBundle();
+				makeLibBundle();
+				updateJSBundle();
+			}
 			
-			if(!self._options.release) {
-				scriptBundle.on('bundle', updateJSBundle);
+			var autoRebundle = function(workers) {			
+				// The master process does not handle requests so it's OK to do sync operations at runtime
+				styleBundle.on('bundle', function() {
+					updateCSSBundle(workers);
+				});
+				
+				var libRebundler = function(filePath) {
+					updateLibBundle(filePath, workers);
+				}
+					
+				var libWatcher = chokidar.watch(libPaths);
+				libWatcher.on('change', libRebundler);
+				libWatcher.on('unlink', libRebundler);
+			
+				scriptBundle.on('bundle', function() {
+					updateJSBundle(workers);
+				});
 			}
 			
 			var minifiedScripts = scriptManager.minifyScripts(self._options.minifyURLs);			
@@ -1524,12 +1589,14 @@ var nCombo = function() {
 							
 							var launchWorker = function() {
 								worker = cluster.fork();
-								worker.send({action: 'init', dataPort: dataPort, dataKey: pass, cacheVersion: self._cacheVersion, minifiedScripts: minifiedScripts});
+								worker.send({action: 'init', dataPort: dataPort, dataKey: pass, cacheVersion: self._cacheVersion, minifiedScripts: minifiedScripts, bundles: bundles});
 								return worker;
 							}
 							
 							var launchWorkers = function() {
+								initBundles();
 								var i;
+								var workers = [];
 								for(i=0; i<self._options.workers; i++) {
 									worker = launchWorker();
 									worker.on('message', function workerHandler(data) {
@@ -1538,7 +1605,9 @@ var nCombo = function() {
 											workerReadyHandler(data);
 										}
 									});
+									workers.push(worker);
 								}
+								autoRebundle(workers);
 							}
 							
 							cluster.on('exit', function(worker, code, signal) {
@@ -1580,12 +1649,14 @@ var nCombo = function() {
 			
 			var handler = function(data) {
 				if(data.action == 'init') {
-					process.removeListener('message', handler);
 					dataPort = data.dataPort;
 					dataKey = data.dataKey;
+					self._bundles = data.bundles;
 					self._minifiedScripts = data.minifiedScripts;
 					self._cacheVersion = data.cacheVersion;
 					begin();
+				} else if(data.action == 'update') {
+					self._cacheResponder.cache(data.url, data.content, true);
 				}
 			}
 			

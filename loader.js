@@ -36,6 +36,7 @@ var $loader = {
 		$loader._appDefinition = appDefinition;
 		$loader._resources = resources ? resources : [];
 		$loader._resources.push($loader._appDefinition.appStyleBundleURL);
+		$loader._resources.push($loader._appDefinition.appLibBundleURL);
 		$loader._resources.push($loader._appDefinition.appScriptBundleURL);
 		
 		if(/MSIE (\d+\.\d+);/.test(navigator.userAgent)) {
@@ -228,7 +229,10 @@ var $loader = {
 		$loader.emit('ready', settings);
 	},
 	
-	_globalEval: function(src) {
+	_globalEval: function(src, sourceURL) {
+		if(sourceURL) {
+			src += '\n//@ sourceURL=' + sourceURL + '\n';
+		}
 		if(window.execScript) {
 			window.execScript(src);
 		} else {
@@ -352,16 +356,6 @@ var $loader = {
 		
 		init: function(options) {
 			$loader.grab._options = options;
-		},
-		
-		_globalEval: function(src) {
-			if(window.execScript) {
-				window.execScript(src);
-			} else {
-				(function() {
-					window.eval.call(window, src);
-				})();
-			}
 		},
 		
 		_triggerReady: function() {
@@ -642,8 +636,7 @@ var $loader = {
 						}
 						$loader.grab._processEmbedQueue();
 					} else if(curTag.type == 'script') {
-						if($loader.grab._options.releaseMode) {
-							$loader.grab._globalEval($loader.grab._scriptCodes[curTag.url]);
+						if(curTag.error) {
 							$loader.grab._resourcesGrabbed.push(curTag.url);
 							if(curTag.callback) {
 								curTag.callback(curTag.error, curTag.url);
@@ -653,28 +646,19 @@ var $loader = {
 							}
 							$loader.grab._processEmbedQueue();
 						} else {
-							if(curTag.error) {
-								$loader.grab._resourcesGrabbed.push(curTag.url);
-								if(curTag.callback) {
-									curTag.callback(curTag.error, curTag.url);
-								}
-								if(!$loader.grab.isGrabbing()) {
-									$loader.grab._triggerReady();
-								}
-								$loader.grab._processEmbedQueue();
+							if(curTag.url == $loader._appDefinition.appScriptBundleURL) {
+								$loader._globalEval($loader.grab._scriptCodes[curTag.url]);
 							} else {
-								$loader.grab.scriptTag(curTag.url, 'text/javascript', null, function(err) {
-									$loader.grab._resourcesGrabbed.push(curTag.url);
-									
-									if(curTag.callback) {
-										curTag.callback(err, curTag.url);
-									}
-									if(!$loader.grab.isGrabbing()) {
-										$loader.grab._triggerReady();
-									}
-									$loader.grab._processEmbedQueue();
-								}, curTag.query);
+								$loader._globalEval($loader.grab._scriptCodes[curTag.url], curTag.url);
 							}
+							$loader.grab._resourcesGrabbed.push(curTag.url);
+							if(curTag.callback) {
+								curTag.callback(curTag.error, curTag.url);
+							}
+							if(!$loader.grab.isGrabbing()) {
+								$loader.grab._triggerReady();
+							}
+							$loader.grab._processEmbedQueue();
 						}
 					}
 				}

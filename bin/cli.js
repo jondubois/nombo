@@ -201,6 +201,13 @@ if(argv.help) {
 	process.exit();
 }
 
+if(argv.v) {
+	var nComboDir = __dirname + '/../../ncombo';
+	var nComboPkg = parsePackageFile(nComboDir);
+	console.log('v' + nComboPkg.version);
+	process.exit();
+}
+
 var wd = process.cwd();
 
 var nodeModulesDir = wd + '/node_modules';

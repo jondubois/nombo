@@ -857,11 +857,16 @@ var nCombo = function() {
 		'text/html': ['handlebars']
 	});
 	
-	if(self._config.privateExtensionRegex) {
-		self._privateExtensionRegex = new RegExp(self._config.privateExtensionRegex);
+	self._privateExtensions = self._config.privateExtensions;
+	if(self._privateExtensions) {
+		self._privateExtensionRegex = new RegExp('[.](' + self._privateExtensions.join('|').replace(/[.]/g, '[.]') + ')$');
 	} else {
 		self._privateExtensionRegex = /$a/;
 	}
+	self._config.privateExtensionRegex = self._privateExtensionRegex;
+	
+	self._customSIMExtension =  self._config.customSIMExtension;
+	
 	self._wsSocks = null;
 		
 	self._normalizeURL = function(url) {
@@ -1426,7 +1431,7 @@ var nCombo = function() {
 					});
 				});
 				
-				gateway.init(self._appDirPath + '/sims/', self._dataClient, self._privateExtensionRegex);
+				gateway.init(self._appDirPath + '/sims/', self._dataClient, self._customSIMExtension);
 				process.send({action: 'ready'});
 			});
 		}
@@ -1501,6 +1506,9 @@ var nCombo = function() {
 					libArray.push(jsLibCodes[i]);
 				}
 				var libBundle = libArray.join('\n');
+				if(self._options.release) {
+					libBundle = scriptManager.minify(libBundle);
+				}
 				bundles[fileURL] = libBundle;
 				
 				if(workers) {
@@ -1527,6 +1535,9 @@ var nCombo = function() {
 				var filePath = self._appDirPath + appDef.appScriptBundleURL;
 				var fileURL = pathManager.pathToURL(filePath);
 				var jsBundle = scriptBundle.bundle();
+				if(self._options.release) {
+					jsBundle = scriptManager.minify(jsBundle);
+				}
 				bundles[fileURL] = jsBundle;
 				
 				if(workers) {

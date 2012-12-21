@@ -44,8 +44,7 @@ var showCorrectUsage = function() {
 	console.log('Usage: ncombo [OPTIONS]');
 	console.log('Install nCombo in current directory\n');
 	console.log('Available options:');
-	console.log('-v                   Get the current version number of your nCombo installation');
-	console.log('-s                   Generate a directory containing sample nCombo apps');
+	console.log('-s                   Generate a directory containing sample ncombo apps');
 	console.log('--help               Get info on how to use this command');
 	console.log('--force              Force all necessary directory modifications without prompts');
 }

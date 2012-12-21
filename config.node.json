@@ -1,5 +1,6 @@
 {
 	"webServiceEndpoint": "/ws",
-	"privateExtensionRegex": "[.](node[.]js|node[.]json)$",
+	"customSIMExtension": "node.js",
+	"privateExtensions": ["node.js", "node.json"],
 	"clientIncludes": ["./client/libs/async.js", "./client/plugins/mvp.js"]
 }

@@ -498,4 +498,4 @@ $n.mvp.init();
 
 $n.grab.app.view = function(templateName, fresh) {
 	return new $n.mvp.View($n.grab.app.template(templateName, fresh));
-}
+};

@@ -37,6 +37,7 @@ var $loader = {
 		$loader._resources = resources ? resources : [];
 		$loader._resources.push($loader._appDefinition.appStyleBundleURL);
 		$loader._resources.push($loader._appDefinition.appLibBundleURL);
+		$loader._resources.push($loader._appDefinition.appTemplateBundleURL);
 		$loader._resources.push($loader._appDefinition.appScriptBundleURL);
 		
 		if(/MSIE (\d+\.\d+);/.test(navigator.userAgent)) {
@@ -1172,7 +1173,7 @@ $loader.Template = function(resourceName) {
 		return self.loader.loaded;
 	}
 	
-	self.loader.grab = function(fresh) {		
+	self.loader.grab = function(fresh) {
 		$loader.grab._loadDeepResourceToCache(self.loader.name, fresh, function(err, result) {
 			if(err) {
 				self.loader.emit('error', self);

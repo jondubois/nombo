@@ -25,6 +25,7 @@ var http = require('http'),
 	browserify = require('browserify'),
 	scriptManager = require('ncombo/scriptmanager'),
 	cssBundler = require('css-bundler'),
+	templateBundler = require('ncombo/template-bundler'),
 	SmartCacheManager = require("./smartcachemanager").SmartCacheManager,
 	chokidar = require('chokidar'),
 	retry = require('retry');
@@ -497,6 +498,7 @@ var nCombo = function() {
 	self._clientScriptMap = {};
 	self._clientScripts = [];
 	self._clientStyles = [];
+	self._clientTemplates = [];
 	self._extRegex = /[.][^\/\\]*$/;
 	
 	self._wsEndpoint = self._config.webServiceEndpoint;
@@ -591,9 +593,11 @@ var nCombo = function() {
 		appDef.frameworkURL = self._frameworkURL;
 		appDef.appURL = self._appURL;
 		appDef.appDataURL = self._appURL + 'app_data/';
-		appDef.appLibBundleURL = appDef.appDataURL + 'libs.js';
-		appDef.appScriptBundleURL = appDef.appDataURL + 'scripts.js';
-		appDef.appStyleBundleURL = appDef.appDataURL + 'styles.css';
+		appDef.virtualURL = '/~virtual/';
+		appDef.appStyleBundleURL = appDef.virtualURL + 'styles.css';
+		appDef.appTemplateBundleURL = appDef.virtualURL + 'templates.js';
+		appDef.appLibBundleURL = appDef.virtualURL + 'libs.js';
+		appDef.appScriptBundleURL = appDef.virtualURL + 'scripts.js';
 		appDef.frameworkClientURL = self._frameworkClientURL;
 		appDef.frameworkLibsURL = self._frameworkClientURL + 'libs/';
 		appDef.pluginsURL = self._frameworkClientURL + 'plugins/';
@@ -615,7 +619,6 @@ var nCombo = function() {
 	
 	self._getLoaderCode = function() {
 		var appDef = self._getAppDef();
-		var resources = [];
 		var appString = JSON.stringify(appDef);
 		var loaderCode = '$loader.init(' + appString + ',null,' + (self._options.release ? 'false' : 'true') + ');';
 		return loaderCode;
@@ -756,7 +759,7 @@ var nCombo = function() {
 		}
 	}
 	
-	self._prepareHTTPHandler = function(req, res, next) {	
+	self._prepareHTTPHandler = function(req, res, next) {
 		res.connection.setNoDelay(true);
 		next();
 	}
@@ -913,6 +916,57 @@ var nCombo = function() {
 			obj['rel'] = rel;
 		}
 		self._clientStyles.push(obj);
+	}
+	
+	self.useTemplate = function(url) {
+		var normalURL = self._normalizeURL(url);
+		var filePath = pathManager.urlToPath(normalURL);
+		var obj = {};
+		if(self._extRegex.test(normalURL)) {
+			obj['url'] = normalURL;
+			obj['path'] = filePath;
+		} else {
+			obj['url'] = url + '.html';
+			obj['path'] = filePath + '.html';
+		}
+		
+		self._clientTemplates.push(obj);
+	}
+	
+	self.bundle = {};	
+	self.bundle.app = {};
+	self.bundle.framework = {};
+	
+	self.bundle.script = self.useScript;
+	self.bundle.style = self.useStyle;
+	self.bundle.template = self.useTemplate;
+	
+	self.bundle.app.lib = function(name) {
+		self.useScript(self._appURL + 'libs/' + name);
+	}
+	
+	self.bundle.app.template = function(name) {
+		self.useTemplate(self._appURL + 'templates/' + name);
+	}
+	
+	self.bundle.app.style = function(name) {
+		self.useStyle(self._appURL + 'styles/' + name);
+	}
+	
+	self.bundle.framework.lib = function(name) {
+		self.useScript(self._frameworkClientURL + 'libs/' + name);
+	}
+	
+	self.bundle.framework.script = function(name) {
+		self.useScript(self._frameworkClientURL + 'scripts/' + name);
+	}
+	
+	self.bundle.framework.plugin = function(name) {
+		self.useScript(self._frameworkClientURL + 'plugins/' + name);
+	}
+	
+	self.bundle.framework.style = function(name) {
+		self.useStyle(self._frameworkClientURL + 'styles/' + name);
 	}
 	
 	self.useScript(self._frameworkClientURL + 'libs/jquery.js');
@@ -1477,16 +1531,33 @@ var nCombo = function() {
 			}
 			
 			var updateCSSBundle = function(workers) {
-				var filePath = self._appDirPath + appDef.appStyleBundleURL;
-				var fileURL = pathManager.pathToURL(filePath);
 				var cssBundle = styleBundle.bundle(cssURLFilter);
 				if(workers) {
 					var i;
 					for(i in workers) {
-						workers[i].send({action: 'update', url: fileURL, content: cssBundle});
+						workers[i].send({action: 'update', url: appDef.appStyleBundleURL, content: cssBundle});
 					}
 				}
-				bundles[fileURL] = cssBundle;
+				bundles[appDef.appStyleBundleURL] = cssBundle;
+			}
+			
+			var templatePaths = [];
+			
+			for(i in self._clientTemplates) {
+				templatePaths.push(self._clientTemplates[i].path);
+			}
+			
+			var templateBundle = templateBundler({files: templatePaths, watch: !self._options.release});
+			
+			var updateTemplateBundle = function(workers) {
+				var htmlBundle = templateBundle.bundle();
+				if(workers) {
+					var i;
+					for(i in workers) {
+						workers[i].send({action: 'update', url: appDef.appTemplateBundleURL, content: htmlBundle});
+					}
+				}
+				bundles[appDef.appTemplateBundleURL] = htmlBundle;
 			}
 			
 			var libPaths = [];
@@ -1498,8 +1569,6 @@ var nCombo = function() {
 			}
 			
 			var makeLibBundle = function(workers) {
-				var filePath = self._appDirPath + appDef.appLibBundleURL;
-				var fileURL = pathManager.pathToURL(filePath);
 				var libArray = [];
 				var i;
 				for(i in jsLibCodes) {
@@ -1509,11 +1578,11 @@ var nCombo = function() {
 				if(self._options.release) {
 					libBundle = scriptManager.minify(libBundle);
 				}
-				bundles[fileURL] = libBundle;
+				bundles[appDef.appLibBundleURL] = libBundle;
 				
 				if(workers) {
 					for(i in workers) {
-						workers[i].send({action: 'update', url: fileURL, content: libBundle});
+						workers[i].send({action: 'update', url: appDef.appLibBundleURL, content: libBundle});
 					}
 				}
 			}
@@ -1532,24 +1601,23 @@ var nCombo = function() {
 			scriptBundle.addEntry(self._appDirPath + appDef.appScriptsURL + 'index.js');
 			
 			var updateJSBundle = function(workers) {
-				var filePath = self._appDirPath + appDef.appScriptBundleURL;
-				var fileURL = pathManager.pathToURL(filePath);
 				var jsBundle = scriptBundle.bundle();
 				if(self._options.release) {
 					jsBundle = scriptManager.minify(jsBundle);
 				}
-				bundles[fileURL] = jsBundle;
+				bundles[appDef.appScriptBundleURL] = jsBundle;
 				
 				if(workers) {
 					var i;
 					for(i in workers) {
-						workers[i].send({action: 'update', url: fileURL, content: jsBundle});
+						workers[i].send({action: 'update', url: appDef.appScriptBundleURL, content: jsBundle});
 					}
 				}
 			}
 			
 			var initBundles = function() {
 				updateCSSBundle();
+				updateTemplateBundle();
 				makeLibBundle();
 				updateJSBundle();
 			}
@@ -1558,6 +1626,10 @@ var nCombo = function() {
 				// The master process does not handle requests so it's OK to do sync operations at runtime
 				styleBundle.on('bundle', function() {
 					updateCSSBundle(workers);
+				});
+				
+				templateBundle.on('bundle', function() {
+					updateTemplateBundle(workers);
 				});
 				
 				var libRebundler = function(filePath) {

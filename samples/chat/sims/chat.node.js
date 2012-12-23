@@ -20,6 +20,12 @@ module.exports.addMessage = function(req, res) {
 				messages.shift();
 			}
 			
+			var i;
+			for(i in messages) {
+				messages[i].user = messages[i].user.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+				messages[i].message = messages[i].message.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+			}
+			
 			req.global.set('messages', messages, function(err) {
 				if(err) {
 					// Send an error to the client.

@@ -20,15 +20,20 @@ ncombo.addMiddleware(ncombo.MIDDLEWARE_SOCKET_IO, function(req, res, next) {
 });
 
 // These files will be included as part of preload process
-ncombo.useStyle('/~framework/client/styles/bootstrap.css');
-ncombo.useStyle('/~framework/client/styles/jqueryui/ui-lightness/jquery.ui.core.css');
-ncombo.useStyle('/~framework/client/styles/jqueryui/ui-lightness/jquery.ui.dialog.css');
-ncombo.useStyle('/~framework/client/styles/jqueryui/ui-lightness/jquery.ui.resizable.css');
-ncombo.useStyle('/~framework/client/styles/jqueryui/ui-lightness/jquery.ui.selectable.css');
-ncombo.useStyle('/~framework/client/styles/jqueryui/ui-lightness/jquery.ui.theme.css');
-ncombo.useScript('/~framework/client/libs/jquery/ui.js');
+ncombo.bundle.framework.style('bootstrap.css');
+ncombo.bundle.framework.style('jqueryui/ui-lightness/jquery.ui.core.css');
+ncombo.bundle.framework.style('jqueryui/ui-lightness/jquery.ui.dialog.css');
+ncombo.bundle.framework.style('jqueryui/ui-lightness/jquery.ui.resizable.css');
+ncombo.bundle.framework.style('jqueryui/ui-lightness/jquery.ui.selectable.css');
+ncombo.bundle.framework.style('jqueryui/ui-lightness/jquery.ui.theme.css');
+ncombo.bundle.framework.lib('jquery/ui.js');
 
-ncombo.useStyle('/styles/main.css');
+ncombo.bundle.app.template('login.html');
+ncombo.bundle.app.template('notes_table.html');
+ncombo.bundle.app.template('main.html');
+ncombo.bundle.app.template('add_note_dialog.html');
+
+ncombo.bundle.app.style('main.css');
 
 // Session will be destroyed if all windows relating to it are closed for 5 seconds
 ncombo.start({port: port, release: false, sessionTimeout: 5000, title: 'Notes App'});

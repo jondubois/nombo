@@ -24,7 +24,7 @@ var http = require('http'),
 	pro = require("uglify-js").uglify,
 	browserify = require('browserify'),
 	scriptManager = require('ncombo/scriptmanager'),
-	cssBundler = require('css-bundler'),
+	cssBundler = require('ncombo/css-bundler'),
 	templateBundler = require('ncombo/template-bundler'),
 	SmartCacheManager = require("./smartcachemanager").SmartCacheManager,
 	chokidar = require('chokidar'),
@@ -1514,7 +1514,7 @@ var nCombo = function() {
 			var styleBundle = cssBundler({files: stylePaths, watch: !self._options.release});
 			var smartCacheManager = new SmartCacheManager(self._cacheVersion);
 			
-			var newPath;
+			var newURL;
 			var appDirRegex = new RegExp('^' + pathManager.toUnixSep(self._appDirPath));
 			var frameworkStylesPath = pathManager.toUnixSep(pathManager.urlToPath(appDef.frameworkStylesURL)).replace(/\/*$/, '');
 			var frameworkStylesDirRegex = new RegExp('^' + frameworkStylesPath);
@@ -1522,12 +1522,15 @@ var nCombo = function() {
 			var cssURLFilter = function(url, rootDir) {
 				rootDir = pathManager.toUnixSep(rootDir);
 				if(appDirRegex.test(rootDir)) {
-					newPath = path.relative(path.dirname(appDef.appStyleBundleURL), appDef.appStylesURL) + '/' + url;
+					newURL = path.relative(path.dirname(appDef.appStyleBundleURL), appDef.appStylesURL) + '/' + url;
 				} else {
-					newPath = path.relative(path.dirname(appDef.appStyleBundleURL), appDef.frameworkStylesURL) + '/' + rootDir.replace(frameworkStylesDirRegex, '') + '/' + url;
+					newURL = path.relative(path.dirname(appDef.appStyleBundleURL), appDef.frameworkStylesURL) + '/' + rootDir.replace(frameworkStylesDirRegex, '') + '/' + url;
 				}
-				newPath = pathManager.toUnixSep(path.normalize(newPath));
-				return newPath;
+				newURL = pathManager.toUnixSep(path.normalize(newURL));
+				if(self._options.release) {
+					newURL = smartCacheManager.setURLCacheVersion(newURL);
+				}
+				return newURL;
 			}
 			
 			var updateCSSBundle = function(workers) {

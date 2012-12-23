@@ -4,18 +4,8 @@
 	In a practical setting, you may want to split your code into several files and include them into one another using 
 	$n.grab.app.script().
 */
-/*
-$n.grab.framework.style('bootstrap');
 
-$n.grab.framework.style('jqueryui/ui-lightness/jquery.ui.core.css');
-$n.grab.framework.style('jqueryui/ui-lightness/jquery.ui.dialog.css');
-$n.grab.framework.style('jqueryui/ui-lightness/jquery.ui.resizable.css');
-$n.grab.framework.style('jqueryui/ui-lightness/jquery.ui.selectable.css');
-$n.grab.framework.style('jqueryui/ui-lightness/jquery.ui.theme.css');
-$n.grab.framework.lib('jquery/ui');
-
-$n.grab.app.style('main');
-*/
+// These have already been bundled into the app, grabbing them will not reload them
 var loginTemplate = $n.grab.app.template('login');
 var mainTemplate = $n.grab.app.template('main');
 var notesTableTemplate = $n.grab.app.template('notes_table');
@@ -68,10 +58,14 @@ function main() {
 	var addNoteDialogAddButton = addNoteDialog.find('.add-btn');
 	
 	addNoteDialogAddButton.click(function() {
-		var title = addNoteDialog.find('.title').val();
-		var message = addNoteDialog.find('.message').val();
+		var titleBox = addNoteDialog.find('.title');
+		var messageBox = addNoteDialog.find('.message');
+		var title = titleBox.val();
+		var message = messageBox.val();
 		// Execute the notes sim's createNote method - This will add a new note to this session
 		$n.local.exec('notes', 'createNote', {title: title, message: message});
+		titleBox.val('');
+		messageBox.val('');
 	});
 	
 	var addNoteButton = mainView.find('.add-note-btn');

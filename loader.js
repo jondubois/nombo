@@ -541,7 +541,7 @@ var $loader = {
 		},
 		
 		template: function(resourceName, fresh) {
-			if($loader.grab._loadableResourceMap.hasOwnProperty(resourceName)) {
+			if($loader.grab._loadableResourceMap.hasOwnProperty(resourceName) && !fresh) {
 				return $loader.grab._loadableResourceMap[resourceName];
 			}
 			var templ = new $loader.Template(resourceName);

@@ -3,7 +3,7 @@
 	You can also import a .less stylesheet which will be pre-compiled on the serverside; In this case, make sure that your files have a .less extension
 	Note that all nCombo framework files are stored under framework/ - App-specific files are stored under the app/ directory
 */
-$n.grab.framework.style('jqueryui/ui-lightness/jquery.ui.all.css');
+$n.grab.framework.style('jqueryui/ui-lightness/style.css');
 
 // Import library script, library scripts are core framework scripts and are located in the framework/libs/ directory
 $n.grab.framework.lib('jquery/ui.js');

@@ -69,6 +69,23 @@ function main() {
 	});
 	
 	var addNoteButton = mainView.find('.add-note-btn');
+	var shareButtons = mainView.find('.share');
+	
+	/*
+	This is a handle to the chat app running at ncombo.com port 8000.
+	Chat app is configured to accept all remote communications by default (there is no middleware which stops this from happening), 
+	so we can call all its SIM methods directly.
+	In practice, all private SIM methods should be protected using middleware which should authenticate calls to it.
+	*/
+	var chatApp = $n.remote('ncombo.com', 8000);
+	
+	mainView.delegate('.share', 'click', function(e) {
+		var parent = $(e.target).parent().parent();
+		var message = parent.find('.message').html();
+		
+		// We are using the chat app's chat sim and calling its addMessage method with the specified 'data' parameter
+		chatApp.exec('chat', 'addMessage', {user: 'Memo', message: message});
+	});
 	
 	addNoteButton.click(function() {
 		addNoteDialog.dialog({title: 'Add New Note'});

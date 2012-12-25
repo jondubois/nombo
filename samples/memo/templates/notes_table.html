@@ -1,9 +1,10 @@
 <table class="notes-table table">
-	<tr><th>Title</th><th>Message</th></tr>
+	<tr><th>Title</th><th>Message</th><th>Share</th></tr>
 	{{#each notes}}
 	<tr>
-		<td>{{this.title}}</td>
-		<td>{{this.message}}</td>
+		<td class="title">{{this.title}}</td>
+		<td class="message">{{this.message}}</td>
+		<td><input type="button" class="share" value="Share" /></td>
 	</tr>
 	{{/each}}
 </table>

@@ -416,8 +416,8 @@ var nCombo = function() {
 	
 	self.MIDDLEWARE_LOCAL_CALL = 'localCall';
 	self.MIDDLEWARE_REMOTE_CALL = 'remoteCall';
-	self.MIDDLEWARE_LOCAL_EVENT = 'localEvent';
-	self.MIDDLEWARE_REMOTE_EVENT = 'remoteEvent';
+	self.MIDDLEWARE_LOCAL_WATCH = 'localWatch';
+	self.MIDDLEWARE_REMOTE_WATCH = 'remoteWatch';
 	
 	self.MIDDLEWARE_SESSION_DESTROY = 'sessionDestroy';
 	
@@ -842,14 +842,14 @@ var nCombo = function() {
 	self._middleware[self.MIDDLEWARE_LOCAL_CALL] = stepper.create();
 	self._middleware[self.MIDDLEWARE_LOCAL_CALL].setTail(gateway.exec);
 	
-	self._middleware[self.MIDDLEWARE_LOCAL_EVENT] = stepper.create();
-	self._middleware[self.MIDDLEWARE_LOCAL_EVENT].setTail(gateway.watch);
+	self._middleware[self.MIDDLEWARE_LOCAL_WATCH] = stepper.create();
+	self._middleware[self.MIDDLEWARE_LOCAL_WATCH].setTail(gateway.watch);
 	
 	self._middleware[self.MIDDLEWARE_REMOTE_CALL] = stepper.create();
 	self._middleware[self.MIDDLEWARE_REMOTE_CALL].setTail(ws.exec);
 	
-	self._middleware[self.MIDDLEWARE_REMOTE_EVENT] = stepper.create();
-	self._middleware[self.MIDDLEWARE_REMOTE_EVENT].setTail(ws.watch);
+	self._middleware[self.MIDDLEWARE_REMOTE_WATCH] = stepper.create();
+	self._middleware[self.MIDDLEWARE_REMOTE_WATCH].setTail(ws.watch);
 	
 	self._middleware[self.MIDDLEWARE_SESSION_DESTROY] = stepper.create();
 	
@@ -1352,7 +1352,7 @@ var nCombo = function() {
 					socket.on('watchLocal', function(request) {
 						var req = new IORequest(request, socket, session, self._global, remoteAddress, secure);
 						var res = new IOResponse(request, socket, session, self._global, remoteAddress, secure);
-						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_EVENT]);
+						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_WATCH]);
 						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
 					});
 					
@@ -1367,7 +1367,7 @@ var nCombo = function() {
 					socket.on('watchRemote', function(request) {
 						var req = new IORequest(request, socket, session, self._global, remoteAddress, request.secure);
 						var res = new IOResponse(request, socket, session, self._global, remoteAddress, secure);
-						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_EVENT]);
+						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_WATCH]);
 						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
 					});
 					

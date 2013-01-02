@@ -266,45 +266,35 @@ $n.NS = function(namespace, wsSocket) {
 		
 		var i;
 		var id = $n._genID();
-		var unwatchRequest = {id: id, requests: []};
+		var unwatchRequest = {
+			id: id,
+			ns: self._namespace,
+			event: event
+		};
 		
 		if(!event) {
-			for(i in self._serverWatchMap) {
-				unwatchRequest.requests.push({ns: self._namespace, event: i});
-			}
 			self._serverWatchMap = {};
-			if(unwatchRequest.requests.length > 0) {
-				$n.trackRequest(id, cb);
-				self.socketIO.emit('unwatchLocal', unwatchRequest);
-			} else {
-				cb();
-			}
+			$n.trackRequest(id, cb);
+			self.socketIO.emit('unwatchLocal', unwatchRequest);
 		} else if(!handler) {
 			if(self._serverWatchMap[event]) {
-				unwatchRequest.requests.push({ns: self._namespace, event: event});
 				delete self._serverWatchMap[event];
-				if(unwatchRequest.requests.length > 0) {
-					$n.trackRequest(id, cb);
-					self.socketIO.emit('unwatchLocal', unwatchRequest);
-				} else {
-					cb();
-				}
+				$n.trackRequest(id, cb);
+				self.socketIO.emit('unwatchLocal', unwatchRequest);
 			}
 		} else {
 			if(self._serverWatchMap[event]) {
 				self._serverWatchMap[event] = $.grep(self._serverWatchMap[event], function(element, index) {
-					if(element == handler) {
-						unwatchRequest.requests.push({ns: self._namespace, event: event});
-						return false;
-					}
-					return true;
+					return element != handler;
 				});
-				if(unwatchRequest.requests.length > 0 && self._serverWatchMap[event].length < 1) {
+				if(self._serverWatchMap[event].length < 1) {
 					$n.trackRequest(id, cb);
 					self.socketIO.emit('unwatchLocal', unwatchRequest);
 				} else {
 					cb();
 				}
+			} else {
+				cb();
 			}
 		}
 	}
@@ -423,70 +413,40 @@ $n.RemoteNS = function(host, port, secure, wsEndpoint, namespace, wsSocket) {
 	
 		var i;
 		var id = $n._genID();
-		var unwatchRequest = {id: id, requests: []};
+		var unwatchRequest = {
+			id: id,
+			remote: true,
+			host: host,
+			port: port,
+			secure: secure,
+			wsEndpoint: wsEndpoint,
+			ns: self._namespace,
+			event: event
+		};
 		
 		if(!event) {
-			for(i in self._serverWatchMap) {
-				unwatchRequest.requests.push({
-					remote: true,
-					host: host,
-					port: port,
-					secure: secure,
-					wsEndpoint: wsEndpoint,
-					ns: self._namespace,
-					event: i
-				});
-			}
 			self._serverWatchMap = {};
-			if(unwatchRequest.requests.length > 0) {
-				$n.trackRequest(id, cb);
-				self.socketIO.emit('unwatchRemote', unwatchRequest);
-			} else {
-				cb()
-			}
+			$n.trackRequest(id, cb);
+			self.socketIO.emit('unwatchRemote', unwatchRequest);
 		} else if(!handler) {
 			if(self._serverWatchMap[event]) {
-				unwatchRequest.requests.push({
-					remote: true,
-					host: host,
-					port: port,
-					secure: secure,
-					wsEndpoint: wsEndpoint,
-					ns: self._namespace,
-					event: event
-				});
 				delete self._serverWatchMap[event];
-				if(unwatchRequest.requests.length > 0) {
-					$n.trackRequest(id, cb);
-					self.socketIO.emit('unwatchRemote', unwatchRequest);
-				} else {
-					cb();
-				}
+				$n.trackRequest(id, cb);
+				self.socketIO.emit('unwatchRemote', unwatchRequest);
 			}
 		} else {
 			if(self._serverWatchMap[event]) {
 				self._serverWatchMap[event] = $.grep(self._serverWatchMap[event], function(element, index) {
-					if(element == handler) {
-						unwatchRequest.requests.push({
-							remote: true,
-							host: host,
-							port: port,
-							secure: secure,
-							wsEndpoint: wsEndpoint,
-							ns: self._namespace,
-							event: event
-						});
-						
-						return false;
-					}
-					return true;
+					return element != handler;
 				});
-				if(unwatchRequest.requests.length > 0 && self._serverWatchMap[event].length < 1) {
+				if(self._serverWatchMap[event].length < 1) {
 					$n.trackRequest(id, cb);
 					self.socketIO.emit('unwatchRemote', unwatchRequest);
 				} else {
 					cb();
 				}
+			} else {
+				cb();
 			}
 		}
 	}

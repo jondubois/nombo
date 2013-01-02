@@ -414,10 +414,12 @@ var nCombo = function() {
 	self.MIDDLEWARE_GET = 'get';
 	self.MIDDLEWARE_POST = 'post';
 	
-	self.MIDDLEWARE_LOCAL_CALL = 'localCall';
-	self.MIDDLEWARE_REMOTE_CALL = 'remoteCall';
+	self.MIDDLEWARE_LOCAL_EXEC = 'localCall';
+	self.MIDDLEWARE_REMOTE_EXEC = 'remoteCall';
 	self.MIDDLEWARE_LOCAL_WATCH = 'localWatch';
 	self.MIDDLEWARE_REMOTE_WATCH = 'remoteWatch';
+	self.MIDDLEWARE_LOCAL_UNWATCH = 'localUnwatch';
+	self.MIDDLEWARE_REMOTE_UNWATCH = 'remoteUnwatch';
 	
 	self.MIDDLEWARE_SESSION_DESTROY = 'sessionDestroy';
 	
@@ -839,17 +841,23 @@ var nCombo = function() {
 	
 	self._middleware[self.MIDDLEWARE_HTTP].setTail(self._routStepper);
 	
-	self._middleware[self.MIDDLEWARE_LOCAL_CALL] = stepper.create();
-	self._middleware[self.MIDDLEWARE_LOCAL_CALL].setTail(gateway.exec);
+	self._middleware[self.MIDDLEWARE_LOCAL_EXEC] = stepper.create();
+	self._middleware[self.MIDDLEWARE_LOCAL_EXEC].setTail(gateway.exec);
 	
 	self._middleware[self.MIDDLEWARE_LOCAL_WATCH] = stepper.create();
 	self._middleware[self.MIDDLEWARE_LOCAL_WATCH].setTail(gateway.watch);
 	
-	self._middleware[self.MIDDLEWARE_REMOTE_CALL] = stepper.create();
-	self._middleware[self.MIDDLEWARE_REMOTE_CALL].setTail(ws.exec);
+	self._middleware[self.MIDDLEWARE_LOCAL_UNWATCH] = stepper.create();
+	self._middleware[self.MIDDLEWARE_LOCAL_UNWATCH].setTail(gateway.unwatch);
+	
+	self._middleware[self.MIDDLEWARE_REMOTE_EXEC] = stepper.create();
+	self._middleware[self.MIDDLEWARE_REMOTE_EXEC].setTail(ws.exec);
 	
 	self._middleware[self.MIDDLEWARE_REMOTE_WATCH] = stepper.create();
 	self._middleware[self.MIDDLEWARE_REMOTE_WATCH].setTail(ws.watch);
+	
+	self._middleware[self.MIDDLEWARE_REMOTE_UNWATCH] = stepper.create();
+	self._middleware[self.MIDDLEWARE_REMOTE_UNWATCH].setTail(ws.unwatch);
 	
 	self._middleware[self.MIDDLEWARE_SESSION_DESTROY] = stepper.create();
 	
@@ -1336,7 +1344,7 @@ var nCombo = function() {
 					socket.on('localCall', function(request) {
 						var req = new IORequest(request, socket, session, self._global, remoteAddress, secure);
 						var res = new IOResponse(request, socket, session, self._global, remoteAddress, secure);
-						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_CALL]);
+						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_EXEC]);
 						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
 					});
 					
@@ -1344,7 +1352,7 @@ var nCombo = function() {
 					socket.on('remoteCall', function(request) {
 						var req = new IORequest(request, socket, session, self._global, remoteAddress, request.secure);
 						var res = new IOResponse(request, socket, session, self._global, remoteAddress, secure);
-						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_CALL]);
+						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_EXEC]);
 						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
 					});
 					
@@ -1360,7 +1368,8 @@ var nCombo = function() {
 					socket.on('unwatchLocal', function(request) {
 						var req = new IORequest(request, socket, session, self._global, remoteAddress, secure);
 						var res = new IOResponse(request, socket, session, self._global, remoteAddress, secure);
-						gateway.unwatch(req, res);
+						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_UNWATCH]);
+						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
 					});
 					
 					// watch remote server events
@@ -1375,7 +1384,8 @@ var nCombo = function() {
 					socket.on('unwatchRemote', function(request) {
 						var req = new IORequest(request, socket, session, self._global, remoteAddress, secure);
 						var res = new IOResponse(request, socket, session, self._global, remoteAddress, secure);
-						ws.unwatch(req, res);
+						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_UNWATCH]);
+						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
 					});
 					
 					var removeOpenSocket = function(callback) {

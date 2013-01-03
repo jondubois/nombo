@@ -98,7 +98,7 @@ var SessionEmitter = function(sessionID, namespace, socketManager, dataClient, r
 	}
 	
 	self.emitRaw = function(eventData) {
-		dataClient.get('__opensessions.' + sessionID, function(err, socks) {
+		dataClient.get('__opensessions.#(' + sessionID + ')', function(err, socks) {
 			if(err) {
 				console.log('   nCombo Error - Failed to get active socket list');
 			} else {
@@ -117,17 +117,17 @@ var Session = nmix(function(sessionID, socketManager, dataClient, retryTimeout) 
 	
 	self._getDataKey = function(key) {
 		if(key) {
-			return '__sessiondata.' + self.id + '.' + key;
+			return '__sessiondata.#(' + self.id + ').#(' + key + ')';
 		} else {
-			return '__sessiondata.' + self.id;
+			return '__sessiondata.#(' + self.id + ')';
 		}
 	}
 	
 	self._getEventKey = function(event) {
 		if(event) {
-			return '__sessionevent.' + self.id + '.' + event;
+			return '__sessionevent.#(' + self.id + ').#(' + event + ')';
 		} else {
-			return '__sessionevent.' + self.id;
+			return '__sessionevent.#(' + self.id + ')';
 		}
 	}
 	
@@ -149,15 +149,15 @@ var Session = nmix(function(sessionID, socketManager, dataClient, retryTimeout) 
 	}
 	
 	self.setAuth = function(data, callback) {
-		dataClient.set('__sessionauth.' + self.id, data, callback);
+		dataClient.set('__sessionauth.#(' + self.id + ')', data, callback);
 	}
 
 	self.getAuth = function(callback) {
-		dataClient.get('__sessionauth.' + self.id, callback);
+		dataClient.get('__sessionauth.#(' + self.id + ')', callback);
 	}
 
 	self.clearAuth = function(callback) {
-		dataClient.remove('__sessionauth.' + self.id, callback);
+		dataClient.remove('__sessionauth.#(' + self.id + ')', callback);
 	}
 	
 	self.on = function(event, listener, ackCallback) {
@@ -180,11 +180,11 @@ var Session = nmix(function(sessionID, socketManager, dataClient, retryTimeout) 
 	}
 	
 	self._addSocket = function(socket, callback) {
-		dataClient.set('__opensessions.' + self.id + '.' + socket.id, 1, callback);
+		dataClient.set('__opensessions.#(' + self.id + ').#(' + socket.id + ')', 1, callback);
 	}
 	
 	self.getSockets = function(callback) {
-		dataClient.get('__opensessions.' + self.id, function(err, data) {
+		dataClient.get('__opensessions.#(' + self.id + ')', function(err, data) {
 			if(err) {
 				callback(err);
 			} else {
@@ -199,13 +199,13 @@ var Session = nmix(function(sessionID, socketManager, dataClient, retryTimeout) 
 	}
 	
 	self.countSockets = function(callback) {
-		dataClient.count('__opensessions.' + self.id, callback);
+		dataClient.count('__opensessions.#(' + self.id + ')', callback);
 	}
 	
 	self._removeSocket = function(socket, callback) {		
 		var operation = retry.operation(self._retryOptions);
 		operation.attempt(function() {
-			dataClient.remove('__opensessions.' + self.id + '.' + socket.id, function(err) {
+			dataClient.remove('__opensessions.#(' + self.id + ').#(' + socket.id + ')', function(err) {
 				_extendRetryOperation(operation);
 				if(operation.retry(err)) {
 					return;
@@ -226,7 +226,7 @@ var Session = nmix(function(sessionID, socketManager, dataClient, retryTimeout) 
 		
 		var removeSessionOp = retry.operation(self._retryOptions);
 		removeSessionOp.attempt(function() {
-			dataClient.remove('__opensessions.' + self.id, function(err) {
+			dataClient.remove('__opensessions.#(' + self.id + ')', function(err) {
 				_extendRetryOperation(removeSessionOp);
 				removeSessionOp.retry(err);
 			});
@@ -259,9 +259,9 @@ var GlobalEmitter = function(namespace, socketManager, dataClient) {
 	
 	self._getSessionEventKey = function(sessionID, key) {
 		if(key) {
-			return '__sessionevent.' + sessionID + '.' + key;
+			return '__sessionevent.#(' + sessionID + ').#(' + key + ')';
 		} else {
-			return '__sessionevent.' + sessionID;
+			return '__sessionevent.#(' + sessionID + ')';
 		}
 	}
 	
@@ -283,7 +283,7 @@ var GlobalEmitter = function(namespace, socketManager, dataClient) {
 	}
 	
 	self.emit = function(sessionID, event, data) {
-		dataClient.get('__opensessions.' + sessionID, function(err, socks) {
+		dataClient.get('__opensessions.#(' + sessionID + ')', function(err, socks) {
 			if(err) {
 				console.log('   nCombo Error - Failed to get active socket list');
 			} else {
@@ -297,7 +297,7 @@ var Global = nmix(function(socketManager, dataClient, frameworkDirPath, appDirPa
 	var self = this;
 	
 	self._getDataKey = function(key) {
-		return '__globaldata.' + key;
+		return '__globaldata.#(' + key + ')';
 	}
 	
 	self.initMixin(AbstractDataClient, dataClient, self._getDataKey);
@@ -1034,7 +1034,7 @@ var nCombo = function() {
 	self._cleanupWorker = function(pid) {
 		var getWorkerDataOp = retry.operation(self._retryOptions);
 		getWorkerDataOp.attempt(function() {
-			self._dataClient.get('__workers.' + pid, function(err, data) {
+			self._dataClient.get('__workers.#(' + pid + ')', function(err, data) {
 				_extendRetryOperation(getWorkerDataOp);
 				if(getWorkerDataOp.retry(err)) {
 					return;
@@ -1046,7 +1046,7 @@ var nCombo = function() {
 						(function(sockID) {
 							var removeOpenSocketOp = retry.operation(self._retryOptions);
 							removeOpenSocketOp.attempt(function() {
-								self._dataClient.remove('__opensockets.' + sockID, function(err) {
+								self._dataClient.remove('__opensockets.#(' + sockID + ')', function(err) {
 									_extendRetryOperation(removeOpenSocketOp);
 									removeOpenSocketOp.retry(err);
 								});
@@ -1058,7 +1058,7 @@ var nCombo = function() {
 						(function(sid) {
 							var removeOpenSessionOp = retry.operation(self._retryOptions);
 							removeOpenSessionOp.attempt(function() {
-								self._dataClient.remove('__opensessions.' + sid, function(err) {
+								self._dataClient.remove('__opensessions.#(' + sid + ')', function(err) {
 									_extendRetryOperation(removeOpenSessionOp);
 									removeOpenSessionOp.retry(err);
 								});
@@ -1069,7 +1069,7 @@ var nCombo = function() {
 				
 				var removeWorkerSocketsOp = retry.operation(self._retryOptions);
 				removeWorkerSocketsOp.attempt(function() {
-					self._dataClient.remove('__workers.' + pid, function(err) {
+					self._dataClient.remove('__workers.#(' + pid + ')', function(err) {
 						_extendRetryOperation(removeWorkerSocketsOp);
 						removeWorkerSocketsOp.retry(err);
 					});
@@ -1092,6 +1092,7 @@ var nCombo = function() {
 	
 	self.start = function(options) {
 		var dataPort, dataKey;
+		var shasum = crypto.createHash('sha256');
 		
 		var isInt = function(input) {
 			return /^[0-9]+$/.test(input);
@@ -1194,6 +1195,10 @@ var nCombo = function() {
 						handshakeData.data = {};
 					}
 					
+					if(handshakeData.query.sskey) {
+						handshakeData.sskey = handshakeData.query.sskey;
+					}
+					
 					handshakeData.getAuth = function() {
 						return handshakeData.auth;
 					}
@@ -1272,9 +1277,14 @@ var nCombo = function() {
 					self.emit(self.EVENT_SOCKET_CONNECT, socket);
 				
 					var remoteAddress = socket.handshake.address;
-					var auth = socket.handshake.auth;	
+					var auth = socket.handshake.auth;
+					var sid;
 					
-					var sid = self._parseSID(socket.handshake.headers.cookie) || socket.id;
+					if(socket.handshake.sskey) {
+						sid = remoteAddress.address + '-' + socket.handshake.sskey;
+					} else {
+						sid = self._parseSID(socket.handshake.headers.cookie) || socket.id;
+					}
 					
 					var addAddressQuery = 'function(DataMap) { \
 						if(DataMap.hasKey("__connectedaddresses.#(' + remoteAddress.address + ')")) { \
@@ -1289,7 +1299,7 @@ var nCombo = function() {
 					
 					var failFlag = false;
 					
-					self._dataClient.set('__workers.' + cluster.worker.process.pid + '.sockets.' + socket.id, 1, function(err) {
+					self._dataClient.set('__workers.#(' + cluster.worker.process.pid + ').sockets.#(' + socket.id + ')', 1, function(err) {
 						if(err && !failFlag) {
 							self.emit(self.EVENT_SOCKET_FAIL, socket);
 							failFlag = true;
@@ -1298,7 +1308,7 @@ var nCombo = function() {
 						}
 					});
 					
-					self._dataClient.set('__workers.' + cluster.worker.process.pid + '.sessions.' + sid, 1, function(err) {
+					self._dataClient.set('__workers.#(' + cluster.worker.process.pid + ').sessions.#(' + sid + ')', 1, function(err) {
 						if(err && !failFlag) {
 							self.emit(self.EVENT_SOCKET_FAIL, socket);
 							failFlag = true;
@@ -1307,7 +1317,7 @@ var nCombo = function() {
 						}
 					});
 					
-					self._dataClient.set('__opensockets.' + socket.id, 1, function(err) {
+					self._dataClient.set('__opensockets.#(' + socket.id + ')', 1, function(err) {
 						if(err) {
 							if(!failFlag) {
 								self.emit(self.EVENT_SOCKET_FAIL, socket);
@@ -1391,7 +1401,7 @@ var nCombo = function() {
 					var removeOpenSocket = function(callback) {
 						var operation = retry.operation(self._retryOptions);
 						operation.attempt(function() {
-							self._dataClient.remove('__opensockets.' + socket.id, function(err) {
+							self._dataClient.remove('__opensockets.#(' + socket.id + ')', function(err) {
 								_extendRetryOperation(operation);
 								if(operation.retry(err)) {
 									return;
@@ -1405,7 +1415,7 @@ var nCombo = function() {
 					var removeWorkerSocket = function() {
 						var operation = retry.operation(self._retryOptions);
 						operation.attempt(function() {
-							self._dataClient.remove('__workers.' + cluster.worker.process.pid + '.sockets.' + socket.id, function(err) {
+							self._dataClient.remove('__workers.#(' + cluster.worker.process.pid + ').sockets.#(' + socket.id + ')', function(err) {
 								_extendRetryOperation(operation);
 								operation.retry(err);
 							});
@@ -1415,7 +1425,7 @@ var nCombo = function() {
 					var removeWorkerSession = function() {
 						var operation = retry.operation(self._retryOptions);
 						operation.attempt(function() {
-							self._dataClient.remove('__workers.' + cluster.worker.process.pid + '.sessions.' + sid, function(err) {
+							self._dataClient.remove('__workers.#(' + cluster.worker.process.pid + ').sessions.#(' + sid + ')', function(err) {
 								_extendRetryOperation(operation);
 								operation.retry(err);
 							});
@@ -1495,6 +1505,9 @@ var nCombo = function() {
 					});
 				});
 				
+				shasum.update(dataKey);
+				var hashedKey = shasum.digest('hex');
+				ws.init(hashedKey);
 				gateway.init(self._appDirPath + '/sims/', self._dataClient, self._customSIMExtension);
 				process.send({action: 'ready'});
 			});

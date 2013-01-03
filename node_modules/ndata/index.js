@@ -210,13 +210,13 @@ var Client = function(port, host, secretKey, timeout) {
 	
 		var callback = function(err, alreadyWatching) {
 			if(err) {
-				ackCallback && ackCallback(err);
+				ackCallback && ackCallback(err, alreadyWatching);
 				self.emit('watchfail');
 			} else {
 				if(!alreadyWatching) {
 					self._watchMap.add(event, handler);
 				}
-				ackCallback && ackCallback();
+				ackCallback && ackCallback(null, alreadyWatching);
 				self.emit('watch');
 			}
 		}

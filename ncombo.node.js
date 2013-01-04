@@ -594,7 +594,6 @@ var nCombo = function() {
 		var appDef = {};
 		appDef.frameworkURL = self._frameworkURL;
 		appDef.appURL = self._appURL;
-		appDef.appDataURL = self._appURL + 'app_data/';
 		appDef.virtualURL = '/~virtual/';
 		appDef.appStyleBundleURL = appDef.virtualURL + 'styles.css';
 		appDef.appTemplateBundleURL = appDef.virtualURL + 'templates.js';

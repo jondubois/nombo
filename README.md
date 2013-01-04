@@ -10,13 +10,13 @@ To install, run:
 npm install -g ncombo
 ```
 
-Once installation is complete, to deploy a new app in the current directory run (replace myapp with your app's name):
+Once installation is complete, to create a new app in the current directory run (replace myapp with your app's name):
 
 ```bash
-ncombo myapp
+ncombo create myapp
 ```
 
-To deploy a 'ncombo-samples/' directory containing sample apps use:
+To create a 'ncombo-samples/' directory containing sample apps use:
 
 ```bash
 ncombo -s

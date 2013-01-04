@@ -10,9 +10,9 @@ var json = require('json');
 
 var argv = require('optimist').argv;
 
-var appName = argv._[0];
+var command = argv._[0];
+var arg1 = argv._[1];
 var force = argv.force ? true : false;
-var samples = argv.s ? true : false;
 var sampleDirName = 'ncombo-samples';
 
 var parsePackageFile = function(moduleDir) {
@@ -39,14 +39,15 @@ var warningMessage = function(message) {
 }
 
 var showCorrectUsage = function() {
-	console.log('Usage: ncombo [PROJECT_NAME] [OPTIONS]');
-	console.log('Create a new nCombo project\n');
-	console.log('Usage: ncombo [OPTIONS]');
-	console.log('Install nCombo in current directory\n');
-	console.log('Available options:');
-	console.log('-s                   Generate a directory containing sample ncombo apps');
-	console.log('--help               Get info on how to use this command');
-	console.log('--force              Force all necessary directory modifications without prompts');
+	console.log('Usage: ncombo [options] [command]\n');
+	console.log('Options:');
+	console.log("  -v                Get the version number of the current nCombo installation");
+	console.log('  --help            Get info on how to use this command');
+	console.log('  --force           Force all necessary directory modifications without prompts');
+	console.log();
+	console.log('Commands:');
+	console.log('  create <appname>  Create a new app <appname> within the working directory');
+	console.log('  samples           Create an ncombo-samples directory');
 }
 
 var failedToRemoveDirMessage = function(dirPath) {
@@ -217,29 +218,37 @@ if(!fs.existsSync(nodeModulesDir)) {
 	fs.mkdirSync(nodeModulesDir);
 }
 
-createFrameworkDir(nComboDestDir, function(frameworkSuccess) {
-	if(frameworkSuccess) {
-		if(samples) {
-			var samplesDestDir = path.normalize(wd + '/' + sampleDirName);
-			createSamplesDir(samplesDestDir, function(samplesSuccess) {
-				if(samplesSuccess) {
-					successMessage("Install process is complete. Run 'node " + sampleDirName + "/sampleappname/server' to launch. Access at http://localhost:8000/");
-				}
-				process.exit();
-			});
-		} else {
-			if(appName) {
-				var appDestDir = path.normalize(wd + '/' + appName);
-				createAppDir(appDestDir, function(appSuccess) {
-					if(appSuccess) {
-						successMessage("Install process is complete. Run 'node " + appName + "/server' to launch. Access at http://localhost:8000/");
+if(command == 'create' || command == 'samples') {
+	createFrameworkDir(nComboDestDir, function(frameworkSuccess) {
+		if(frameworkSuccess) {
+			if(command == 'samples') {
+				var samplesDestDir = path.normalize(wd + '/' + sampleDirName);
+				createSamplesDir(samplesDestDir, function(samplesSuccess) {
+					if(samplesSuccess) {
+						successMessage("Install process is complete. Run 'node " + sampleDirName + "/sampleappname/server' to launch. Access at http://localhost:8000/");
 					}
 					process.exit();
 				});
-			} else {
-				successMessage('nCombo framework core has been installed. nCombo apps which are placed within the ' + wd + ' directory (including subdirectories) will use this framework core.');
-				process.exit();
+			} else if(command == 'create') {
+				if(arg1) {
+					var appDestDir = path.normalize(wd + '/' + arg1);
+					createAppDir(appDestDir, function(appSuccess) {
+						if(appSuccess) {
+							successMessage("Install process is complete. Run 'node " + arg1 + "/server' to launch. Access at http://localhost:8000/");
+						}
+						process.exit();
+					});
+				} else {
+					successMessage('nCombo framework core has been installed. nCombo apps which are placed within the ' + wd + ' directory (including subdirectories) will use this framework core.');
+					process.exit();
+				}
 			}
+		} else {
+			process.exit();
 		}
-	}
-});
+	});
+} else {
+	errorMessage("'" + command + "' is not a valid nCombo command");
+	showCorrectUsage();
+	process.exit();
+}

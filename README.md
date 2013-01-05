@@ -19,7 +19,7 @@ ncombo create myapp
 To create a 'ncombo-samples/' directory containing sample apps use:
 
 ```bash
-ncombo -s
+ncombo samples
 ```
 
 nCombo offers several ground-breaking features:

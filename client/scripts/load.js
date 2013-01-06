@@ -61,6 +61,7 @@ var jLoad = {
 		imgEl.setAttribute('border', '0px');
 		
 		jLoad._loaderTextBox = document.createElement('div');
+		jLoad._loaderTextBox.style.whiteSpace = 'nowrap';
 		jLoad._loaderTextBox.style.marginTop = '4px';
 		jLoad._loaderTextBox.style.fontFamily = 'Arial';
 		jLoad._loaderTextBox.style.fontSize = '12px';

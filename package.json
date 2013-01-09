@@ -38,7 +38,7 @@
 		"active-x-obfuscator": "0.0.1",
 		"async": "0.1.22",
 		"base64id": "0.1.0",
-		"browserify": "1.16.6",
+		"browserify": "1.17.1",
 		"buffer-browserify": "0.0.4",
 		"chokidar": "0.5.0",
 		"coffee-script": "1.4.0",

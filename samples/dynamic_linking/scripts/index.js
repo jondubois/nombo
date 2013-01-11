@@ -21,7 +21,7 @@ console.log('Loading scripts...');
 */
 $n.ready(function() {
 	console.log('All scripts have been loaded.');
-	var text = a.foo(function(result) {
+	a.foo(function(result) {
 		$(document.body).html('<div style="padding:20px;">' + result + '</div>');
 	});
 });

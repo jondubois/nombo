@@ -32,13 +32,16 @@ var $loader = {
 		}
 	},
 	
-	init: function(appDefinition, resources, skipPreload) {		
+	init: function(appDefinition, resources, skipPreload) {
+		$loader._resources = [];
 		$loader._appDefinition = appDefinition;
-		$loader._resources = resources ? resources : [];
 		$loader._resources.push($loader._appDefinition.appStyleBundleURL);
 		$loader._resources.push($loader._appDefinition.appLibBundleURL);
 		$loader._resources.push($loader._appDefinition.appTemplateBundleURL);
 		$loader._resources.push($loader._appDefinition.appScriptBundleURL);
+		if(resources) {
+			$loader._resources = $loader._resources.concat(resources);
+		}
 		
 		if(/MSIE (\d+\.\d+);/.test(navigator.userAgent)) {
 			$loader._ie = true;
@@ -248,7 +251,7 @@ var $loader = {
 		var numLoaded = 0;
 		var triggeredLoadAllFail = false;
 		for(i in $loader._resources) {
-			$loader.grab._loadResourceToEmbedQueue($loader._resources[i], function(err) {
+			$loader.grab._loadResource($loader._resources[i], function(err) {
 				if(err) {
 					if(!triggeredLoadAllFail) {
 						triggeredLoadAllFail = true;
@@ -256,9 +259,7 @@ var $loader = {
 					}
 				} else {
 					if(++numLoaded >= $loader._resources.length) {
-						if(callback) {
-							callback();
-						}
+						callback && callback();
 						$loader.emit('loadall');
 					}
 				}
@@ -462,12 +463,28 @@ var $loader = {
 				return $loader.grab.template(resourceName, fresh);
 			},
 			
-			assetURL: function(nameWithExtension) {
-				return $loader.grab._options.appAssetsURL + nameWithExtension;
+			assetURL: function(nameWithExtension, fresh) {
+				if(fresh) {
+					return smartCacheManager.setCacheKiller($loader.grab._options.appAssetsURL + nameWithExtension);
+				} else {
+					if($loader.grab._options.releaseMode) {
+						return smartCacheManager.setURLCacheVersion($loader.grab._options.appAssetsURL + nameWithExtension);
+					} else {
+						return $loader.grab._options.appAssetsURL + nameWithExtension;
+					}
+				}
 			},
 			
-			fileURL: function(nameWithExtension) {
-				return $loader.grab._options.appFilesURL + nameWithExtension;
+			fileURL: function(nameWithExtension, fresh) {
+				if(fresh) {
+					return smartCacheManager.setCacheKiller($loader.grab._options.appFilesURL + nameWithExtension);
+				} else {
+					if($loader.grab._options.releaseMode) {
+						return smartCacheManager.setURLCacheVersion($loader.grab._options.appFilesURL + nameWithExtension);
+					} else {
+						return $loader.grab._options.appFilesURL + nameWithExtension;
+					}
+				}
 			}
 		},
 		
@@ -571,6 +588,18 @@ var $loader = {
 			}
 		},
 		
+		url: function(url, fresh) {
+			if(fresh) {
+				return smartCacheManager.setCacheKiller(url);
+			} else {
+				if($loader.grab._options.releaseMode) {
+					return smartCacheManager.setURLCacheVersion(url);
+				} else {
+					return url;
+				}
+			}
+		},
+		
 		/**
 			Get the the image at the given URL and start downloading it.
 		*/
@@ -666,28 +695,32 @@ var $loader = {
 			}
 		},
 		
-		_loadResourceToEmbedQueue: function(url, callback) {
+		_loadTag: function(tagData, callback) {
+			$loader.grab._embedQueue.push(tagData);
+			
+			$loader.grab._loadDeepResourceToCache(tagData.url, false, function(err, data) {
+				tagData.ready = true;
+				tagData.error = err;
+				callback(err, data);
+			});
+		},
+		
+		_loadResource: function(url, callback) {
 			var ext = url.match(/[.][^.]*$/);
 			var tagData;			
 			
 			if(ext[0] == '.js') {
 				tagData = {type: 'script', url: url, callback: function(){}, ready: false};
-				
+				$loader.grab._loadTag(tagData, callback);
 			} else if(ext[0] == '.css' || ext[0] == '.less') {
-				tagData = {type: 'link', url: url, callback: function(){}, ready: false}
+				tagData = {type: 'link', url: url, callback: function(){}, ready: false};
+				$loader.grab._loadTag(tagData, callback);
 			} else {
-				return false;
+				$loader.grab._loadDeepResourceToCache(url, false, function(err, data) {
+					$loader.grab._resourcesGrabbed.push(url);
+					callback(err, data);
+				});
 			}
-			
-			$loader.grab._embedQueue.push(tagData);
-			
-			$loader.grab._loadDeepResourceToCache(url, false, function(err, data) {
-				tagData.ready = true;
-				tagData.error = err;
-				callback(err, data);
-			});
-			
-			return true;
 		},
 		
 		loadAndEmbedScript: function(url, callback) {		

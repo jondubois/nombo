@@ -516,6 +516,7 @@ var nCombo = function() {
 	self._failedWorkerCleanups = {};
 	self._minifiedScripts = null;
 	self._bundles = null;
+	self._bundledResources = [];
 	
 	self._spinJSURL = self._frameworkClientURL + 'libs/spin.js';
 	
@@ -601,6 +602,7 @@ var nCombo = function() {
 		appDef.appScriptBundleURL = appDef.virtualURL + 'scripts.js';
 		appDef.frameworkClientURL = self._frameworkClientURL;
 		appDef.frameworkLibsURL = self._frameworkClientURL + 'libs/';
+		appDef.frameworkAssetsURL = self._frameworkClientURL + 'assets/';
 		appDef.pluginsURL = self._frameworkClientURL + 'plugins/';
 		appDef.frameworkScriptsURL = self._frameworkClientURL + 'scripts/';
 		appDef.loadScriptURL = appDef.frameworkScriptsURL + 'load.js';
@@ -621,7 +623,8 @@ var nCombo = function() {
 	self._getLoaderCode = function() {
 		var appDef = self._getAppDef();
 		var appString = JSON.stringify(appDef);
-		var loaderCode = '$loader.init(' + appString + ',null,' + (self._options.release ? 'false' : 'true') + ');';
+		var resources = JSON.stringify(self._bundledResources);
+		var loaderCode = '$loader.init(' + appString + ',' + resources + ',' + (self._options.release ? 'false' : 'true') + ');';
 		return loaderCode;
 	}
 	
@@ -960,6 +963,10 @@ var nCombo = function() {
 		self.useStyle(self._appURL + 'styles/' + name);
 	}
 	
+	self.bundle.app.asset = function(name) {
+		self._bundledResources.push(self._appURL + 'assets/' + name);
+	}
+	
 	self.bundle.framework.lib = function(name) {
 		self.useScript(self._frameworkClientURL + 'libs/' + name);
 	}
@@ -974,6 +981,10 @@ var nCombo = function() {
 	
 	self.bundle.framework.style = function(name) {
 		self.useStyle(self._frameworkClientURL + 'styles/' + name);
+	}
+	
+	self.bundle.framework.asset = function(name) {
+		self._bundledResources.push(self._frameworkClientURL + 'assets/' + name);
 	}
 	
 	self.useScript(self._frameworkClientURL + 'libs/jquery.js');

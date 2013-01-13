@@ -620,14 +620,6 @@ var nCombo = function() {
 		return appDef;
 	}
 	
-	self._getLoaderCode = function() {
-		var appDef = self._getAppDef();
-		var appString = JSON.stringify(appDef);
-		var resources = JSON.stringify(self._bundledResources);
-		var loaderCode = '$loader.init(' + appString + ',' + resources + ',' + (self._options.release ? 'false' : 'true') + ');';
-		return loaderCode;
-	}
-	
 	self._fullAuthResources = {};
 	
 	self.allowFullAuthResource = function(url) {
@@ -683,17 +675,7 @@ var nCombo = function() {
 	self._sessionHandler = function(req, res, next) {
 		req.global = self._global;
 		
-		if(req.url == '/~startscript') {
-			var encoding = self._getReqEncoding(req);
-			var cacheKey = encoding + ':' + req.url;
-			
-			if(self._options.release && cache.has(cacheKey)) {
-				self._respond(req, res, cache.get(cacheKey), 'text/javascript');
-			} else {
-				var loaderCode = self._getLoaderCode();
-				self._respond(req, res, loaderCode, 'text/javascript');
-			}
-		} else if(req.url == '/~timecache') {
+		if(req.url == '/~timecache') {
 			var now = (new Date()).getTime();
 			var expiry = new Date(now + self._options.cacheLife);
 			res.setHeader('Content-Type', 'text/javascript');
@@ -739,10 +721,19 @@ var nCombo = function() {
 									var template = handlebars.compile(data.toString());
 									data = template({cacheVersion: '*/ = ' + self._cacheVersion + ' /*'});
 								} else if(url == self._frameworkURL + 'session.js') {
+									var appDef = self._getAppDef();
 									var template = handlebars.compile(data.toString());
-									data = template({endpoint: self._wsEndpoint, port: self._options.port,
-											frameworkURL: self._frameworkURL, frameworkClientURL: self._frameworkClientURL, 
-											autoSession: self._options.autoSession ? 1 : 0, timeout: self._options.timeout});
+									data = template({
+											endpoint: self._wsEndpoint, 
+											port: self._options.port,
+											frameworkURL: self._frameworkURL,
+											frameworkClientURL: self._frameworkClientURL, 
+											autoSession: self._options.autoSession ? 1 : 0,
+											timeout: self._options.timeout,
+											appDef: JSON.stringify(appDef),
+											resources: JSON.stringify(self._bundledResources),
+											debug: self._options.release ? 'false' : 'true'
+											});
 								}
 								self._respond(req, res, data, null, skipCache);
 							}

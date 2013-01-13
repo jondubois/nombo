@@ -16,8 +16,15 @@ var NCOMBO_SOCKET = null;
 var NCOMBO_SESSION_MANAGER = null;
 var NCOMBO_IE = IE;
 var NCOMBO_IE_VERSION = IE_VERSION;
+var NCOMBO_APP_DEF = {{{appDef}}};
+var NCOMBO_RESOURCES = {{{resources}}};
+var NCOMBO_DEBUG = {{debug}}; 
 
 (function() {
+	var beginLoading = function() {
+		$loader.init(NCOMBO_APP_DEF, NCOMBO_RESOURCES, NCOMBO_DEBUG);
+	}
+
 	var head = document.getElementsByTagName('head');
 	if(head) {
 		head = head[0];
@@ -274,39 +281,24 @@ var NCOMBO_IE_VERSION = IE_VERSION;
 			NCOMBO_SOCKET.disconnect();
 		}
 	})();
-
-	var globalEval = function(src) {
-		if(window.execScript) {
-			window.execScript(src);
-		} else {
-			(function() {
-				window.eval.call(window, src);
-			})();
-		}
-	}
 	
 	var ncBegin = function() {
-		ajax({
-			url: smartCacheManager.setURLCacheVersion('/~startscript'),
-			success: function(loaderCode) {				
-				var startLoader = function() {
-					if(document.getElementById('ncspinner')) {
-						document.body.removeChild(spinnerDiv);
-						globalEval(loaderCode);
-					} else {
-						setTimeout(startLoader, 20);
-					}
-				}
-
-				if(ncScriptLoaded) {
-					startLoader();
-				} else {
-					ncOnScriptLoad(loadScript, function() {
-						startLoader();
-					});
-				}
+		var startLoader = function() {
+			if(document.getElementById('ncspinner')) {
+				document.body.removeChild(spinnerDiv);
+				beginLoading();
+			} else {
+				setTimeout(startLoader, 20);
 			}
-		});
+		}
+
+		if(ncScriptLoaded) {
+			startLoader();
+		} else {
+			ncOnScriptLoad(loadScript, function() {
+				startLoader();
+			});
+		}
 	}
 	
 	if(NCOMBO_AUTO_SESSION) {

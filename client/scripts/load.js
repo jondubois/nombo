@@ -1,5 +1,5 @@
 /**
-	Default loader for nCombo applications.
+	Default loader for nCombo apps.
 */
 
 var jLoad = {
@@ -74,21 +74,7 @@ var jLoad = {
 		jLoad._loader.appendChild(linkEl);
 		jLoad._loader.appendChild(jLoad._loaderTextBox);
 		
-		var img = new Image();
-		img.onload = jLoad._ready;
-		img.src = loadImageURL;
-	},
-	
-	_setOpacity: function(obj, value) {
-		obj.style.opacity = value / 100;
-		obj.style.filter = 'alpha(opacity=' + value + ')';
-	},
-	
-	_ready: function() {
-		$loader.loadAll();
-		$loader.on('loadall', jLoad._loaded);
-		
-		if(jLoad._loader) {
+		var showLoader = function() {
 			document.body.appendChild(jLoad._loader);
 			
 			var loadWidth = jLoad._loader.offsetWidth;
@@ -122,6 +108,18 @@ var jLoad = {
 				jLoad._loaderInterval = setInterval(jLoad._animateLoader, jLoad._loaderAnimInterval);
 			}
 		}
+		
+		var img = new Image();
+		img.onload = showLoader;
+		img.src = loadImageURL;
+		
+		$loader.loadAll();
+		$loader.on('loadall', jLoad._loaded);
+	},
+	
+	_setOpacity: function(obj, value) {
+		obj.style.opacity = value / 100;
+		obj.style.filter = 'alpha(opacity=' + value + ')';
 	},
 	
 	_animateLoader: function() {

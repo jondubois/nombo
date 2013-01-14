@@ -33,7 +33,13 @@ var NCOMBO_DEBUG = {{debug}};
 	var nComboStyle = document.createElement('link');
 	nComboStyle.rel = 'stylesheet';
 	nComboStyle.type = 'text/css';
-	nComboStyle.href = smartCacheManager.setURLCacheVersion(NCOMBO_FRAMEWORK_CLIENT_URL + 'styles/ncombo.css');
+	var url = NCOMBO_FRAMEWORK_CLIENT_URL + 'styles/ncombo.css';
+	
+	if(!NCOMBO_DEBUG) {
+		url = smartCacheManager.setURLCacheVersion(url);
+	}
+	
+	nComboStyle.href = url;
 
 	var ncOnScriptLoad = function(scriptTag, callback) {
 		if(!NCOMBO_IE || NCOMBO_IE_VERSION > 8) {
@@ -53,7 +59,14 @@ var NCOMBO_DEBUG = {{debug}};
 
 	var loadScript = document.createElement('script');
 	loadScript.type = 'text/javascript';
-	loadScript.src = smartCacheManager.setURLCacheVersion(NCOMBO_FRAMEWORK_URL + 'loader.js');
+	
+	url = NCOMBO_FRAMEWORK_URL + 'loader.js';
+	
+	if(!NCOMBO_DEBUG) {
+		url = smartCacheManager.setURLCacheVersion(url);
+	}
+	
+	loadScript.src = url;
 	
 	ncOnScriptLoad(loadScript, function() {
 		ncScriptLoaded = true;

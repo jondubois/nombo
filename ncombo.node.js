@@ -429,6 +429,7 @@ var nCombo = function() {
 	self.EVENT_FAIL = 'fail';
 	
 	self._cacheVersion = 0;
+	self._smartCacheManager = null;
 	
 	self._options = {
 		port: 8000,
@@ -1020,6 +1021,9 @@ var nCombo = function() {
 	
 	self._getScriptTag = function(url, type) {
 		url = self._normalizeURL(url);
+		if(self._options.release) {
+			url = self._smartCacheManager.setURLCacheVersion(url);
+		}
 		return '<script type="' + type + '" src="' + url + '"></script>';
 	}
 	
@@ -1536,7 +1540,7 @@ var nCombo = function() {
 			}
 			
 			var styleBundle = cssBundler({files: stylePaths, watch: !self._options.release});
-			var smartCacheManager = new SmartCacheManager(self._cacheVersion);
+			self._smartCacheManager = new SmartCacheManager(self._cacheVersion);
 			
 			var newURL;
 			var appDirRegex = new RegExp('^' + pathManager.toUnixSep(self._appDirPath));
@@ -1552,7 +1556,7 @@ var nCombo = function() {
 				}
 				newURL = pathManager.toUnixSep(path.normalize(newURL));
 				if(self._options.release) {
-					newURL = smartCacheManager.setURLCacheVersion(newURL);
+					newURL = self._smartCacheManager.setURLCacheVersion(newURL);
 				}
 				return newURL;
 			}
@@ -1764,6 +1768,7 @@ var nCombo = function() {
 					self._bundles = data.bundles;
 					self._minifiedScripts = data.minifiedScripts;
 					self._cacheVersion = data.cacheVersion;
+					self._smartCacheManager = new SmartCacheManager(self._cacheVersion);
 					begin();
 				} else if(data.action == 'update') {
 					self._cacheResponder.cache(data.url, data.content, true);

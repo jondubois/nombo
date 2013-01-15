@@ -18,18 +18,22 @@ clientA.set('this.is.an.array', arr, function(err) {
 	clientA.getRange('this.is.an.array', 0, 5, function(err, value) {
 		console.log(3, value);
 	});
+	
+	clientA.getRange('this.is.an.array', 4, 15, function(err, value) {
+		console.log(4, value);
+	});
 })
 
 clientA.set('this.is.an.object', obj, function(err) {
 	clientA.getRange('this.is.an.object', 'green', 'blue', function(err, value) {
-		console.log(4, value);
-	});
-	
-	clientA.getRange('this.is.an.object', 'blue', function(err, value) {
 		console.log(5, value);
 	});
 	
-	clientA.getRange('this.is.an.object', 'green', 'yellow', function(err, value) {
+	clientA.getRange('this.is.an.object', 'blue', function(err, value) {
 		console.log(6, value);
+	});
+	
+	clientA.getRange('this.is.an.object', 'green', 'yellow', function(err, value) {
+		console.log(7, value);
 	});
 })

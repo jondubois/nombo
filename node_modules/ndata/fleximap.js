@@ -136,9 +136,9 @@ var FlexiMap = function(object) {
 		
 		if(value instanceof Array) {
 			range = [];
-			if(!toIndex) {
+			if(!toIndex || toIndex > value.length) {
 				toIndex = value.length;
-			}
+			}			
 			for(i=fromIndex; i<toIndex; i++) {
 				range.push(value[i]);
 			}

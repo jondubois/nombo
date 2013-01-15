@@ -113,6 +113,11 @@ var actions = {
 		send(socket, {id: command.id, type: 'response', action: 'get', value: result});
 	},
 	
+	getRange: function(command, socket) {
+		var result = DataMap.getRange(command.key, command.fromIndex, command.toIndex);
+		send(socket, {id: command.id, type: 'response', action: 'getRange', value: result});
+	},
+	
 	getAll: function(command, socket) {
 		send(socket, {id: command.id, type: 'response', action: 'getAll', value: DataMap.getData()});
 	},

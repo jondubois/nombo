@@ -345,6 +345,34 @@ var Client = function(port, host, secretKey, timeout) {
 		self._exec(command, callback);
 	}
 	
+	/*
+		getRange(key, fromIndex,[ toIndex,] callback)
+	*/
+	self.getRange = function() {
+		var key = arguments[0];
+		var fromIndex = arguments[1];
+		var toIndex = null;
+		var callback;
+		if(arguments[2] instanceof Function) {
+			callback = arguments[2];
+		} else {
+			toIndex = arguments[2];
+			callback = arguments[3];
+		}
+		
+		var command = {
+			action: 'getRange',
+			key: key,
+			fromIndex: fromIndex
+		}
+		
+		if(toIndex) {
+			command.toIndex = toIndex;
+		}
+		
+		self._exec(command, callback);
+	}
+	
 	self.getAll = function(callback) {
 		var command = {
 			action: 'getAll'

@@ -50,19 +50,25 @@ The callback is in form: callback(err)
 this existing value will be placed inside an empty array and the specified value argument will be appended to that array.
 The callback is in form: callback(err)
 
-- remove(key, callback) - Removes the value at key. If value is an array, it will remove the entire array.
+- remove(key, callback) - Remove the value at key. If value is an array, it will remove the entire array.
 The callback is in form: callback(err, value)
 
-- removeAll(callback) - Clears nData completely.
+- removeAll(callback) - Clear nData completely.
 The callback is in form: callback(err)
 
-- pop(key, callback) - Removes the last numerically-indexed entry at key; callback is in the form: callback(err, value)
+- pop(key, callback) - Remove the last numerically-indexed entry at key; callback is in the form: callback(err, value)
 
-- get(key, callback) - Gets the value at key; callback is in form: callback(err, value)
+- get(key, callback) - Get the value at key; callback is in form: callback(err, value)
 
-- getAll(callback) - Gets all the values in nData; callback is in form: callback(err, value)
+- getRange(key, fromIndex,[ toIndex,] callback) - This function assumes that the value at key is an Array or Object; 
+capture all values starting at fromIndex and finishing at toIndex (but not including toIndex).
+If toIndex is not specified, all values from fromIndex until the end of the Array/Object will be included).
 
-- watch(event, handler, ackCallback) - Watches for an event on nData, handler is a callback in the form handler(value) where value is a value sent with the event.
+- getAll(callback) - Get all the values in nData; callback is in form: callback(err, value)
+
+- count(key, callback) - Count the number of elements at key; callback is in form: callback(err, value)
+
+- watch(event, handler, ackCallback) - Watch for an event on nData, handler is a callback in the form handler(value) where value is a value sent with the event.
 Note that you can watch the same event multiple times (even using the same handler).
 
 - watchOnce(event, handler, ackCallback) - As above except that it will only trigger a single handler (from the last call to watchOnce).

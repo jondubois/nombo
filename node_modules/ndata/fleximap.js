@@ -129,6 +129,38 @@ var FlexiMap = function(object) {
 		return result;
 	}
 	
+	self.getRange = function(keyPath, fromIndex, toIndex) {
+		var value = self.get(keyPath);
+		var range;
+		var i;
+		
+		if(value instanceof Array) {
+			range = [];
+			if(!toIndex) {
+				toIndex = value.length;
+			}
+			for(i=fromIndex; i<toIndex; i++) {
+				range.push(value[i]);
+			}
+		} else {
+			range = {};
+			var recording = false;
+			for(i in value) {
+				if(i == fromIndex) {
+					recording = true;
+				}
+				if(recording && i == toIndex) {
+					break;
+				}
+				if(recording) {
+					range[i] = value[i];
+				}
+			}
+		}
+		
+		return range;
+	}
+	
 	self.count = function(keyPath) {
 		var elements = self.get(keyPath);
 		
@@ -239,28 +271,16 @@ var FlexiMap = function(object) {
 		}
 	}
 	
-	self.remove = function(keyPath, value) {
-		if(value) {
-			var keyChain = keyPath.split('.');
-			var parentMap = self._get(keyChain);
-			var objects = self.get(keyPath);
-			var i;
-			for(i in objects) {
-				if(objects[i] == value) {
-					parentMap._remove(i);
-				}
-			}
+	self.remove = function(keyPath) {
+		var keyChain = keyPath.split('.');
+		if(keyChain.length < 2) {
+			return self._remove(keyChain[0]);
+		}
+		var parentMap = self._get(keyChain.slice(0, -1));
+		if(parentMap instanceof FlexiMap) {
+			return parentMap._remove(keyChain[keyChain.length - 1]);
 		} else {
-			var keyChain = keyPath.split('.');
-			if(keyChain.length < 2) {
-				return self._remove(keyChain[0]);
-			}
-			var parentMap = self._get(keyChain.slice(0, -1));
-			if(parentMap instanceof FlexiMap) {
-				return parentMap._remove(keyChain[keyChain.length - 1]);
-			} else {
-				return undefined;
-			}
+			return undefined;
 		}
 	}
 	

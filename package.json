@@ -1,7 +1,7 @@
 {
 	"name": "ncombo",
 	"description": "Cloud application framework",
-	"version": "0.9.57",
+	"version": "0.9.58",
 	"author": {
 		"name": "JF Gros-Dubois",
 		"email": "flashthink@gmail.com"
@@ -54,8 +54,8 @@
 		"http-browserify": "0.1.6",
 		"less": "1.3.0",
 		"mime": "1.2.5",
-		"ndata": ">= 0.9.11",
-		"nmix": ">= 0.9.0",
+		"ndata": ">= 0.9.15",
+		"nmix": ">= 0.9.3",
 		"nub": "0.0.0",
 		"optimist": "0.3.5",
 		"options": "0.0.3",

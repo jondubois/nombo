@@ -305,7 +305,7 @@ var Global = nmix(function(socketManager, dataClient, frameworkDirPath, appDirPa
 	var _frameworkDirPath = frameworkDirPath;
 	var _appDirPath = appDirPath;
 	
-	self.store = dataClient;
+	self.dataClient = dataClient;
 	
 	self._emitterNamespace = new GlobalEmitter('__main', socketManager, dataClient);
 	self._namespaces = {'__main': self._emitterNamespace};
@@ -324,6 +324,22 @@ var Global = nmix(function(socketManager, dataClient, frameworkDirPath, appDirPa
 	
 	self.broadcast = function(event, data) {
 		self._emitterNamespace.broadcast(event, data);
+	}
+	
+	self.dispatch = function(event, data) {
+		dataClient.broadcast(event, data);
+	}
+	
+	self.on = function(event, listener, ackCallback) {
+		dataClient.watch(event, listener, ackCallback);
+	}
+	
+	self.once = function(event, listener, ackCallback) {
+		dataClient.watchExclusive(event, listener, ackCallback);
+	}
+	
+	self.removeListener = function(event, listener, ackCallback) {
+		dataClient.unwatch(event, listener, ackCallback);
 	}
 	
 	self.ns = function(namespace) {
@@ -423,6 +439,8 @@ var nCombo = function() {
 	
 	self.MIDDLEWARE_SESSION_DESTROY = 'sessionDestroy';
 	
+	self.EVENT_WORKER_START = 'workerstart';
+	self.EVENT_LEADER_START = 'leaderstart';
 	self.EVENT_SOCKET_CONNECT = 'socketconnect';
 	self.EVENT_SOCKET_DISCONNECT = 'socketdisconnect';
 	self.EVENT_SOCKET_FAIL = 'socketfail';
@@ -430,6 +448,9 @@ var nCombo = function() {
 	
 	self._cacheVersion = 0;
 	self._smartCacheManager = null;
+	
+	self.isLeader = false;
+	self.workerIndex = -1;
 	
 	self._options = {
 		port: 8000,
@@ -481,7 +502,7 @@ var nCombo = function() {
 	self._retryTimeout = 10000;
 	
 	self._dataServer = null;
-	self._global = null;
+	self.global = null;
 	
 	self._config = conf.parseConfig(__dirname + '/config.node.json');
 	
@@ -693,7 +714,7 @@ var nCombo = function() {
 	}
 	
 	self._sessionHandler = function(req, res, next) {
-		req.global = self._global;
+		req.global = self.global;
 		
 		if(req.url == '/~timecache') {
 			var now = (new Date()).getTime();
@@ -1291,7 +1312,7 @@ var nCombo = function() {
 				}
 				
 				self._wsSocks = self._io.of(self._wsEndpoint);
-				self._global = new Global(self._wsSocks, self._dataClient, pathManager.getFrameworkPath(), pathManager.getAppPath());
+				self.global = new Global(self._wsSocks, self._dataClient, pathManager.getFrameworkPath(), pathManager.getAppPath());
 			
 				gateway.setReleaseMode(self._options.release);
 				ws.setReleaseMode(self._options.release);
@@ -1376,48 +1397,48 @@ var nCombo = function() {
 					
 					// handle local server interface call
 					socket.on('localCall', function(request) {
-						var req = new IORequest(request, socket, session, self._global, remoteAddress, secure);
-						var res = new IOResponse(request, socket, session, self._global, remoteAddress, secure);
+						var req = new IORequest(request, socket, session, self.global, remoteAddress, secure);
+						var res = new IOResponse(request, socket, session, self.global, remoteAddress, secure);
 						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_EXEC]);
 						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
 					});
 					
 					// handle remote interface call
 					socket.on('remoteCall', function(request) {
-						var req = new IORequest(request, socket, session, self._global, remoteAddress, request.secure);
-						var res = new IOResponse(request, socket, session, self._global, remoteAddress, secure);
+						var req = new IORequest(request, socket, session, self.global, remoteAddress, request.secure);
+						var res = new IOResponse(request, socket, session, self.global, remoteAddress, secure);
 						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_EXEC]);
 						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
 					});
 					
 					// watch local server events
 					socket.on('watchLocal', function(request) {
-						var req = new IORequest(request, socket, session, self._global, remoteAddress, secure);
-						var res = new IOResponse(request, socket, session, self._global, remoteAddress, secure);
+						var req = new IORequest(request, socket, session, self.global, remoteAddress, secure);
+						var res = new IOResponse(request, socket, session, self.global, remoteAddress, secure);
 						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_WATCH]);
 						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
 					});
 					
 					// unwatch local server events
 					socket.on('unwatchLocal', function(request) {
-						var req = new IORequest(request, socket, session, self._global, remoteAddress, secure);
-						var res = new IOResponse(request, socket, session, self._global, remoteAddress, secure);
+						var req = new IORequest(request, socket, session, self.global, remoteAddress, secure);
+						var res = new IOResponse(request, socket, session, self.global, remoteAddress, secure);
 						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_UNWATCH]);
 						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
 					});
 					
 					// watch remote server events
 					socket.on('watchRemote', function(request) {
-						var req = new IORequest(request, socket, session, self._global, remoteAddress, request.secure);
-						var res = new IOResponse(request, socket, session, self._global, remoteAddress, secure);
+						var req = new IORequest(request, socket, session, self.global, remoteAddress, request.secure);
+						var res = new IOResponse(request, socket, session, self.global, remoteAddress, secure);
 						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_WATCH]);
 						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
 					});
 					
 					// unwatch remote server events
 					socket.on('unwatchRemote', function(request) {
-						var req = new IORequest(request, socket, session, self._global, remoteAddress, secure);
-						var res = new IOResponse(request, socket, session, self._global, remoteAddress, secure);
+						var req = new IORequest(request, socket, session, self.global, remoteAddress, secure);
+						var res = new IOResponse(request, socket, session, self.global, remoteAddress, secure);
 						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_UNWATCH]);
 						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
 					});
@@ -1533,6 +1554,8 @@ var nCombo = function() {
 				var hashedKey = shasum.digest('hex');
 				ws.init(hashedKey);
 				gateway.init(self._appDirPath + '/sims/', self._dataClient, self._customSIMExtension);
+				
+				self.emit(self.EVENT_WORKER_START);
 				process.send({action: 'ready'});
 			});
 		}
@@ -1706,6 +1729,8 @@ var nCombo = function() {
 					portScanner.findAPortNotInUse(self._options.port + 1, self._options.port + 1000, 'localhost', function(error, datPort) {
 						console.log('   ' + self.colorText('[Busy]', 'yellow') + ' Launching nData server');
 						
+						var workerIndex = 0;
+						
 						if(error) {
 							console.log('   nCombo Error - Failed to acquire new port; try relaunching');
 							process.exit();
@@ -1722,15 +1747,19 @@ var nCombo = function() {
 							
 							self._dataClient = ndata.createClient(dataPort, pass);
 							
-							var workerReadyHandler = function(data) {
+							var workerReadyHandler = function(data, worker, workers) {
 								if(++activeWorkers >= self._options.workers) {
+									var i;
+									for(i in workers) {
+										workers[i].send({action: 'emit', event: self.EVENT_LEADER_START});
+									}
 									console.log('   ' + self.colorText('[Active]', 'green') + ' nCombo server started on port ' + self._options.port + ' - Number of workers: ' + self._options.workers);
 								}
 							}
 							
 							var launchWorker = function() {
 								worker = cluster.fork();
-								worker.send({action: 'init', dataPort: dataPort, dataKey: pass, cacheVersion: self._cacheVersion, minifiedScripts: minifiedScripts, bundles: bundles});
+								worker.send({action: 'init', workerIndex: workerIndex++, dataPort: dataPort, dataKey: pass, cacheVersion: self._cacheVersion, minifiedScripts: minifiedScripts, bundles: bundles});
 								return worker;
 							}
 							
@@ -1743,7 +1772,7 @@ var nCombo = function() {
 									worker.on('message', function workerHandler(data) {
 										worker.removeListener('message', workerHandler);
 										if(data.action == 'ready') {
-											workerReadyHandler(data);
+											workerReadyHandler(data, worker, workers);
 										}
 									});
 									workers.push(worker);
@@ -1792,6 +1821,8 @@ var nCombo = function() {
 				if(data.action == 'init') {
 					dataPort = data.dataPort;
 					dataKey = data.dataKey;
+					self.workerIndex = data.workerIndex;
+					self.isLeader = data.workerIndex == self._options.workers - 1;
 					self._bundles = data.bundles;
 					self._minifiedScripts = data.minifiedScripts;
 					self._cacheVersion = data.cacheVersion;
@@ -1799,6 +1830,12 @@ var nCombo = function() {
 					begin();
 				} else if(data.action == 'update') {
 					self._cacheResponder.cache(data.url, data.content, true);
+				} else if(data.action == 'emit') {
+					if(data.event == self.EVENT_LEADER_START) {
+						self.isLeader && self.emit(data.event, data.data);
+					} else {
+						self.emit(data.event, data.data);
+					}
 				}
 			}
 			

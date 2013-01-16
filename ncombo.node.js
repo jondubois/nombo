@@ -646,16 +646,16 @@ var nCombo = function() {
 		res.setHeader('Access-Control-Allow-Origin', '*');
 		
 		if(self._options.release && cache.has(cacheKey)) {
-			self._respond(req, res, cache.get(cacheKey), 'text/html');
+			self._respond(req, res, cache.get(cacheKey), 'text/html', true);
 		} else {
-			var includeString = self._getScriptTag(self._frameworkURL + 'smartcachemanager.js', 'text/javascript') + "\n";
-			includeString += self._getScriptTag('/~timecache', 'text/javascript') + "\n";
-			includeString += self._getScriptTag(self._spinJSURL, 'text/javascript') + "\n";
-			includeString += self._getScriptTag(self._frameworkModulesURL + 'socket.io-client/dist/socket.io.min.js', 'text/javascript') + "\n";
+			var includeString = self._getScriptTag(self._frameworkURL + 'smartcachemanager.js', 'text/javascript') + "\n\t";
+			includeString += self._getScriptTag('/~timecache', 'text/javascript') + "\n\t";
+			includeString += self._getScriptTag(self._spinJSURL, 'text/javascript') + "\n\t";
+			includeString += self._getScriptTag(self._frameworkModulesURL + 'socket.io-client/dist/socket.io.min.js', 'text/javascript') + "\n\t";
 			includeString += self._getScriptTag(self._frameworkURL + 'session.js', 'text/javascript');
 			
 			var html = self._rootTemplate({title: self._options.title, includes: new handlebars.SafeString(includeString)});
-			self._respond(req, res, html, 'text/html');
+			self._respond(req, res, html, 'text/html', true);
 		}
 	}
 	
@@ -1628,10 +1628,10 @@ var nCombo = function() {
 			bundleOptions.debug = !self._options.release;
 			bundleOptions.exports = 'require';
 			
-			var scriptBundle = browserify(bundleOptions);			
+			var scriptBundle = browserify(bundleOptions);
 			scriptBundle.addEntry(self._appDirPath + appDef.appScriptsURL + 'index.js');
 			
-			var updateJSBundle = function(workers) {
+			var updateScriptBundle = function(workers) {
 				var jsBundle = scriptBundle.bundle();
 				if(self._options.release) {
 					jsBundle = scriptManager.minify(jsBundle);
@@ -1650,7 +1650,7 @@ var nCombo = function() {
 				updateCSSBundle();
 				updateTemplateBundle();
 				makeLibBundle();
-				updateJSBundle();
+				updateScriptBundle();
 			}
 			
 			var autoRebundle = function(workers) {			
@@ -1670,9 +1670,9 @@ var nCombo = function() {
 				var libWatcher = chokidar.watch(libPaths);
 				libWatcher.on('change', libRebundler);
 				libWatcher.on('unlink', libRebundler);
-			
+				
 				scriptBundle.on('bundle', function() {
-					updateJSBundle(workers);
+					updateScriptBundle(workers);
 				});
 			}
 			
@@ -1747,7 +1747,7 @@ var nCombo = function() {
 			});
 		} else {
 			var secure = false;
-		
+			
 			if(self._options.protocol == 'http') {
 				self._server = http.createServer(self._middleware[self.MIDDLEWARE_HTTP].run);
 			} else if(self._options.protocol == 'https') {

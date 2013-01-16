@@ -255,7 +255,7 @@ var $loader = {
 				if(err) {
 					if(!triggeredLoadAllFail) {
 						triggeredLoadAllFail = true;
-						$loader.grab._loadAllFail();
+						$loader._loadAllFail();
 					}
 				} else {
 					if(++numLoaded >= $loader._resources.length) {

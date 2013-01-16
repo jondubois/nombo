@@ -521,6 +521,25 @@ var nCombo = function() {
 	
 	self._spinJSURL = self._frameworkClientURL + 'libs/spin.js';
 	
+	var colorCodes = {
+		red: 31,
+		green: 32,
+		yellow: 33
+	}
+	
+	self.colorText = function(message, color) {
+		if(colorCodes[color]) {
+			return '\033[0;' + colorCodes[color] + 'm' + message + '\033[0m';
+		} else if(color) {
+			return '\033[' + color + 'm' + message + '\033[0m';
+		}
+		return message;
+	}
+	
+	self._successText = self.colorText('[Success]', 'green');
+	self._errorText = self.colorText('[Error]', 'red');
+	self._warningText = self.colorText('[Warning]', 'yellow');
+	
 	self._faviconHandler = function(req, res, next) {
 		var iconPath = self._appDirPath + '/assets/favicon.gif';
 		
@@ -1191,7 +1210,7 @@ var nCombo = function() {
 			
 			self._dataClient.on('ready', function() {
 				self._server.listen(self._options.port);
-				self._io = io.listen(self._server);
+				self._io = io.listen(self._server, {'log level': 1});
 				
 				var handleHandshake = function(handshakeData, callback) {
 					if(handshakeData.query.data) {
@@ -1519,6 +1538,7 @@ var nCombo = function() {
 		}
 		
 		if(cluster.isMaster) {
+			console.log('   ' + self.colorText('[Busy]', 'yellow') + ' Launching nCombo server');
 			if(!self._options.release) {
 				process.stdin.resume();
 				process.stdin.setEncoding('utf8');
@@ -1682,8 +1702,15 @@ var nCombo = function() {
 				if(err || status == 'open') {
 					console.log('   nCombo Error - Port ' + self._options.port + ' is already taken');
 					process.exit();
-				} else {					
+				} else {
 					portScanner.findAPortNotInUse(self._options.port + 1, self._options.port + 1000, 'localhost', function(error, datPort) {
+						console.log('   ' + self.colorText('[Busy]', 'yellow') + ' Launching nData server');
+						
+						if(error) {
+							console.log('   nCombo Error - Failed to acquire new port; try relaunching');
+							process.exit();
+						}
+						
 						dataPort = datPort;
 						var pass = crypto.randomBytes(32).toString('hex');
 						
@@ -1697,7 +1724,7 @@ var nCombo = function() {
 							
 							var workerReadyHandler = function(data) {
 								if(++activeWorkers >= self._options.workers) {
-									console.log('   nCombo server started on port ' + self._options.port + ' - Number of workers: ' + self._options.workers);
+									console.log('   ' + self.colorText('[Active]', 'green') + ' nCombo server started on port ' + self._options.port + ' - Number of workers: ' + self._options.workers);
 								}
 							}
 							

@@ -94,10 +94,31 @@ var rmdirRecursive = function(dirname) {
 }
 
 var createFrameworkDir = function(destDir, callback) {
-	var nComboSrcDir = __dirname + '/../../ncombo';
-	var progressMessage = 'Installing nCombo module... This may take a while.';
+	var nComboSrcDir = __dirname + '/..';
+	var progressMessage = 'Installing nCombo modules... This may take a while.';
 	var finishedMessage = 'Done';
 	var success = true;
+	
+	var copyModules = function() {
+		var nodeModulesDir = nComboSrcDir + '/node_modules';
+		var nodeModules = fs.readdirSync(nodeModulesDir);
+		var curFile, moduleDest;
+		var modulesDirs = [];
+		var i;
+		for(i in nodeModules) {
+			curFile = nodeModulesDir + '/' + nodeModules[i];
+			if(fs.statSync(curFile).isDirectory() && nodeModules[i] != 'ncombo') {
+				moduleDest = destDir + '/../' + nodeModules[i];
+				if(fs.existsSync(moduleDest)) {
+					wrench.rmdirSyncRecursive(moduleDest);
+				}
+				copyDirRecursive(curFile, moduleDest);
+			}
+		}
+	}
+	
+	copyModules();
+	
 	var proceed = function(confirm) {
 		if(confirm) {
 			console.log(progressMessage);

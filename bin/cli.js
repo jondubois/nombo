@@ -112,7 +112,7 @@ var createFrameworkDir = function(destDir, callback) {
 				if(fs.existsSync(moduleDest)) {
 					wrench.rmdirSyncRecursive(moduleDest);
 				}
-				copyDirRecursive(curFile, moduleDest);
+				fs.renameSync(curFile, moduleDest);
 			}
 		}
 	}

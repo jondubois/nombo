@@ -1,7 +1,7 @@
 {
 	"name": "ncombo",
 	"description": "Cloud application framework",
-	"version": "0.9.61",
+	"version": "0.9.62",
 	"author": {
 		"name": "JF Gros-Dubois",
 		"email": "flashthink@gmail.com"
@@ -75,6 +75,7 @@
 		"zeparser": "0.0.5"
 	},
 	"bundleDependencies": [
+		"nc",
 		"css-bundler",
 		"fileuploader",
 		"json",

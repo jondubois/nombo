@@ -1,7 +1,7 @@
 var http = require('http'),
 	https = require('https'),
 	path = require('path'),
-	pathManager = require('ncombo-core/pathmanager'),
+	pathManager = require('nc/pathmanager'),
 	mime = require('mime'),
 	fs = require('fs'),
 	url = require('url'),
@@ -10,11 +10,11 @@ var http = require('http'),
 	io = require('socket.io'),
 	nDataStore = require('socket.io-ndata'),
 	nmix = require('nmix'),
-	conf = require('ncombo-core/configmanager'),
-	gateway = require('ncombo-core/gateway'),
+	conf = require('nc/configmanager'),
+	gateway = require('nc/gateway'),
 	handlebars = require('./client/libs/handlebars'),
-	cache = require('ncombo-core/cache'),
-	ws = require('ncombo-core/webservice'),
+	cache = require('nc/cache'),
+	ws = require('nc/webservice'),
 	portScanner = require('portscanner'),
 	EventEmitter = require('events').EventEmitter,
 	json = require('json'),
@@ -23,9 +23,9 @@ var http = require('http'),
 	jsp = require("uglify-js").parser,
 	pro = require("uglify-js").uglify,
 	browserify = require('browserify'),
-	scriptManager = require('ncombo-core/scriptmanager'),
-	cssBundler = require('ncombo-core/css-bundler'),
-	templateBundler = require('ncombo-core/template-bundler'),
+	scriptManager = require('nc/scriptmanager'),
+	cssBundler = require('nc/css-bundler'),
+	templateBundler = require('nc/template-bundler'),
 	SmartCacheManager = require("./smartcachemanager").SmartCacheManager,
 	chokidar = require('chokidar'),
 	retry = require('retry');
@@ -181,11 +181,11 @@ var Session = nmix(function(sessionID, socketManager, dataClient, retryTimeout) 
 		dataClient.remove('__sessionauth.' + dataClient.escape(self.id), callback);
 	}
 	
-	self.on = function(event, listener, ackCallback) {
+	self.watch = function(event, listener, ackCallback) {
 		dataClient.watch(self._getEventKey(event), listener, ackCallback);
 	}
 	
-	self.once = function(event, listener, ackCallback) {
+	self.watchOnce = function(event, listener, ackCallback) {
 		dataClient.watchExclusive(self._getEventKey(event), listener, ackCallback);
 	}
 	
@@ -351,11 +351,11 @@ var Global = nmix(function(socketManager, dataClient, frameworkDirPath, appDirPa
 		dataClient.broadcast(event, data);
 	}
 	
-	self.on = function(event, listener, ackCallback) {
+	self.watch = function(event, listener, ackCallback) {
 		dataClient.watch(event, listener, ackCallback);
 	}
 	
-	self.once = function(event, listener, ackCallback) {
+	self.watchOnce = function(event, listener, ackCallback) {
 		dataClient.watchExclusive(event, listener, ackCallback);
 	}
 	
@@ -527,14 +527,14 @@ var nCombo = function() {
 	
 	self._config = conf.parseConfig(__dirname + '/config.node.json');
 	
-	self._prerouter = require('ncombo-core/router/prerouter.node.js');
-	self._cacheResponder = require('ncombo-core/router/cacheresponder.node.js');
-	self._router = require('ncombo-core/router/router.node.js');
-	self._preprocessor = require('ncombo-core/router/preprocessor.node.js');
-	self._compressor = require('ncombo-core/router/compressor.node.js');
-	self._responder = require('ncombo-core/router/responder.node.js');
+	self._prerouter = require('nc/router/prerouter.node.js');
+	self._cacheResponder = require('nc/router/cacheresponder.node.js');
+	self._router = require('nc/router/router.node.js');
+	self._preprocessor = require('nc/router/preprocessor.node.js');
+	self._compressor = require('nc/router/compressor.node.js');
+	self._responder = require('nc/router/responder.node.js');
 	
-	self._fileUploader = require('ncombo-core/fileuploader');
+	self._fileUploader = require('nc/fileuploader');
 	
 	self._rootTemplateURL = self._frameworkClientURL + 'index.html';
 	self._rootTemplateBody = fs.readFileSync(self._frameworkClientDirPath + '/index.html', 'utf8');

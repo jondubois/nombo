@@ -1774,7 +1774,11 @@ var nCombo = function() {
 									for(i in workers) {
 										workers[i].send({action: 'emit', event: self.EVENT_LEADER_START});
 									}
-									console.log('   ' + self.colorText('[Active]', 'green') + ' nCombo server started on port ' + self._options.port + ' - Number of workers: ' + self._options.workers);
+									console.log('   ' + self.colorText('[Active]', 'green') + ' nCombo server started');
+									console.log('            Port: ' + self._options.port);
+									console.log('            Mode: ' + (self._options.release ? 'Release' : 'Debug'));
+									console.log('            Number of workers: ' + self._options.workers);
+									console.log();
 								}
 							}
 							

@@ -712,7 +712,7 @@ var nCombo = function() {
 			var includeString = self._getScriptTag(self._frameworkURL + 'smartcachemanager.js', 'text/javascript') + "\n\t";
 			includeString += self._getScriptTag('/~timecache', 'text/javascript') + "\n\t";
 			includeString += self._getScriptTag(self._spinJSURL, 'text/javascript') + "\n\t";
-			includeString += self._getScriptTag(self._frameworkModulesURL + 'socket.io-client/dist/socket.io.min.js', 'text/javascript') + "\n\t";
+			includeString += self._getScriptTag(self._frameworkURL + 'socket.io.min.js', 'text/javascript') + "\n\t";
 			includeString += self._getScriptTag(self._frameworkURL + 'session.js', 'text/javascript');
 			
 			var html = self._rootTemplate({title: self._options.title, includes: new handlebars.SafeString(includeString)});
@@ -768,7 +768,7 @@ var nCombo = function() {
 				
 				var skipCache = (url == self._frameworkURL + 'smartcachemanager.js');
 				
-				if(skipCache || url == self._frameworkURL + 'node_modules/socket.io-client/dist/socket.io.min.js' || url == self._frameworkURL + 'session.js'
+				if(skipCache || url == self._frameworkURL + 'socket.io.min.js' || url == self._frameworkURL + 'session.js'
 						|| self.isFullAuthResource(url)) {
 					
 					if(self._options.release && cache.has(cacheKey)) {

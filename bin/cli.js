@@ -98,9 +98,9 @@ var createFrameworkDir = function(destDir, callback) {
 	var progressMessage = 'Installing nCombo modules... This may take a while.';
 	var finishedMessage = 'Done';
 	var success = true;
+	var nodeModulesDir = destDir + '/node_modules';
 	
-	var copyModules = function() {
-		var nodeModulesDir = nComboSrcDir + '/node_modules';
+	var moveModules = function() {
 		var nodeModules = fs.readdirSync(nodeModulesDir);
 		var curFile, moduleDest;
 		var modulesDirs = [];
@@ -108,21 +108,21 @@ var createFrameworkDir = function(destDir, callback) {
 		for(i in nodeModules) {
 			curFile = nodeModulesDir + '/' + nodeModules[i];
 			if(fs.statSync(curFile).isDirectory() && nodeModules[i] != 'ncombo') {
-				moduleDest = destDir + '/../' + nodeModules[i];
+				moduleDest = nodeModulesDir + '/../../' + nodeModules[i];
 				if(fs.existsSync(moduleDest)) {
 					wrench.rmdirSyncRecursive(moduleDest);
 				}
 				copyDirRecursive(curFile, moduleDest);
+				wrench.rmdirSyncRecursive(curFile);
 			}
 		}
 	}
-	
-	copyModules();
 	
 	var proceed = function(confirm) {
 		if(confirm) {
 			console.log(progressMessage);
 			success = rmdirRecursive(destDir) && copyDirRecursive(nComboSrcDir, destDir);
+			moveModules();
 			console.log(finishedMessage);
 		}
 		callback(success);
@@ -133,10 +133,12 @@ var createFrameworkDir = function(destDir, callback) {
 		var destPkg = parsePackageFile(destDir);
 		
 		if(srcPkg.version == destPkg.version) {
+			moveModules();
 			callback(success);
 		} else if(force) {
 			console.log(progressMessage);
 			success = rmdirRecursive(destDir) && copyDirRecursive(nComboSrcDir, destDir);
+			moveModules();
 			console.log(finishedMessage);
 			callback(success);
 		} else {
@@ -145,6 +147,7 @@ var createFrameworkDir = function(destDir, callback) {
 	} else {
 		console.log(progressMessage);
 		success = copyDirRecursive(nComboSrcDir, destDir);
+		moveModules();
 		console.log(finishedMessage);
 		callback(success);
 	}

@@ -78,8 +78,29 @@ var AbstractDataClient = function(dataClient, keyTransformFunction) {
 		dataClient.hasKey.apply(dataClient, arguments);
 	}
 	
-	self.run = function() {
-		dataClient.run.apply(dataClient, arguments);
+	self.stringify = function(value) {
+		return dataClient.stringify(value);
+	}
+	
+	self.escape = function(value) {
+		return dataClient.escape(value);
+	}
+	
+	self.input = function(value) {
+		return dataClient.input(value);
+	}
+	
+	self.query = function(query, data) {
+		var i;
+		for(i in data) {
+			data[i] = self.input(data[i]);
+		}
+		var queryTemplate = handlebars.compile(query, {noEscape: true});
+		return queryTemplate(data);
+	}
+	
+	self.run = function(code, callback) {
+		dataClient.run(code, keyTransformFunction(), callback);
 	}
 }
 
@@ -98,7 +119,7 @@ var SessionEmitter = function(sessionID, namespace, socketManager, dataClient, r
 	}
 	
 	self.emitRaw = function(eventData) {
-		dataClient.get('__opensessions.#(' + sessionID + ')', function(err, socks) {
+		dataClient.get('__opensessions.' + dataClient.escape(sessionID), function(err, socks) {
 			if(err) {
 				console.log('   nCombo Error - Failed to get active socket list');
 			} else {
@@ -113,29 +134,29 @@ var SessionEmitter = function(sessionID, namespace, socketManager, dataClient, r
 
 var Session = nmix(function(sessionID, socketManager, dataClient, retryTimeout) {
 	var self = this;
+	self.id = sessionID;
+	
 	self._listeners = {};
 	
 	self._getDataKey = function(key) {
 		if(key) {
-			return '__sessiondata.#(' + self.id + ').#(' + key + ')';
+			return '__sessiondata.' + dataClient.escape(self.id) + '.' + dataClient.escape(key);
 		} else {
-			return '__sessiondata.#(' + self.id + ')';
+			return '__sessiondata.' + dataClient.escape(self.id);
 		}
 	}
 	
 	self._getEventKey = function(event) {
 		if(event) {
-			return '__sessionevent.#(' + self.id + ').#(' + event + ')';
+			return '__sessionevent.' + dataClient.escape(self.id) + '.' + dataClient.escape(event);
 		} else {
-			return '__sessionevent.#(' + self.id + ')';
+			return '__sessionevent.' + dataClient.escape(self.id);
 		}
 	}
 	
 	self.initMixin(AbstractDataClient, dataClient, self._getDataKey);
 	
 	self.EVENT_DESTROY = 'destroy';
-	
-	self.id = sessionID;
 	
 	self._emitterNamespace = new SessionEmitter(self.id, '__main', socketManager, dataClient, retryTimeout);
 	self._namespaces = {'__main': self._emitterNamespace};
@@ -149,15 +170,15 @@ var Session = nmix(function(sessionID, socketManager, dataClient, retryTimeout) 
 	}
 	
 	self.setAuth = function(data, callback) {
-		dataClient.set('__sessionauth.#(' + self.id + ')', data, callback);
+		dataClient.set('__sessionauth.' + dataClient.escape(self.id), data, callback);
 	}
 
 	self.getAuth = function(callback) {
-		dataClient.get('__sessionauth.#(' + self.id + ')', callback);
+		dataClient.get('__sessionauth.' + dataClient.escape(self.id), callback);
 	}
 
 	self.clearAuth = function(callback) {
-		dataClient.remove('__sessionauth.#(' + self.id + ')', callback);
+		dataClient.remove('__sessionauth.' + dataClient.escape(self.id), callback);
 	}
 	
 	self.on = function(event, listener, ackCallback) {
@@ -180,11 +201,11 @@ var Session = nmix(function(sessionID, socketManager, dataClient, retryTimeout) 
 	}
 	
 	self._addSocket = function(socket, callback) {
-		dataClient.set('__opensessions.#(' + self.id + ').#(' + socket.id + ')', 1, callback);
+		dataClient.set('__opensessions.' + dataClient.escape(self.id) + '.' + dataClient.escape(socket.id), 1, callback);
 	}
 	
 	self.getSockets = function(callback) {
-		dataClient.get('__opensessions.#(' + self.id + ')', function(err, data) {
+		dataClient.get('__opensessions.' + dataClient.escape(self.id), function(err, data) {
 			if(err) {
 				callback(err);
 			} else {
@@ -199,13 +220,13 @@ var Session = nmix(function(sessionID, socketManager, dataClient, retryTimeout) 
 	}
 	
 	self.countSockets = function(callback) {
-		dataClient.count('__opensessions.#(' + self.id + ')', callback);
+		dataClient.count('__opensessions.' + dataClient.escape(self.id), callback);
 	}
 	
 	self._removeSocket = function(socket, callback) {		
 		var operation = retry.operation(self._retryOptions);
 		operation.attempt(function() {
-			dataClient.remove('__opensessions.#(' + self.id + ').#(' + socket.id + ')', function(err) {
+			dataClient.remove('__opensessions.' + dataClient.escape(self.id) + '.' + dataClient.escape(socket.id), function(err) {
 				_extendRetryOperation(operation);
 				if(operation.retry(err)) {
 					return;
@@ -226,7 +247,7 @@ var Session = nmix(function(sessionID, socketManager, dataClient, retryTimeout) 
 		
 		var removeSessionOp = retry.operation(self._retryOptions);
 		removeSessionOp.attempt(function() {
-			dataClient.remove('__opensessions.#(' + self.id + ')', function(err) {
+			dataClient.remove('__opensessions.' + dataClient.escape(self.id), function(err) {
 				_extendRetryOperation(removeSessionOp);
 				removeSessionOp.retry(err);
 			});
@@ -259,9 +280,9 @@ var GlobalEmitter = function(namespace, socketManager, dataClient) {
 	
 	self._getSessionEventKey = function(sessionID, key) {
 		if(key) {
-			return '__sessionevent.#(' + sessionID + ').#(' + key + ')';
+			return '__sessionevent.' + dataClient.escape(sessionID) + '.' + dataClient.escape(key);
 		} else {
-			return '__sessionevent.#(' + sessionID + ')';
+			return '__sessionevent.' + dataClient.escape(sessionID);
 		}
 	}
 	
@@ -283,7 +304,7 @@ var GlobalEmitter = function(namespace, socketManager, dataClient) {
 	}
 	
 	self.emit = function(sessionID, event, data) {
-		dataClient.get('__opensessions.#(' + sessionID + ')', function(err, socks) {
+		dataClient.get('__opensessions.' + dataClient.escape(sessionID), function(err, socks) {
 			if(err) {
 				console.log('   nCombo Error - Failed to get active socket list');
 			} else {
@@ -297,7 +318,7 @@ var Global = nmix(function(socketManager, dataClient, frameworkDirPath, appDirPa
 	var self = this;
 	
 	self._getDataKey = function(key) {
-		return '__globaldata.#(' + key + ')';
+		return '__globaldata.' + dataClient.escape(key);
 	}
 	
 	self.initMixin(AbstractDataClient, dataClient, self._getDataKey);
@@ -1079,7 +1100,7 @@ var nCombo = function() {
 	self._cleanupWorker = function(pid) {
 		var getWorkerDataOp = retry.operation(self._retryOptions);
 		getWorkerDataOp.attempt(function() {
-			self._dataClient.get('__workers.#(' + pid + ')', function(err, data) {
+			self._dataClient.get('__workers.' + self._dataClient.escape(pid), function(err, data) {
 				_extendRetryOperation(getWorkerDataOp);
 				if(getWorkerDataOp.retry(err)) {
 					return;
@@ -1091,7 +1112,7 @@ var nCombo = function() {
 						(function(sockID) {
 							var removeOpenSocketOp = retry.operation(self._retryOptions);
 							removeOpenSocketOp.attempt(function() {
-								self._dataClient.remove('__opensockets.#(' + sockID + ')', function(err) {
+								self._dataClient.remove('__opensockets.' + self._dataClient.escape(sockID), function(err) {
 									_extendRetryOperation(removeOpenSocketOp);
 									removeOpenSocketOp.retry(err);
 								});
@@ -1103,7 +1124,7 @@ var nCombo = function() {
 						(function(sid) {
 							var removeOpenSessionOp = retry.operation(self._retryOptions);
 							removeOpenSessionOp.attempt(function() {
-								self._dataClient.remove('__opensessions.#(' + sid + ')', function(err) {
+								self._dataClient.remove('__opensessions.' + self._dataClient.escape(sid), function(err) {
 									_extendRetryOperation(removeOpenSessionOp);
 									removeOpenSessionOp.retry(err);
 								});
@@ -1114,7 +1135,7 @@ var nCombo = function() {
 				
 				var removeWorkerSocketsOp = retry.operation(self._retryOptions);
 				removeWorkerSocketsOp.attempt(function() {
-					self._dataClient.remove('__workers.#(' + pid + ')', function(err) {
+					self._dataClient.remove('__workers.' + self._dataClient.escape(pid), function(err) {
 						_extendRetryOperation(removeWorkerSocketsOp);
 						removeWorkerSocketsOp.retry(err);
 					});
@@ -1332,11 +1353,11 @@ var nCombo = function() {
 					}
 					
 					var addAddressQuery = 'function(DataMap) { \
-						if(DataMap.hasKey("__connectedaddresses.#(' + remoteAddress.address + ')")) { \
-							var curValue = DataMap.get("__connectedaddresses.#(' + remoteAddress.address + ')"); \
-							DataMap.set("__connectedaddresses.#(' + remoteAddress.address + ')", curValue + 1); \
+						if(DataMap.hasKey("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '")) { \
+							var curValue = DataMap.get("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '"); \
+							DataMap.set("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '", curValue + 1); \
 						} else { \
-							DataMap.set("__connectedaddresses.#(' + remoteAddress.address + ')", 1) \
+							DataMap.set("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '", 1) \
 						} \
 					}';
 					
@@ -1344,7 +1365,7 @@ var nCombo = function() {
 					
 					var failFlag = false;
 					
-					self._dataClient.set('__workers.#(' + cluster.worker.process.pid + ').sockets.#(' + socket.id + ')', 1, function(err) {
+					self._dataClient.set('__workers.' + self._dataClient.escape(cluster.worker.process.pid) + '.sockets.' + self._dataClient.escape(socket.id), 1, function(err) {
 						if(err && !failFlag) {
 							self.emit(self.EVENT_SOCKET_FAIL, socket);
 							failFlag = true;
@@ -1353,7 +1374,7 @@ var nCombo = function() {
 						}
 					});
 					
-					self._dataClient.set('__workers.#(' + cluster.worker.process.pid + ').sessions.#(' + sid + ')', 1, function(err) {
+					self._dataClient.set('__workers.' + self._dataClient.escape(cluster.worker.process.pid) + '.sessions.' + self._dataClient.escape(sid), 1, function(err) {
 						if(err && !failFlag) {
 							self.emit(self.EVENT_SOCKET_FAIL, socket);
 							failFlag = true;
@@ -1362,7 +1383,7 @@ var nCombo = function() {
 						}
 					});
 					
-					self._dataClient.set('__opensockets.#(' + socket.id + ')', 1, function(err) {
+					self._dataClient.set('__opensockets.' + self._dataClient.escape(socket.id), 1, function(err) {
 						if(err) {
 							if(!failFlag) {
 								self.emit(self.EVENT_SOCKET_FAIL, socket);
@@ -1446,7 +1467,7 @@ var nCombo = function() {
 					var removeOpenSocket = function(callback) {
 						var operation = retry.operation(self._retryOptions);
 						operation.attempt(function() {
-							self._dataClient.remove('__opensockets.#(' + socket.id + ')', function(err) {
+							self._dataClient.remove('__opensockets.' + self._dataClient.escape(socket.id), function(err) {
 								_extendRetryOperation(operation);
 								if(operation.retry(err)) {
 									return;
@@ -1460,7 +1481,7 @@ var nCombo = function() {
 					var removeWorkerSocket = function() {
 						var operation = retry.operation(self._retryOptions);
 						operation.attempt(function() {
-							self._dataClient.remove('__workers.#(' + cluster.worker.process.pid + ').sockets.#(' + socket.id + ')', function(err) {
+							self._dataClient.remove('__workers.' + self._dataClient.escape(cluster.worker.process.pid) + '.sockets.' + self._dataClient.escape(socket.id), function(err) {
 								_extendRetryOperation(operation);
 								operation.retry(err);
 							});
@@ -1470,7 +1491,7 @@ var nCombo = function() {
 					var removeWorkerSession = function() {
 						var operation = retry.operation(self._retryOptions);
 						operation.attempt(function() {
-							self._dataClient.remove('__workers.#(' + cluster.worker.process.pid + ').sessions.#(' + sid + ')', function(err) {
+							self._dataClient.remove('__workers.' + self._dataClient.escape(cluster.worker.process.pid) + '.sessions.' + self._dataClient.escape(sid), function(err) {
 								_extendRetryOperation(operation);
 								operation.retry(err);
 							});
@@ -1512,13 +1533,13 @@ var nCombo = function() {
 						self.emit(self.EVENT_SOCKET_DISCONNECT, socket);
 						
 						var jsQuery = 'function(DataMap) { \
-							if(DataMap.hasKey("__connectedaddresses.#(' + remoteAddress.address + ')")) { \
-								var newValue = DataMap.get("__connectedaddresses.#(' + remoteAddress.address + ')") - 1; \
+							if(DataMap.hasKey("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '")) { \
+								var newValue = DataMap.get("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '") - 1; \
 								if(newValue <= 0) { \
-									DataMap.remove("__connectedaddresses.#(' + remoteAddress.address + ')"); \
+									DataMap.remove("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '"); \
 									return 0; \
 								} else { \
-									DataMap.set("__connectedaddresses.#(' + remoteAddress.address + ')", newValue); \
+									DataMap.set("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '", newValue); \
 									return newValue; \
 								} \
 							} else { \

@@ -10,7 +10,7 @@ module.exports.addMessage = function(req, res) {
 	req.global.get('messages', function(err, messages) {
 		if(err) {
 			// Send an error to the client.
-			req.error('Failed to add message');
+			res.error('Failed to add message');
 		} else {
 			if(!messages) {
 				messages = [];
@@ -39,6 +39,7 @@ module.exports.addMessage = function(req, res) {
 						The emit method allows you to emit the event to a specific session (by ID) while the broadcast method sends the event to every client that is connected to nCombo
 					*/
 					req.global.broadcast('updatemessages', messages);
+					
 					res.end();
 				}
 			});

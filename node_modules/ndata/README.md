@@ -35,13 +35,18 @@ The client exposes the following methods:
 (Please see the section on keys (below) to see how you can use keys in nData.
 Also, note that the callback argument in all of the following cases is optional.)
 
-- run(code, callback) - Run a JavaScript function declaration as a query on the nData server - This function declaration accepts the DataMap as a parameter. The callback is in form: callback(err, data) Example:
+- run(code, callback) - Run a JavaScript function declaration (code) as a query on the nData server - This function declaration accepts the DataMap as a parameter.
+This is the most important data function in nData, all the other data functions are utility functions to make things quicker. Using run() offers the most flexibility.
+When using run(), make sure that you escape user input using the input() function.
+The callback is in form: callback(err, data) Example:
 
 ```js
 client.run('function(DataMap) { DataMap.set("main.message", "This is an important message"); return DataMap.get("main"); }', function(err, data) {
 	console.log(data); // outputs {message: "This is an important message"}
 });
 ```
+
+- input(value) - Escapes user input to make it safe for use within run(). The value parameter can be any JSON-compatible object.
 
 - set(key, value, callback) - Set a key-value pair, when the operation has been completed, callback will be executed.
 The callback is in form: callback(err)
@@ -50,19 +55,30 @@ The callback is in form: callback(err)
 this existing value will be placed inside an empty array and the specified value argument will be appended to that array.
 The callback is in form: callback(err)
 
-- remove(key, callback) - Remove the value at key. If value is an array, it will remove the entire array.
+- concat(key, value, callback) - Concatenate the array or object at key with the specified array or object (value).
+The callback is in form: callback(err)
+
+- remove(key,[getValue,] callback) - Remove the value at key. If value is an array, it will remove the entire array.
+The optional getValue is a boolean which indicates whether or not to get the removed value in the callback.
+The callback is in form: callback(err, value)
+
+- removeRange(key, fromIndex,[ toIndex, getValue,] callback) - Remove a range of values at key between fromIndex and toIndex.
+This function assumes that the value at key is an object or array. The optional getValue argument specified whether or not to return the removed section as an argument to the callback.
 The callback is in form: callback(err, value)
 
 - removeAll(callback) - Clear nData completely.
 The callback is in form: callback(err)
 
-- pop(key, callback) - Remove the last numerically-indexed entry at key; callback is in the form: callback(err, value)
+- pop(key,[getValue,] callback) - Remove the last numerically-indexed entry at key; callback is in the form: callback(err, value).
+The optional getValue is a boolean which indicates whether or not to get the removed value in the callback.
+The callback is in form: callback(err, value)
 
 - get(key, callback) - Get the value at key; callback is in form: callback(err, value)
 
-- getRange(key, fromIndex,[ toIndex,] callback) - This function assumes that the value at key is an Array or Object; 
+- getRange(key, fromIndex,[ toIndex,] callback) - This function assumes that the value at key is an Array or Object;
 capture all values starting at fromIndex and finishing at toIndex (but not including toIndex).
 If toIndex is not specified, all values from fromIndex until the end of the Array/Object will be included).
+The callback is in form: callback(err, value)
 
 - getAll(callback) - Get all the values in nData; callback is in form: callback(err, value)
 

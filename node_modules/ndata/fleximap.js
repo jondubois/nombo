@@ -1,7 +1,7 @@
 var FlexiMap = function(object) {
 	var self = this;
 	self.length = 0;
-	self._data = [];
+	var _data = [];
 	
 	FlexiMap.isEmpty = function(object) {
 		var i;
@@ -68,7 +68,7 @@ var FlexiMap = function(object) {
 		if(keyPath) {
 			return self.count(keyPath);
 		} else {
-			return self._data.length;
+			return _data.length;
 		}
 	}
 	
@@ -77,13 +77,13 @@ var FlexiMap = function(object) {
 		if(FlexiMap.isIterable(object)) {
 			for(i in object) {
 				if(FlexiMap.isIterable(object[i])) {
-					self._data[i] = new FlexiMap(object[i]);
+					_data[i] = new FlexiMap(object[i]);
 				} else {
-					self._data[i] = object[i];
+					_data[i] = object[i];
 				}
 			}
 		} else {
-			self._data.push(object);
+			_data.push(object);
 		}
 	}
 	
@@ -92,17 +92,17 @@ var FlexiMap = function(object) {
 	}
 	
 	self._getValue = function(key) {
-		return self._data[key];
+		return _data[key];
 	}
 	
 	self._setValue = function(key, value) {
-		self._data[key] = value;
+		_data[key] = value;
 	}
 	
 	self._deleteValue = function(key) {
-		delete self._data[key];
+		delete _data[key];
 		if(self._isInt(key)) {
-			self._data.splice(key, 1);
+			_data.splice(key, 1);
 		}
 	}
 	
@@ -118,6 +118,11 @@ var FlexiMap = function(object) {
 				return undefined;
 			}
 		}
+	}
+	
+	self.getRaw = function(keyPath) {
+		var keyChain = keyPath.split('.');
+		return self._get(keyChain);
 	}
 	
 	self.get = function(keyPath) {
@@ -136,7 +141,7 @@ var FlexiMap = function(object) {
 		
 		if(value instanceof Array) {
 			range = [];
-			if(!toIndex || toIndex > value.length) {
+			if(toIndex == null || toIndex > value.length) {
 				toIndex = value.length;
 			}			
 			for(i=fromIndex; i<toIndex; i++) {
@@ -179,7 +184,7 @@ var FlexiMap = function(object) {
 	}
 	
 	self.hasImmediateKey = function(key) {
-		return self._data[key] !== undefined;
+		return _data[key] !== undefined;
 	}
 	
 	self.hasKey = function(keyPath) {
@@ -246,12 +251,47 @@ var FlexiMap = function(object) {
 		
 		if(!target) {
 			target = new FlexiMap([value]);
-			self.set(keyPath, target);
+			self._set(keyChain, target);
 		} else if(!(target instanceof FlexiMap)) {
 			target = new FlexiMap([target, value]);
-			self.set(keyPath, target);
+			self._set(keyChain, target);
 		} else {
-			self.set(keyPath + '.' + target.getLength(), value);
+			keyChain.push(target.getLength());
+			self._set(keyChain, value);
+		}
+		return value;
+	}
+	
+	self.concat = function(keyPath, value) {
+		var keyChain = keyPath.split('.');
+		var target = self._get(keyChain);
+		
+		if(!FlexiMap.isIterable(value)) {
+			value = [value];
+		}
+		
+		if(!target) {
+			target = new FlexiMap(value);
+			self._set(keyChain, target);
+		} else if(!(target instanceof FlexiMap)) {
+			target = new FlexiMap([target].concat(value));
+			self._set(keyChain, target);
+		} else {
+			var i;
+			var keyChainLastIndex = keyChain.length;
+			if(value instanceof Array) {
+				var len = target.getLength();
+				keyChain.push(len);
+				for(i in value) {
+					self._set(keyChain, value[i]);
+					keyChain[keyChainLastIndex] += 1;
+				}
+			} else {
+				for(i in value) {
+					keyChain[keyChainLastIndex] = i;
+					self._set(keyChain, value[i]);
+				}
+			}
 		}
 		return value;
 	}
@@ -284,6 +324,38 @@ var FlexiMap = function(object) {
 		}
 	}
 	
+	self.removeRange = function(keyPath, fromIndex, toIndex) {
+		var value = self.get(keyPath);
+		var range;
+		var i;
+		
+		if(value instanceof Array) {
+			if(toIndex == null || toIndex > value.length) {
+				toIndex = value.length;
+			}
+			range = value.splice(fromIndex, toIndex - fromIndex);
+			self.set(keyPath, value);
+		} else {
+			range = {};
+			var deleting = false;
+			for(i in value) {
+				if(i == fromIndex) {
+					deleting = true;
+				}
+				if(deleting && i == toIndex) {
+					break;
+				}
+				if(deleting) {
+					range[i] = value[i];
+					delete value[i];
+				}
+			}
+			self.set(keyPath, value);
+		}
+		
+		return range;
+	}
+	
 	self.pop = function(keyPath) {
 		var target = self.get(keyPath);
 		if(!target) {
@@ -297,7 +369,7 @@ var FlexiMap = function(object) {
 	}
 	
 	self.removeAll = function() {
-		self._data = [];
+		_data = [];
 	}
 	
 	self._arrayToObject = function(array) {
@@ -310,16 +382,16 @@ var FlexiMap = function(object) {
 	}
 	
 	self.getData = function() {
-		var isArray = (self._data.length > 0) ? true : false;
+		var isArray = (_data.length > 0) ? true : false;
 		var i;
 		
 		var data = [];
 		
-		for(i in self._data) {
-			if(self._data[i] instanceof FlexiMap) {
-				data[i] = self._data[i].getData();
+		for(i in _data) {
+			if(_data[i] instanceof FlexiMap) {
+				data[i] = _data[i].getData();
 			} else {
-				data[i] = self._data[i];
+				data[i] = _data[i];
 			}
 		}
 		

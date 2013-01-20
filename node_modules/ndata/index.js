@@ -2,6 +2,7 @@ var fork = require('child_process').fork;
 var EventEmitter = require('events').EventEmitter;
 var ComSocket = require('./com').ComSocket;
 var FlexiMap = require('./fleximap').FlexiMap;
+var json = require('json');
 
 var DEFAULT_PORT = 9435;
 var HOST = '127.0.0.1';
@@ -171,7 +172,29 @@ var Client = function(port, host, secretKey, timeout) {
 	}
 	
 	self.escapeCode = function(str) {
-		return str.replace(/([()'"])/g, '\\u001b$1');
+		return str.replace(/([()])/g, '\\u001b$1');
+	}
+	
+	self.stringify = function(value) {
+		return json.stringify(value);
+	}
+	
+	self.escape = function(str) {
+		return self.escapeDots(self.escapeCode(str + ''));
+	}
+	
+	self.unescape = function(str) {
+		return str.replace(/\\+u001b/g, '').replace(/\\+u001a/g, '.');
+	}
+	
+	self.input = function(value) {
+		var type = typeof value;
+		if(type == 'object') {
+			return self.stringify(value);
+		} else if(type == 'number') {
+			return value;
+		}
+		return self.escape(value);	
 	}
 	
 	self.watch = function(event, handler, ackCallback) {
@@ -185,7 +208,7 @@ var Client = function(port, host, secretKey, timeout) {
 				ackCallback && ackCallback(err);
 				self.emit('watchfail');
 			} else {
-				self._watchMap.add(event, handler);
+				self._watchMap.add(self.unescape(event), handler);
 				ackCallback && ackCallback();
 				self.emit('watch');
 			}
@@ -214,7 +237,7 @@ var Client = function(port, host, secretKey, timeout) {
 				self.emit('watchfail');
 			} else {
 				if(!alreadyWatching) {
-					self._watchMap.add(event, handler);
+					self._watchMap.add(self.unescape(event), handler);
 				}
 				ackCallback && ackCallback(null, alreadyWatching);
 				self.emit('watch');
@@ -225,9 +248,9 @@ var Client = function(port, host, secretKey, timeout) {
 	
 	self.isWatching = function(event, handler) {
 		if(handler) {
-			return self._watchMap.hasValue(event, handler);
+			return self._watchMap.hasValue(self.unescape(event), handler);
 		} else {
-			return self._watchMap.hasKey(event);
+			return self._watchMap.hasKey(self.unescape(event));
 		}
 	}
 	
@@ -252,10 +275,11 @@ var Client = function(port, host, secretKey, timeout) {
 	
 	self.unwatch = function(event, handler, ackCallback) {
 		if(event) {
-			if(self._watchMap.hasKey(event)) {
+			var safeEvent = self.unescape(event);
+			if(self._watchMap.hasKey(safeEvent)) {
 				if(handler) {
 					var newWatchers = [];
-					var watchers = self._watchMap.get(event);
+					var watchers = self._watchMap.get(safeEvent);
 					var i;
 					for(i in watchers) {
 						if(watchers[i] != handler) {
@@ -265,10 +289,10 @@ var Client = function(port, host, secretKey, timeout) {
 					
 					var callback = function(err) {
 						if(!err) {
-							self._watchMap.set(event, newWatchers);
+							self._watchMap.set(safeEvent, newWatchers);
 						}
-						if(self._watchMap.count(event) < 1) {
-							self._watchMap.remove(event);
+						if(self._watchMap.count(safeEvent) < 1) {
+							self._watchMap.remove(safeEvent);
 						}
 						ackCallback && ackCallback(err);
 					}
@@ -276,16 +300,16 @@ var Client = function(port, host, secretKey, timeout) {
 					if(newWatchers.length < 1) {
 						self._unwatch(event, callback);
 					} else {
-						self._watchMap.set(event, newWatchers);
-						if(self._watchMap.count(event) < 1) {
-							self._watchMap.remove(event);
+						self._watchMap.set(safeEvent, newWatchers);
+						if(self._watchMap.count(safeEvent) < 1) {
+							self._watchMap.remove(safeEvent);
 						}
 						ackCallback && ackCallback();
 					}
 				} else {
 					var callback = function(err) {
 						if(!err) {
-							self._watchMap.remove(event);
+							self._watchMap.remove(safeEvent);
 						}
 						ackCallback && ackCallback(err);
 					}
@@ -316,24 +340,91 @@ var Client = function(port, host, secretKey, timeout) {
 			event: event,
 			value: value
 		}
+		
 		self._exec(command, callback);
 	}
 	
-	self.set = function(key, value, callback) {
+	/*
+		set(key, value,[ getValue,] callback)
+	*/
+	self.set = function() {
+		var key = arguments[0];
+		var value = arguments[1];
+		var getValue = false;
+		var callback;
+		if(arguments[2] instanceof Function) {
+			callback = arguments[2];
+		} else {
+			getValue = arguments[2];
+			callback = arguments[3];
+		}
+		
 		var command = {
 			action: 'set',
 			key: key,
 			value: value
 		}
+		
+		if(getValue) {
+			command.getValue = 1;
+		}
+		
 		self._exec(command, callback);
 	}
 	
-	self.add = function(key, value, callback) {
+	/*
+		add(key, value,[ getValue,] callback)
+	*/
+	self.add = function() {
+		var key = arguments[0];
+		var value = arguments[1];
+		var getValue = false;
+		var callback;
+		if(arguments[2] instanceof Function) {
+			callback = arguments[2];
+		} else {
+			getValue = arguments[2];
+			callback = arguments[3];
+		}
+		
 		var command = {
 			action: 'add',
 			key: key,
 			value: value
 		}
+		
+		if(getValue) {
+			command.getValue = 1;
+		}
+		
+		self._exec(command, callback);
+	}
+	
+	/*
+		concat(key, value,[ getValue,] callback)
+	*/
+	self.concat = function() {
+		var key = arguments[0];
+		var value = arguments[1];
+		var getValue = false;
+		var callback;
+		if(arguments[2] instanceof Function) {
+			callback = arguments[2];
+		} else {
+			getValue = arguments[2];
+			callback = arguments[3];
+		}
+		
+		var command = {
+			action: 'concat',
+			key: key,
+			value: value
+		}
+		
+		if(getValue) {
+			command.getValue = 1;
+		}
+		
 		self._exec(command, callback);
 	}
 	
@@ -388,7 +479,20 @@ var Client = function(port, host, secretKey, timeout) {
 		self._exec(command, callback);
 	}
 	
-	self.run = function(code, callback) {
+	/*
+		run(code,[ context,] callback)
+	*/
+	self.run = function() {
+		var code = arguments[0];
+		var context = null;
+		var callback;
+		if(arguments[1] instanceof Function) {
+			callback = arguments[1];
+		} else {
+			context = arguments[1];
+			callback = arguments[2];
+		}
+		
 		code = code.replace(/[\t ]+/g, ' ');
 		
 		var command = {
@@ -396,14 +500,71 @@ var Client = function(port, host, secretKey, timeout) {
 			value: code
 		}
 		
+		if(context) {
+			command.context = context;
+		}
+		
 		self._exec(command, callback);
 	}
 	
-	self.remove = function(key, callback) {
+	/*
+		remove(key,[ getValue,] callback)
+	*/
+	self.remove = function() {
+		var key = arguments[0];
+		var getValue = false;
+		var callback;
+		if(arguments[1] instanceof Function) {
+			callback = arguments[1];
+		} else {
+			getValue = arguments[1];
+			callback = arguments[2];
+		}
+		
 		var command = {
 			action: 'remove',
 			key: key
 		}
+		if(getValue) {
+			command.getValue = 1;
+		}
+		
+		self._exec(command, callback);
+	}
+	
+	/*
+		removeRange(key, fromIndex,[ toIndex, getValue] callback)
+	*/
+	self.removeRange = function() {
+		var key = arguments[0];
+		var fromIndex = arguments[1];
+		var toIndex = null;
+		var getValue = false;
+		var callback;
+		if(arguments[2] instanceof Function) {
+			callback = arguments[2];
+		} else if(arguments[3] instanceof Function) {
+			toIndex = arguments[2];
+			callback = arguments[3];
+		} else {
+			toIndex = arguments[2];
+			getValue = arguments[3];
+			callback = arguments[4];
+		}
+		
+		var command = {
+			action: 'removeRange',
+			fromIndex: fromIndex,
+			key: key
+		}
+		
+		if(toIndex) {
+			command.toIndex = toIndex;
+		}
+		if(getValue) {
+			command.getValue = 1;
+		}
+		
 		self._exec(command, callback);
 	}
 	
@@ -414,11 +575,28 @@ var Client = function(port, host, secretKey, timeout) {
 		self._exec(command, callback);
 	}
 	
-	self.pop = function(key, callback) {
+	/*
+		pop(key,[ getValue,] callback)
+	*/
+	self.pop = function() {
+		var key = arguments[0];
+		var getValue = false;
+		var callback;
+		if(arguments[1] instanceof Function) {
+			callback = arguments[1];
+		} else {
+			getValue = arguments[1];
+			callback = arguments[2];
+		}
+		
 		var command = {
 			action: 'pop',
 			key: key
 		}
+		if(getValue) {
+			command.getValue = 1;
+		}
+		
 		self._exec(command, callback);
 	}
 	

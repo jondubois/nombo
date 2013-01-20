@@ -70,11 +70,19 @@ var validateQuery = function(str) {
 	return /^ *function *\([^)]*\) *\{(\n|.)*\} *$/.test(str);
 }
 
-var run = function(code) {
+var run = function(code, context) {
 	if(!validateQuery(code)) {
 		throw "JavaScript query must be an anonymous function declaration";
 	}
-	return Function('return (' + escapeBackslashes(code) + ')(arguments[0], arguments[1]);')(DataMap, EventMap);
+	
+	var dataContext;
+	if(context) {
+		dataContext = DataMap.getRaw(context);
+	} else {
+		dataContext = DataMap;
+	}
+	
+	return Function('return (' + escapeBackslashes(code) + ')(arguments[0], arguments[1]);')(dataContext, EventMap);
 }
 
 var countTreeLeaves = function(tree) {
@@ -105,7 +113,11 @@ var actions = {
 
 	set: function(command, socket) {
 		var result = DataMap.set(command.key, command.value);
-		send(socket, {id: command.id, type: 'response', action: 'set', value: result});
+		var response = {id: command.id, type: 'response', action: 'set'};
+		if(command.getValue) {
+			response.value = result;
+		}
+		send(socket, response);
 	},
 	
 	get: function(command, socket) {
@@ -129,13 +141,26 @@ var actions = {
 	
 	add: function(command, socket) {
 		var result = DataMap.add(command.key, command.value);
-		send(socket, {id: command.id, type: 'response', action: 'add', value: result});
+		var response = {id: command.id, type: 'response', action: 'add'};
+		if(command.getValue) {
+			response.value = result;
+		}
+		send(socket, response);
+	},
+	
+	concat: function(command, socket) {
+		var result = DataMap.concat(command.key, command.value);
+		var response = {id: command.id, type: 'response', action: 'concat'};
+		if(command.getValue) {
+			response.value = result;
+		}
+		send(socket, response);
 	},
 	
 	run: function(command, socket) {
 		var ret = {id: command.id, type: 'response', action: 'run'};
 		try {
-			var result = run(command.value);
+			var result = run(command.value, command.context);
 			ret.value = result;
 		} catch(e) {
 			ret.error = 'nData Error - Exception at run(): ' + e;
@@ -145,7 +170,20 @@ var actions = {
 	
 	remove: function(command, socket) {
 		var result = DataMap.remove(command.key);
-		send(socket, {id: command.id, type: 'response', action: 'remove', value: result});
+		var response = {id: command.id, type: 'response', action: 'remove'};
+		if(command.getValue) {
+			response.value = result;
+		}
+		send(socket, response);
+	},
+	
+	removeRange: function(command, socket) {
+		var result = DataMap.removeRange(command.key, command.fromIndex, command.toIndex);
+		var response = {id: command.id, type: 'response', action: 'removeRange'};
+		if(command.getValue) {
+			response.value = result;
+		}
+		send(socket, response);
 	},
 	
 	removeAll: function(command, socket) {
@@ -155,7 +193,11 @@ var actions = {
 	
 	pop: function(command, socket) {
 		var result = DataMap.pop(command.key);
-		send(socket, {id: command.id, type: 'response', action: 'pop', value: result});
+		var response = {id: command.id, type: 'response', action: 'pop'};
+		if(command.getValue) {
+			response.value = result;
+		}
+		send(socket, response);
 	},
 	
 	hasKey: function(command, socket) {
@@ -229,12 +271,6 @@ var substitute = function(str) {
 
 var simplify = function(str) {
 	return str.replace(/[.]/g, dotSubstitute);
-}
-
-var escapeReplacement = escapeStr + '$1';
-
-var escape = function(str) {
-	return simplify(str.replace(/([()'"])/g, escapeReplacement));
 }
 
 var convertToString = function(object) {
@@ -327,7 +363,7 @@ var compile = function(str, macroMap, macroName) {
 var macros = {
 	'%': evaluate,
 	'$': substitute,
-	'#': escape
+	'#': simplify
 };
 
 server.on('connection', function(sock) {
@@ -343,13 +379,15 @@ server.on('connection', function(sock) {
 					if(command.value && typeof command.value == 'string') {
 						command.value = compile(command.value, macros);
 					}
+					if(command.context) {
+						command.context = compile(command.context, macros);
+					}
 					if(actions.hasOwnProperty(command.action)) {
 						actions[command.action](command, sock);
 					}
 				} else {
 					send(sock, {id: command.id, type: 'response', action: command.action, error: 'nData Error - The specified key was not a string'});
 				}
-			
 			} catch(e) {
 				if(e.stack) {
 					console.log(e.stack);
@@ -361,7 +399,6 @@ server.on('connection', function(sock) {
 				}
 				send(sock, {id: command.id, type: 'response', action:  command.action, error: 'nData Error - Failed to process command due to the following error: ' + e});
 			}
-			
 		} else {
 			var e = 'nData Error - Cannot process command before init handshake';
 			console.log(e);

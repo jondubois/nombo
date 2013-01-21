@@ -2,7 +2,7 @@
 
 process.stdin.resume();
 process.stdin.setEncoding('utf8');
-  
+
 var wrench = require('wrench');
 var fs = require('fs');
 var path = require('path');
@@ -98,17 +98,28 @@ var createFrameworkDir = function(destDir, callback) {
 	var progressMessage = 'Installing nCombo modules... This may take a while.';
 	var finishedMessage = 'Done';
 	var success = true;
-	var nodeModulesDir = destDir + '/node_modules';
+	var subModulesDir = destDir + '/node_modules';
+	var mainModulesDir = destDir + '/../';
+	var coreModulesDir = destDir + '/';
 	
 	var moveModules = function() {
-		var nodeModules = fs.readdirSync(nodeModulesDir);
+		var nodeModules = fs.readdirSync(subModulesDir);
+		var coreModules, coreModuleDir;
 		var curFile, moduleDest;
-		var modulesDirs = [];
-		var i;
+		var i, j;
 		for(i in nodeModules) {
-			curFile = nodeModulesDir + '/' + nodeModules[i];
-			if(fs.statSync(curFile).isDirectory() && nodeModules[i] != 'ncombo') {
-				moduleDest = nodeModulesDir + '/../../' + nodeModules[i];
+			curFile = subModulesDir + '/' + nodeModules[i];
+			if(nodeModules[i] == 'ncombo') {
+				coreModules = fs.readdirSync(curFile);
+				for(j in coreModules) {
+					if(coreModules[j] != 'index.js') {
+						coreModuleDir = curFile + '/' + coreModules[j];
+						copyDirRecursive(coreModuleDir, coreModulesDir + coreModules[j]);
+						wrench.rmdirSyncRecursive(coreModuleDir);
+					}
+				}
+			} else if(fs.statSync(curFile).isDirectory()) {
+				moduleDest = mainModulesDir + nodeModules[i];
 				if(fs.existsSync(moduleDest)) {
 					wrench.rmdirSyncRecursive(moduleDest);
 				}
@@ -243,34 +254,47 @@ if(!fs.existsSync(nodeModulesDir)) {
 }
 
 if(command == 'create' || command == 'samples') {
-	createFrameworkDir(nComboDestDir, function(frameworkSuccess) {
-		if(frameworkSuccess) {
-			if(command == 'samples') {
-				var samplesDestDir = path.normalize(wd + '/' + sampleDirName);
-				createSamplesDir(samplesDestDir, function(samplesSuccess) {
-					if(samplesSuccess) {
-						successMessage("Install process is complete. Run 'node " + sampleDirName + "/sampleappname/server' to launch. Access at http://localhost:8000/");
-					}
-					process.exit();
-				});
-			} else if(command == 'create') {
-				if(arg1) {
-					var appDestDir = path.normalize(wd + '/' + arg1);
-					createAppDir(appDestDir, function(appSuccess) {
-						if(appSuccess) {
-							successMessage("Install process is complete. Run 'node " + arg1 + "/server' to launch. Access at http://localhost:8000/");
+	var begin = function(confirm) {
+		if(confirm) {
+			createFrameworkDir(nComboDestDir, function(frameworkSuccess) {
+				if(frameworkSuccess) {
+					if(command == 'samples') {
+						var samplesDestDir = path.normalize(wd + '/' + sampleDirName);
+						createSamplesDir(samplesDestDir, function(samplesSuccess) {
+							if(samplesSuccess) {
+								successMessage("Install process is complete. Run 'node " + sampleDirName + "/memo/server' to launch the memo sample app. Access at http://localhost:8000/");
+							}
+							process.exit();
+						});
+					} else if(command == 'create') {
+						if(arg1) {
+							var appDestDir = path.normalize(wd + '/' + arg1);
+							createAppDir(appDestDir, function(appSuccess) {
+								if(appSuccess) {
+									successMessage("Install process is complete. Run 'node " + arg1 + "/server' to launch. Access at http://localhost:8000/");
+								}
+								process.exit();
+							});
+						} else {
+							successMessage('nCombo framework core has been installed. nCombo apps which are placed within the ' + wd + ' directory (including subdirectories) will use this framework core.');
+							process.exit();
 						}
-						process.exit();
-					});
+					}
 				} else {
-					successMessage('nCombo framework core has been installed. nCombo apps which are placed within the ' + wd + ' directory (including subdirectories) will use this framework core.');
 					process.exit();
 				}
-			}
+			});
 		} else {
+			errorMessage("nCombo installation was cancelled");
 			process.exit();
 		}
-	});
+	}
+	
+	if(force) {
+		begin(true);
+	} else {
+		prompConfirm('You are about to install nCombo. Please note that as part of the installation process, new modules will be added inside the ' + nodeModulesDir + ' directory - Existing modules may be overwitten. Would you like to continue (y/n)?', begin);
+	}
 } else {
 	errorMessage("'" + command + "' is not a valid nCombo command");
 	showCorrectUsage();

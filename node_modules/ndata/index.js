@@ -640,6 +640,5 @@ module.exports.createClient = function(port, secretKey) {
 	if(!port) {
 		port = DEFAULT_PORT;
 	}
-	
 	return new Client(port, HOST, secretKey);
 }

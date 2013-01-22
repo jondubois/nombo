@@ -28,6 +28,7 @@ var http = require('http'),
 	templateBundler = require('ncombo/template-bundler'),
 	SmartCacheManager = require("./smartcachemanager").SmartCacheManager,
 	chokidar = require('chokidar'),
+	domain = require('domain'),
 	retry = require('retry');
 
 var _maxTimeout = 120000;
@@ -1156,7 +1157,7 @@ var nCombo = function() {
 		}
 	}
 	
-	self.start = function(options) {
+	var _start = function(options) {
 		var dataPort, dataKey;
 		var shasum = crypto.createHash('sha256');
 		
@@ -1852,6 +1853,7 @@ var nCombo = function() {
 					self._minifiedScripts = data.minifiedScripts;
 					self._cacheVersion = data.cacheVersion;
 					self._smartCacheManager = new SmartCacheManager(self._cacheVersion);
+					
 					begin();
 				} else if(data.action == 'update') {
 					self._cacheResponder.cache(data.url, data.content, true);
@@ -1866,24 +1868,27 @@ var nCombo = function() {
 			
 			process.on('message', handler);
 		}
-		
-		if(self._options.release) {
-			process.on('uncaughtException', function(err) {
-				self.emit(self.EVENT_FAIL, err);
-				if(err.stack) {
-					console.log(err.stack);
-				} else {
-					console.log(err);
-				}
-			});
-		}
+	}
+	
+	if(self._options.release) {
+		var workerDomain = domain.create();
+		workerDomain.on('error', function(err) {
+			self.emit(self.EVENT_FAIL, err);
+			if(err.stack) {
+				console.log(err.stack);
+			} else {
+				console.log(err);
+			}
+		});
+		self.start = workerDomain.bind(_start);
+	} else {
+		self.start = _start
 	}
 	
 	self.addMiddleware = function(type, callback) {
 		if(!self._middleware.hasOwnProperty(type)) {
 			console.log("   Middleware type '" + type + "' is invalid");
 		}
-		
 		self._middleware[type].addFunction(callback);
 	}
 	

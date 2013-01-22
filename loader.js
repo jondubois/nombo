@@ -272,6 +272,9 @@ var $loader = {
 	},
 	
 	finish: function() {
+		if($loader.grab._options.releaseMode) {
+			NCOMBO_SESSION_MANAGER.markAsCached();
+		}
 		$loader._embedAllResources();
 	},
 	

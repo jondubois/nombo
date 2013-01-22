@@ -191,11 +191,11 @@ var NCOMBO_DEBUG = {{debug}};
 		xmlhttp.send(null);
 	}
 
+	var cacheVersion = smartCacheManager.getCacheVersion();
 	var ncCacheCookieName = '__nccached';
 	var ncCacheCookie = getCookie(ncCacheCookieName);
 
-	NCOMBO_IS_FRESH = (ncCacheCookie && ncCacheCookie > 0) ? false : true;
-	setCookie(ncCacheCookieName, '1', 31536000);
+	NCOMBO_IS_FRESH = (ncCacheCookie && ncCacheCookie == cacheVersion) ? false : true;
 	
 	NCOMBO_SESSION_MANAGER = new (function() {
 		var self = this;
@@ -214,6 +214,14 @@ var NCOMBO_DEBUG = {{debug}};
 		
 		self.getTimeout = function(millis) {
 			return timeout;
+		}
+		
+		self.markAsCached = function() {
+			setCookie(ncCacheCookieName, cacheVersion, 31536000);
+		}
+		
+		self.markAsUncached = function() {
+			setCookie(ncCacheCookieName, cacheVersion, -100);
 		}
 		
 		self.startSession = function() {

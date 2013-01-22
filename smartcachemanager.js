@@ -62,6 +62,10 @@ var SmartCacheManager = function(cacheVersion) {
 	self.getURLCacheVersionParam = function() {
 		return 'cv=' + cacheVersion;
 	}
+	
+	self.getCacheVersion = function() {
+		return cacheVersion;
+	}
 }
 
 if(typeof window === 'undefined') {

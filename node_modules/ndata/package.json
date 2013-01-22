@@ -1,7 +1,7 @@
 {
 	"name": "ndata",
 	"description": "nData key-value store",
-	"version": "0.9.16",
+	"version": "0.9.17",
 	"author": {
 		"name": "JF Gros-Dubois",
 		"email": "flashthink@gmail.com"
@@ -28,7 +28,7 @@
 	},
 	"main": "index",
 	"engines": {
-		"node": ">= 0.6.12"
+		"node": ">= 0.8.0"
 	},
 	"optionalDependencies": {}
 }

@@ -1,3 +1,5 @@
+var domain = require('domain');
+
 var PORT = process.argv[2];
 var SECRET_KEY = process.argv[3] || null;
 var HOST = '127.0.0.1';
@@ -163,6 +165,9 @@ var actions = {
 			var result = run(command.value, command.context);
 			ret.value = result;
 		} catch(e) {
+			if(e.stack) {
+				e = e.stack;
+			}
 			ret.error = 'nData Error - Exception at run(): ' + e;
 		}
 		send(socket, ret);
@@ -258,8 +263,19 @@ var genID = function() {
 }
 
 var server = com.createServer();
+var serverDomain = domain.create();
 
-server.listen(PORT, HOST);
+serverDomain.on('error', function(err) {
+	if(err.stack) {
+		console.log(err.stack);
+	} else {
+		console.log(err);
+	}
+});
+
+serverDomain.run(function() {
+	server.listen(PORT, HOST);
+});
 
 var evaluate = function(str) {
 	return Function('return ' + DataMap.escapeBackslashes(str) + ' || null;')();
@@ -366,9 +382,8 @@ var macros = {
 	'#': simplify
 };
 
-server.on('connection', function(sock) {
+server.on('connection', serverDomain.bind(function(sock) {
 	sock.id = genID();
-	
 	sock.on('message', function(command) {
 		if(!SECRET_KEY || initialized.hasOwnProperty(sock.id) || command.action == 'init') {
 			try {
@@ -412,8 +427,8 @@ server.on('connection', function(sock) {
 		}
 		removeAllListeners(sock);
 	});
-});
+}));
 
-server.on('listening', function() {
+server.on('listening', serverDomain.bind(function() {
 	process.send({event: 'listening'});
-});
+}));

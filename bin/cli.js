@@ -262,7 +262,7 @@ if(command == 'create' || command == 'samples') {
 						var samplesDestDir = path.normalize(wd + '/' + sampleDirName);
 						createSamplesDir(samplesDestDir, function(samplesSuccess) {
 							if(samplesSuccess) {
-								successMessage("Install process is complete. Run 'node " + sampleDirName + "/memo/server' to launch the memo sample app. Access at http://localhost:8000/");
+								successMessage("Install process is complete. Run 'node " + sampleDirName + "/memo/server.node' to launch the memo sample app. Access at http://localhost:8000/");
 							}
 							process.exit();
 						});
@@ -271,7 +271,7 @@ if(command == 'create' || command == 'samples') {
 							var appDestDir = path.normalize(wd + '/' + arg1);
 							createAppDir(appDestDir, function(appSuccess) {
 								if(appSuccess) {
-									successMessage("Install process is complete. Run 'node " + arg1 + "/server' to launch. Access at http://localhost:8000/");
+									successMessage("Install process is complete. Run 'node " + arg1 + "/server.node' to launch. Access at http://localhost:8000/");
 								}
 								process.exit();
 							});

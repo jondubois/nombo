@@ -609,28 +609,30 @@ var Client = function(port, host, secretKey, timeout) {
 	}
 	
 	self.end = function(callback) {
-		if(callback) {
-			var disconnectCallback = function() {
-				if(disconnectTimeout) {
-					clearTimeout(disconnectTimeout);
+		self.unwatch(null, null, function(err) {
+			if(callback) {
+				var disconnectCallback = function() {
+					if(disconnectTimeout) {
+						clearTimeout(disconnectTimeout);
+					}
+					callback();
+					self._socket.removeListener('end', disconnectCallback);
 				}
-				callback();
-				self._socket.removeListener('end', disconnectCallback);
+				
+				var disconnectTimeout = setTimeout(function() {
+					self._socket.removeListener('end', disconnectCallback);
+					callback('Disconnection timed out');
+				}, self._timeout);
+				
+				self._socket.on('end', disconnectCallback);
 			}
-			
-			var disconnectTimeout = setTimeout(function() {
-				self._socket.removeListener('end', disconnectCallback);
-				callback('Disconnection timed out');
-			}, self._timeout);
-			
-			self._socket.on('end', disconnectCallback);
-		}
-		var setDisconnectStatus = function() {
-			self._socket.removeListener('end', setDisconnectStatus);
-			self._connected = false;
-		}
-		self._socket.on('end', setDisconnectStatus);
-		self._socket.end();
+			var setDisconnectStatus = function() {
+				self._socket.removeListener('end', setDisconnectStatus);
+				self._connected = false;
+			}
+			self._socket.on('end', setDisconnectStatus);
+			self._socket.end();
+		});
 	}
 }
 

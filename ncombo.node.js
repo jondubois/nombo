@@ -471,8 +471,8 @@ var nCombo = function() {
 	self._cacheVersion = 0;
 	self._smartCacheManager = null;
 	
+	self.id = -1;
 	self.isLeader = false;
-	self.workerIndex = -1;
 	
 	self._options = {
 		port: 8000,
@@ -1366,7 +1366,7 @@ var nCombo = function() {
 					
 					var failFlag = false;
 					
-					self._dataClient.set('__workers.' + self._dataClient.escape(cluster.worker.process.pid) + '.sockets.' + self._dataClient.escape(socket.id), 1, function(err) {
+					self._dataClient.set('__workers.' + self._dataClient.escape(cluster.worker.id) + '.sockets.' + self._dataClient.escape(socket.id), 1, function(err) {
 						if(err && !failFlag) {
 							self.emit(self.EVENT_SOCKET_FAIL, socket);
 							failFlag = true;
@@ -1375,7 +1375,7 @@ var nCombo = function() {
 						}
 					});
 					
-					self._dataClient.set('__workers.' + self._dataClient.escape(cluster.worker.process.pid) + '.sessions.' + self._dataClient.escape(sid), 1, function(err) {
+					self._dataClient.set('__workers.' + self._dataClient.escape(cluster.worker.id) + '.sessions.' + self._dataClient.escape(sid), 1, function(err) {
 						if(err && !failFlag) {
 							self.emit(self.EVENT_SOCKET_FAIL, socket);
 							failFlag = true;
@@ -1482,7 +1482,7 @@ var nCombo = function() {
 					var removeWorkerSocket = function() {
 						var operation = retry.operation(self._retryOptions);
 						operation.attempt(function() {
-							self._dataClient.remove('__workers.' + self._dataClient.escape(cluster.worker.process.pid) + '.sockets.' + self._dataClient.escape(socket.id), function(err) {
+							self._dataClient.remove('__workers.' + self._dataClient.escape(cluster.worker.id) + '.sockets.' + self._dataClient.escape(socket.id), function(err) {
 								_extendRetryOperation(operation);
 								operation.retry(err);
 							});
@@ -1492,7 +1492,7 @@ var nCombo = function() {
 					var removeWorkerSession = function() {
 						var operation = retry.operation(self._retryOptions);
 						operation.attempt(function() {
-							self._dataClient.remove('__workers.' + self._dataClient.escape(cluster.worker.process.pid) + '.sessions.' + self._dataClient.escape(sid), function(err) {
+							self._dataClient.remove('__workers.' + self._dataClient.escape(cluster.worker.id) + '.sessions.' + self._dataClient.escape(sid), function(err) {
 								_extendRetryOperation(operation);
 								operation.retry(err);
 							});
@@ -1595,6 +1595,7 @@ var nCombo = function() {
 				self._cacheVersion = self._options.cacheVersion;
 			}
 			
+			var workers = [];
 			var bundles = {};
 			
 			var i;
@@ -1626,7 +1627,7 @@ var nCombo = function() {
 				return newURL;
 			}
 			
-			var updateCSSBundle = function(workers) {
+			var updateCSSBundle = function() {
 				var cssBundle = styleBundle.bundle(cssURLFilter);
 				if(workers) {
 					var i;
@@ -1645,7 +1646,7 @@ var nCombo = function() {
 			
 			var templateBundle = templateBundler({files: templatePaths, watch: !self._options.release});
 			
-			var updateTemplateBundle = function(workers) {
+			var updateTemplateBundle = function() {
 				var htmlBundle = templateBundle.bundle();
 				if(workers) {
 					var i;
@@ -1664,7 +1665,7 @@ var nCombo = function() {
 				jsLibCodes[self._clientScripts[i].path] = fs.readFileSync(self._clientScripts[i].path, 'utf8');
 			}
 			
-			var makeLibBundle = function(workers) {
+			var makeLibBundle = function() {
 				var libArray = [];
 				var i;
 				for(i in jsLibCodes) {
@@ -1683,9 +1684,9 @@ var nCombo = function() {
 				}
 			}
 			
-			var updateLibBundle = function(filePath, workers) {
+			var updateLibBundle = function(filePath) {
 				jsLibCodes[filePath] = fs.readFileSync(filePath, 'utf8');
-				makeLibBundle(workers);
+				makeLibBundle();
 			}
 			
 			var bundleOptions = {};
@@ -1696,7 +1697,7 @@ var nCombo = function() {
 			var scriptBundle = browserify(bundleOptions);
 			scriptBundle.addEntry(self._appDirPath + appDef.appScriptsURL + 'index.js');
 			
-			var updateScriptBundle = function(workers) {
+			var updateScriptBundle = function() {
 				var jsBundle = scriptBundle.bundle();
 				if(self._options.release) {
 					jsBundle = scriptManager.minify(jsBundle);
@@ -1718,18 +1719,18 @@ var nCombo = function() {
 				updateScriptBundle();
 			}
 			
-			var autoRebundle = function(workers) {			
+			var autoRebundle = function() {			
 				// The master process does not handle requests so it's OK to do sync operations at runtime
 				styleBundle.on('bundle', function() {
-					updateCSSBundle(workers);
+					updateCSSBundle();
 				});
 				
 				templateBundle.on('bundle', function() {
-					updateTemplateBundle(workers);
+					updateTemplateBundle();
 				});
 				
 				var libRebundler = function(filePath) {
-					updateLibBundle(filePath, workers);
+					updateLibBundle(filePath);
 				}
 					
 				var libWatcher = chokidar.watch(libPaths);
@@ -1737,11 +1738,14 @@ var nCombo = function() {
 				libWatcher.on('unlink', libRebundler);
 				
 				scriptBundle.on('bundle', function() {
-					updateScriptBundle(workers);
+					updateScriptBundle();
 				});
 			}
 			
-			var minifiedScripts = scriptManager.minifyScripts(self._options.minifyURLs);			
+			var minifiedScripts = scriptManager.minifyScripts(self._options.minifyURLs);
+			
+			var leaderId = -1;
+			var firstTime = true;
 			
 			portScanner.checkPortStatus(self._options.port, 'localhost', function(err, status) {
 				if(err || status == 'open') {
@@ -1750,8 +1754,6 @@ var nCombo = function() {
 				} else {
 					portScanner.findAPortNotInUse(self._options.port + 1, self._options.port + 1000, 'localhost', function(error, datPort) {
 						console.log('   ' + self.colorText('[Busy]', 'yellow') + ' Launching nData server');
-						
-						var workerIndex = 0;
 						
 						if(error) {
 							console.log('   nCombo Error - Failed to acquire new port; try relaunching');
@@ -1764,58 +1766,92 @@ var nCombo = function() {
 						self._dataServer = ndata.createServer(dataPort, pass);
 						self._dataServer.on('ready', function() {
 							var i;
-							var worker = null;
-							var activeWorkers = 0;
 							
 							self._dataClient = ndata.createClient(dataPort, pass);
 							
-							var workerReadyHandler = function(data, worker, workers) {
-								if(++activeWorkers >= self._options.workers) {
-									var i;
-									for(i in workers) {
-										workers[i].send({action: 'emit', event: self.EVENT_LEADER_START});
-									}
+							var workerReadyHandler = function(data, worker) {
+								workers.push(worker);
+								if(worker.id == leaderId) {
+									worker.send({action: 'emit', event: self.EVENT_LEADER_START});
+								}
+								if(workers.length >= self._options.workers && firstTime) {									
 									console.log('   ' + self.colorText('[Active]', 'green') + ' nCombo server started');
 									console.log('            Port: ' + self._options.port);
 									console.log('            Mode: ' + (self._options.release ? 'Release' : 'Debug'));
 									console.log('            Number of workers: ' + self._options.workers);
 									console.log();
+									firstTime = false;
 								}
 							}
 							
-							var launchWorker = function() {
-								worker = cluster.fork();
-								worker.send({action: 'init', workerIndex: workerIndex++, dataPort: dataPort, dataKey: pass, cacheVersion: self._cacheVersion, minifiedScripts: minifiedScripts, bundles: bundles});
+							var launchWorker = function(lead) {
+								var worker = cluster.fork();
+								worker.send({
+									action: 'init',
+									workerId: worker.id,
+									dataPort: dataPort,
+									dataKey: pass,
+									cacheVersion: self._cacheVersion,
+									minifiedScripts: minifiedScripts,
+									bundles: bundles,
+									lead: lead ? 1 : 0
+								});
+								
+								worker.on('message', function workerHandler(data) {
+									worker.removeListener('message', workerHandler);
+									if(data.action == 'ready') {
+										if(lead) {
+											leaderId = worker.id;
+										}
+										workerReadyHandler(data, worker);
+									}
+								});
+								
 								return worker;
 							}
-							
+								
 							var launchWorkers = function() {
 								initBundles();
 								var i;
-								var workers = [];
-								for(i=0; i<self._options.workers; i++) {
-									worker = launchWorker();
-									worker.on('message', function workerHandler(data) {
-										worker.removeListener('message', workerHandler);
-										if(data.action == 'ready') {
-											workerReadyHandler(data, worker, workers);
-										}
-									});
-									workers.push(worker);
+								
+								if(self._options.workers > 0) {
+									launchWorker(true);
+									
+									for(i=1; i<self._options.workers; i++) {
+										launchWorker();
+									}
+									autoRebundle();
 								}
-								autoRebundle(workers);
 							}
 							
 							cluster.on('exit', function(worker, code, signal) {
-								console.log('   Worker ' + worker.process.pid + ' died');
-								self._cleanupWorker(worker.process.pid);
+								var message = '   Worker ' + worker.id + ' died - Exit code: ' + code;
 								
-								activeWorkers--;
+								if(signal) {
+									message += ', signal: ' + signal;
+								}
+								
+								var newWorkers = [];
+								var i;
+								for(i in workers) {
+									if(workers[i].id != worker.id) {
+										newWorkers.push(workers[i]);
+									}
+								}
+								
+								workers = newWorkers;
+								
+								var lead = worker.id == leaderId;
+								leaderId = -1;
+								
+								console.log(message);
+								self._cleanupWorker(worker.id);
+								
 								if(self._options.release) {
 									console.log('   Respawning worker');
-									launchWorker();
+									launchWorker(lead);
 								} else {
-									if(activeWorkers <= 0) {
+									if(workers.length <= 0) {
 										console.log('   All workers are dead - nCombo is shutting down');
 										process.exit();
 									}
@@ -1847,22 +1883,17 @@ var nCombo = function() {
 				if(data.action == 'init') {
 					dataPort = data.dataPort;
 					dataKey = data.dataKey;
-					self.workerIndex = data.workerIndex;
-					self.isLeader = data.workerIndex == self._options.workers - 1;
+					self.id = data.workerId;
+					self.isLeader = data.lead;
 					self._bundles = data.bundles;
 					self._minifiedScripts = data.minifiedScripts;
 					self._cacheVersion = data.cacheVersion;
 					self._smartCacheManager = new SmartCacheManager(self._cacheVersion);
-					
 					begin();
 				} else if(data.action == 'update') {
 					self._cacheResponder.cache(data.url, data.content, true);
 				} else if(data.action == 'emit') {
-					if(data.event == self.EVENT_LEADER_START) {
-						self.isLeader && self.emit(data.event, data.data);
-					} else {
-						self.emit(data.event, data.data);
-					}
+					self.emit(data.event, data.data);
 				}
 			}
 			
@@ -1872,14 +1903,17 @@ var nCombo = function() {
 	
 	if(self._options.release) {
 		var workerDomain = domain.create();
-		workerDomain.on('error', function(err) {
+		var errorHandler = function(err) {
 			self.emit(self.EVENT_FAIL, err);
 			if(err.stack) {
 				console.log(err.stack);
 			} else {
 				console.log(err);
 			}
-		});
+		}
+		
+		workerDomain.on('error', errorHandler);
+		process.on('uncaughtException', errorHandler);
 		self.start = workerDomain.bind(_start);
 	} else {
 		self.start = _start

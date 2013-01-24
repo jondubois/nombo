@@ -494,7 +494,8 @@ var nCombo = function() {
 		matchOriginProtocol: true,
 		maxConnectionsPerAddress: 0,
 		pollingDuration: 30000,
-		heartbeatInterval: 25000
+		heartbeatInterval: 25000,
+		heartbeatTimeout: 60000
 	}
 	
 	self._retryOptions = {
@@ -582,6 +583,15 @@ var nCombo = function() {
 	self._successText = self.colorText('[Success]', 'green');
 	self._errorText = self.colorText('[Error]', 'red');
 	self._warningText = self.colorText('[Warning]', 'yellow');
+	
+	self.errorHandler = function(err) {
+		self.emit(self.EVENT_FAIL, err);
+		if(err.stack) {
+			console.log(err.stack);
+		} else {
+			console.log(err);
+		}
+	}
 	
 	self._faviconHandler = function(req, res, next) {
 		var iconPath = self._appDirPath + '/assets/favicon.gif';
@@ -1213,6 +1223,9 @@ var nCombo = function() {
 			},
 			heartbeatInterval: function() {
 				return isInt(arguments[0]) ? null : 'expecting an integer';
+			},
+			heartbeatTimeout: function() {
+				return isInt(arguments[0]) ? null : 'expecting an integer';
 			}
 		}
 		
@@ -1312,7 +1325,7 @@ var nCombo = function() {
 				self._io.set('origins', self._options.origins);
 				self._io.set('polling duration', Math.round(self._options.pollingDuration / 1000));
 				self._io.set('heartbeat interval', Math.round(self._options.heartbeatInterval / 1000));
-				self._io.set('heartbeat timeout', Math.round(self._options.heartbeatInterval / 500) + 10);
+				self._io.set('heartbeat timeout', Math.round(self._options.heartbeatTimeout / 1000));
 				self._io.set('match origin protocol', self._options.matchOriginProtocol);
 				
 				if(self._options.maxConnectionsPerAddress > 0) {
@@ -1903,17 +1916,8 @@ var nCombo = function() {
 	
 	if(self._options.release) {
 		var workerDomain = domain.create();
-		var errorHandler = function(err) {
-			self.emit(self.EVENT_FAIL, err);
-			if(err.stack) {
-				console.log(err.stack);
-			} else {
-				console.log(err);
-			}
-		}
 		
-		workerDomain.on('error', errorHandler);
-		process.on('uncaughtException', errorHandler);
+		workerDomain.on('error', self.errorHandler);
 		self.start = workerDomain.bind(_start);
 	} else {
 		self.start = _start
@@ -1935,4 +1939,10 @@ var nCombo = function() {
 
 nCombo.prototype.__proto__ = EventEmitter.prototype;
 
-module.exports = new nCombo();
+var ncombo = new nCombo();
+
+var nComboDomain = domain.create();
+nComboDomain.on('error', ncombo.errorHandler);
+nComboDomain.add(ncombo);
+
+module.exports = ncombo;

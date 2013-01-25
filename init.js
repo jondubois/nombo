@@ -1,1 +1,0 @@
-$n.init($loader.getAppDefinition());

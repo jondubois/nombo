@@ -1056,7 +1056,6 @@ var nCombo = function() {
 	self.useScript(self._frameworkClientURL + 'libs/json2.js');
 	
 	self.useScript(self._frameworkURL + 'ncombo-client.js');
-	self.useScript(self._frameworkURL + 'init.js');
 	
 	var i, nurl;
 	for(i in self._clientIncludes) {

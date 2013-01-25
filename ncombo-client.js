@@ -30,7 +30,9 @@ var $n = {
 		}
 	},
     
-	init: function(appDefinition) {
+	init: function() {
+		var appDefinition = $loader.getAppDefinition();
+		
 		$n._frameworkURL = appDefinition.frameworkURL;
 		$n._appURL = appDefinition.appURL;
 		$n._jsLibsURL = appDefinition.jsLibsURL;
@@ -648,3 +650,5 @@ if(!Array.prototype.indexOf) {
 		return -1;
 	}
 }
+
+$n.init();

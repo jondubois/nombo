@@ -191,11 +191,11 @@ var NCOMBO_DEBUG = {{debug}};
 		xmlhttp.send(null);
 	}
 
-	var cacheVersion = smartCacheManager.getCacheVersion();
+	var cookieCache = location.href + '#' + smartCacheManager.getCacheVersion();
 	var ncCacheCookieName = '__nccached';
 	var ncCacheCookie = getCookie(ncCacheCookieName);
 
-	NCOMBO_IS_FRESH = (ncCacheCookie && ncCacheCookie == cacheVersion) ? false : true;
+	NCOMBO_IS_FRESH = (ncCacheCookie && ncCacheCookie == cookieCache) ? false : true;
 	
 	NCOMBO_SESSION_MANAGER = new (function() {
 		var self = this;
@@ -217,11 +217,11 @@ var NCOMBO_DEBUG = {{debug}};
 		}
 		
 		self.markAsCached = function() {
-			setCookie(ncCacheCookieName, cacheVersion, 31536000);
+			setCookie(ncCacheCookieName, cookieCache, 31536000);
 		}
 		
 		self.markAsUncached = function() {
-			setCookie(ncCacheCookieName, cacheVersion, -100);
+			setCookie(ncCacheCookieName, cookieCache, -100);
 		}
 		
 		self.startSession = function() {

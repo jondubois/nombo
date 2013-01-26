@@ -520,7 +520,7 @@ var nCombo = function() {
 	self._appDirPath = path.dirname(require.main.filename);
 	pathManager.init(self._frameworkURL, self._frameworkDirPath, self._appDirPath);
 	
-	self._appURL = '/';
+	self._appURL = './';
 	
 	self._retryTimeout = 10000;
 	
@@ -680,12 +680,12 @@ var nCombo = function() {
 		appDef.frameworkScriptsURL = self._frameworkClientURL + 'scripts/';
 		appDef.loadScriptURL = appDef.frameworkScriptsURL + 'load.js';
 		appDef.frameworkStylesURL = self._frameworkClientURL + 'styles/';
-		appDef.appScriptsURL = self._appURL + 'scripts/';
-		appDef.appLibsURL = self._appURL + 'libs/';
-		appDef.appStylesURL = self._appURL + 'styles/';
-		appDef.appTemplatesURL = self._appURL + 'templates/';
-		appDef.appAssetsURL = self._appURL + 'assets/';
-		appDef.appFilesURL = self._appURL + 'files/';
+		appDef.appScriptsURL = appDef.appURL + 'scripts/';
+		appDef.appLibsURL = appDef.appURL + 'libs/';
+		appDef.appStylesURL = appDef.appURL + 'styles/';
+		appDef.appTemplatesURL = appDef.appURL + 'templates/';
+		appDef.appAssetsURL = appDef.appURL + 'assets/';
+		appDef.appFilesURL = appDef.appURL + 'files/';
 		appDef.wsEndpoint = self._wsEndpoint;
 		appDef.releaseMode = self._options.release;
 		appDef.timeout = self._options.timeout;
@@ -752,7 +752,7 @@ var nCombo = function() {
 			var now = (new Date()).getTime();
 			var expiry = new Date(now + self._options.cacheLife);
 			res.setHeader('Content-Type', 'text/javascript');
-			res.setHeader('Set-Cookie', '__nccached=0;');
+			res.setHeader('Set-Cookie', '__nccached:' + self._options.port + '=0;');
 			res.setHeader('Cache-Control', 'private');
 			res.setHeader('Pragma', 'private');
 			res.setHeader('Expires', expiry.toUTCString());
@@ -1707,7 +1707,7 @@ var nCombo = function() {
 			bundleOptions.exports = 'require';
 			
 			var scriptBundle = browserify(bundleOptions);
-			scriptBundle.addEntry(self._appDirPath + appDef.appScriptsURL + 'index.js');
+			scriptBundle.addEntry(path.normalize(self._appDirPath + '/' + appDef.appScriptsURL + 'index.js'));
 			
 			var updateScriptBundle = function() {
 				var jsBundle = scriptBundle.bundle();

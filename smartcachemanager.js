@@ -12,20 +12,19 @@ var SmartCacheManager = function(cacheVersion) {
 				var temp;
 				var fields = {};
 				var i;
-		
+				
 				for(i in fieldStrings) {
 					temp = fieldStrings[i].split('=');
 					fields[temp[0]] = temp[1] || true;
 				}
-		
+				
 				fields[paramName] = paramValue;
-		
 				fieldStrings = [];
-		
+				
 				for(i in fields) {
 					fieldStrings.push(i + '=' + fields[i]);
 				}
-	
+				
 				return mainPart + '?' + fieldStrings.join('&');
 			} else {
 				return mainPart + '?' + paramName + '=' + paramValue;

@@ -163,34 +163,6 @@ var NCOMBO_DEBUG = {{debug}};
 		return xmlhttp;
 	}
 
-	var ajax = function(settings) {
-		var type;
-		if(settings.type) {
-			type = settings.type;
-		} else {
-			type = "GET";
-		}
-
-		var xmlhttp = _getHTTPReqObject();
-		xmlhttp.open(type, settings.url, true);
-		xmlhttp.onreadystatechange = function() {
-			if(xmlhttp.readyState == 4) {
-				if(xmlhttp.status == 200) {
-					if(settings.success) {
-						settings.success(xmlhttp.responseText);
-					}
-				} else {
-					if(settings.error) {
-						settings.error(xmlhttp.statusText);
-					} else {
-						throw "Failed to load resource: " + url;
-					}
-				}
-			}
-		}
-		xmlhttp.send(null);
-	}
-
 	var cacheVersion = smartCacheManager.getCacheVersion();
 	var ncCacheCookieName = '__nccached:' + NCOMBO_PORT;
 	var ncCacheCookie = getCookie(ncCacheCookieName);
@@ -236,8 +208,7 @@ var NCOMBO_DEBUG = {{debug}};
 			}
 		      
 			var url = '{{endpoint}}';
-			
-			var options = {'force new connection': true, 'sync disconnect on unload': true};
+			var options = {'force new connection': true, 'sync disconnect on unload': true, 'resource': NCOMBO_APP_DEF.ioResource};
 			
 			if(NCOMBO_SOCKET && (NCOMBO_SOCKET.socket.connected || NCOMBO_SOCKET.socket.connecting)) {
 				NCOMBO_SOCKET.removeAllListeners();
@@ -322,44 +293,23 @@ var NCOMBO_DEBUG = {{debug}};
 		}
 	}
 	
-	if(NCOMBO_AUTO_SESSION) {
-		var handshakeErrorHandler = function(err) {
-			if(err != 'client not handshaken') {
-				NCOMBO_SOCKET.removeListener('error', handshakeErrorHandler);
-				NCOMBO_SOCKET.removeListener('connect', connectHandler);
-			
+	if(NCOMBO_AUTO_SESSION) {		
+		var handler = function(err, ssid) {
+			if(err) {
 				var head = document.getElementsByTagName('head');
 				if(head) {
 					head = head[0];
 				}
-		
+				
 				var limitScript = document.createElement('script');
 				limitScript.type = 'text/javascript';
 				limitScript.src = smartCacheManager.setURLCacheVersion(NCOMBO_FRAMEWORK_CLIENT_URL + 'scripts/failedconnection.js');
 				head.appendChild(limitScript);
+			} else {
+				ncBegin();
 			}
 		}
-	
-		var connectHandler = function() {
-			NCOMBO_SOCKET.removeListener('error', handshakeErrorHandler);
-			NCOMBO_SOCKET.removeListener('connect', connectHandler);
-			clearTimeout(timeoutCallback);	
-			NCOMBO_SESSION_MANAGER._setIDCookies(NCOMBO_SOCKET.socket.sessionid);
-			ncBegin();
-		}
-	
-		var timeoutCallback = null;
-	
-		NCOMBO_SOCKET = io.connect('{{endpoint}}');
-		
-		if(NCOMBO_TIMEOUT > 0) {
-			timeoutCallback = setTimeout(function() {
-				handshakeErrorHandler('Error - Session initiation attempt timed out');
-			}, NCOMBO_TIMEOUT);
-		}
-		
-		NCOMBO_SOCKET.on('error', handshakeErrorHandler);
-		NCOMBO_SOCKET.on('connect', connectHandler);
+		NCOMBO_SESSION_MANAGER.startSession(handler);
 	} else {
 		ncBegin();
 	}

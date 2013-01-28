@@ -74,7 +74,7 @@ var $loader = {
 				this[i] = MixinClass.prototype[i];
 			}
 			
-			// Using different calls for browser compatibility reasons
+			// using different calls for browser compatibility reasons
 			if(args) {
 				MixinClass.apply(this, args);
 			} else {
@@ -726,7 +726,7 @@ var $loader = {
 			}
 		},
 		
-		loadAndEmbedScript: function(url, callback) {		
+		loadAndEmbedScript: function(url, callback) {
 			var tagData = {type: 'script', url: url, callback: callback, error: null, ready: false};
 			$loader.grab._embedQueue.push(tagData);
 			$loader.grab._loadDeepResourceToCache(url, false, function(err) {

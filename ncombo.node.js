@@ -493,8 +493,9 @@ var nCombo = function() {
 		maxConnectionsPerAddress: 0,
 		pollingDuration: 30000,
 		heartbeatInterval: 25000,
-		heartbeatTimeout: 60000
-	}
+		heartbeatTimeout: 60000,
+		baseURL: null
+	};
 	
 	self._retryOptions = {
 		retries: 10,
@@ -515,17 +516,28 @@ var nCombo = function() {
 	self._frameworkModulesURL = self._frameworkURL + 'node_modules/';
 	
 	self._appDirPath = path.dirname(require.main.filename);
-	
 	self._appName = path.basename(self._appDirPath);
-	self._appExternalURL = '/~' + self._appName + '/';
-	self._appInternalURL = '/';
-	self._timeCacheExternalURL = self._appExternalURL + '~timecache';
-	self._timeCacheInternalURL = self._appInternalURL + '~timecache';
 	
-	self._ioResource = self._appExternalURL + 'socket.io';
+	var slashSequenceRegex = /\/+/g;
+	
+	self._setBaseURL = function(url) {
+		self._appExternalURL = ('/' + url + '/').replace(slashSequenceRegex, '/');
+		self._appInternalURL = '/';
+		self._timeCacheExternalURL = self._appExternalURL + '~timecache';
+		self._timeCacheInternalURL = self._appInternalURL + '~timecache';
+		
+		self._ioResourceExternalURL = self._appExternalURL + 'socket.io';
+		self._ioResourceInternalURL = self._appInternalURL + 'socket.io';
+		
+		pathManager.setBaseURL(self._appExternalURL);
+		scriptManager.setBaseURL(self._appExternalURL);
+	}
+	
+	self._setBaseURL(self._appName);
+	
 	self._appScriptsURLRegex = new RegExp('^/scripts(\/|$)');
 	
-	pathManager.init(self._frameworkURL, self._frameworkDirPath, self._appExternalURL, self._appDirPath);
+	pathManager.init(self._frameworkURL, self._frameworkDirPath, self._appDirPath, self._appExternalURL);
 	scriptManager.init(self._frameworkURL, self._appExternalURL);
 	
 	self._retryTimeout = 10000;
@@ -674,14 +686,14 @@ var nCombo = function() {
 	
 	self._getAppDef = function(useInternalURLs) {
 		var appDef = {};
-		appDef.frameworkURL = self._frameworkURL;
 		if(useInternalURLs) {
 			appDef.appURL = self._appInternalURL;
-			appDef.ioResource = self._ioResource;
+			appDef.ioResource = self._ioResourceExternalURL;
 		} else {
 			appDef.appURL = self._appExternalURL;
-			appDef.ioResource = self._ioResource.replace(startSlashRegex, '');
+			appDef.ioResource = self._ioResourceExternalURL.replace(startSlashRegex, '');
 		}
+		appDef.frameworkURL = self._frameworkURL;
 		appDef.virtualURL = appDef.appURL + '~virtual/';
 		appDef.appStyleBundleURL = appDef.virtualURL + 'styles.css';
 		appDef.appTemplateBundleURL = appDef.virtualURL + 'templates.js';
@@ -839,10 +851,11 @@ var nCombo = function() {
 		}
 	}
 	
+	self._rewriteHTTPRequest = function(req) {
+		req.url = pathManager.simplify(req.url);
+	}
+	
 	self._prepareHTTPHandler = function(req, res, next) {
-		if(req.url != self._ioResource) {
-			req.url = pathManager.simplify(req.url);
-		}
 		res.connection.setNoDelay(true);
 		next();
 	}
@@ -1240,6 +1253,9 @@ var nCombo = function() {
 			},
 			heartbeatTimeout: function() {
 				return isInt(arguments[0]) ? null : 'expecting an integer';
+			},
+			baseURL: function() {
+				return (typeof arguments[0] == 'string') ? null : 'expecting a string';
 			}
 		}
 		
@@ -1250,6 +1266,10 @@ var nCombo = function() {
 			for(i in options) {
 				self._options[i] = options[i];
 			}
+		}
+		
+		if(self._options.baseURL) {
+			self._setBaseURL(self._options.baseURL);
 		}
 		
 		self._options.appDirPath = self._appDirPath;
@@ -1280,8 +1300,25 @@ var nCombo = function() {
 			var nStore = new nDataStore({client: self._dataClient, useExistingServer: true});
 			
 			self._dataClient.on('ready', function() {
-				self._server.listen(self._options.port);
 				self._io = io.listen(self._server, {'log level': 1});
+				
+				var oldRequestListeners = self._server.listeners('request').splice(0);
+				self._server.removeAllListeners('request');
+				var oldUpgradeListeners = self._server.listeners('upgrade').splice(0);
+				self._server.removeAllListeners('upgrade');
+				
+				self._server.on('request', self._rewriteHTTPRequest);
+				self._server.on('upgrade', self._rewriteHTTPRequest);
+				
+				var i;
+				for(i in oldRequestListeners) {
+					self._server.on('request', oldRequestListeners[i]);
+				}
+				for(i in oldUpgradeListeners) {
+					self._server.on('upgrade', oldUpgradeListeners[i]);
+				}
+				
+				self._server.listen(self._options.port);
 				
 				var handleHandshake = function(handshakeData, callback) {
 					if(handshakeData.query.data) {
@@ -1334,7 +1371,7 @@ var nCombo = function() {
 				}
 				
 				self._io.set('store', nStore);
-				self._io.set('resource', self._ioResource);
+				self._io.set('resource', self._ioResourceInternalURL);
 				self._io.set('log level', self._options.logLevel);
 				self._io.set('transports', self._options.transports);
 				self._io.set('origins', self._options.origins);

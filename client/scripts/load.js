@@ -26,7 +26,6 @@ var jLoad = {
 	},
 	
 	progress: function(status) {
-		console.log(status);
 		var percentage;
 		if(status.total == 0) {
 			percentage = 100;

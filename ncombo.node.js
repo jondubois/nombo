@@ -1686,17 +1686,20 @@ var nCombo = function() {
 			
 			var externalAppDef = self._getAppDef();
 			
+			var pathToRoot = '../..';
+			
 			var cssURLFilter = function(url, rootDir) {
 				rootDir = pathManager.toUnixSep(rootDir);
 				if(appDirRegex.test(rootDir)) {
-					newURL = path.relative(path.dirname(externalAppDef.appStyleBundleURL), externalAppDef.appStylesURL) + '/' + url;
+					newURL = pathToRoot + pathManager.pathToURL(rootDir) + '/' + url;
 				} else {
-					newURL = path.relative(path.dirname(externalAppDef.appStyleBundleURL), externalAppDef.frameworkStylesURL) + '/' + rootDir.replace(frameworkStylesDirRegex, '') + '/' + url;
+					newURL = pathToRoot + pathManager.pathToURL(rootDir) + '/' + url;
 				}
 				newURL = pathManager.toUnixSep(path.normalize(newURL));
 				if(self._options.release) {
 					newURL = self._smartCacheManager.setURLCacheVersion(newURL);
 				}
+				
 				return newURL;
 			}
 			

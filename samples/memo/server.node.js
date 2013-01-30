@@ -22,7 +22,7 @@ ncombo.addMiddleware(ncombo.MIDDLEWARE_SOCKET_IO, function(req, res, next) {
 
 // These files will be included as part of preload process
 ncombo.bundle.framework.style('bootstrap.css');
-ncombo.bundle.app.style('jqueryui/ui-lightness/style.css');
+ncombo.bundle.framework.style('jqueryui/ui-lightness/style.css');
 ncombo.bundle.framework.lib('jquery/ui.js');
 
 ncombo.bundle.app.template('login.html');

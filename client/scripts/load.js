@@ -6,9 +6,8 @@ var jLoad = {
 	_ie: /MSIE (\d+\.\d+);/.test(navigator.userAgent),
 	_loader: null,
 	_loaderTextBox: null,
-	_loaderInterval: null,
 	_loaderAnimInterval: 200,
-	_loaderAnimText: null,
+	_loaderText: null,
 	_loaderCounter: null,
 	_frameworkURL: null,
 	_imgLoaded: false,
@@ -19,16 +18,26 @@ var jLoad = {
 	start: function(settings) {
 		jLoad._frameworkURL = settings.frameworkURL;
 		jLoad._frameworkClientURL = settings.frameworkClientURL;
-		jLoad._loaderAnimText = [];
 		
 		var imgURL = smartCacheManager.setURLCacheVersion(jLoad._frameworkClientURL + 'assets/logo.png');
-		var textAnim = ['Loading App', 'Loading App.', 'Loading App..', 
-				'Loading App...', 'Loading App..', 'Loading App.'];
+		var text = 'Loading';
 		
-		jLoad._load(imgURL, 'nCombo', 'http://ncombo.com/', textAnim);
+		jLoad._load(imgURL, 'nCombo', 'http://ncombo.com/', text);
 	},
 	
-	_load: function(loadImageURL, loadImageCaption, loadImageLinkURL, loadTextAnimation) {		
+	progress: function(status) {
+		console.log(status);
+		var percentage;
+		if(status.total == 0) {
+			percentage = 100;
+		} else {
+			percentage = Math.round(status.loaded / status.total * 100);
+		}
+		
+		jLoad._loaderTextBox.innerHTML = jLoad._loaderText + ' (' + percentage + '%)';
+	},
+	
+	_load: function(loadImageURL, loadImageCaption, loadImageLinkURL, text) {		
 		jLoad._loader = document.createElement('div');
 		jLoad._loader.style.position = 'absolute';
 		jLoad._loader.style.visibility = 'hidden';
@@ -37,14 +46,7 @@ var jLoad = {
 		jLoad._loaderCounter = 0;
 		jLoad._imgLoaded = false;
 		jLoad.hideLoader();
-		jLoad._loaderAnimText = loadTextAnimation;
-		
-		var startText;
-		if(jLoad._loaderAnimText.length > 0) {
-			startText = jLoad._loaderAnimText[0];
-		} else {
-			startText = '';
-		}
+		jLoad._loaderText = text;
 		
 		var linkEl = document.createElement('a');
 		linkEl.setAttribute('href', loadImageLinkURL);
@@ -67,7 +69,7 @@ var jLoad = {
 		jLoad._loaderTextBox.style.fontSize = '12px';
 		jLoad._loaderTextBox.style.color = '#666';
 		
-		jLoad._loaderTextBox.innerHTML = startText;
+		jLoad.progress({loaded: 0, total: 1});
 		
 		linkEl.appendChild(imgEl);
 		
@@ -91,6 +93,7 @@ var jLoad = {
 			jLoad._loader.style.visibility = 'visible';
 			
 			if(NCOMBO_IS_FRESH) {
+				$loader.progress(jLoad.progress);
 				jLoad._fadeInterval = setInterval(function() {
 					if(jLoad._alpha < 100) {
 						jLoad._alpha += jLoad._fadeSpeed;
@@ -104,8 +107,6 @@ var jLoad = {
 						clearInterval(jLoad._fadeInterval);
 					}
 				}, 25);
-				
-				jLoad._loaderInterval = setInterval(jLoad._animateLoader, jLoad._loaderAnimInterval);
 			}
 		}
 		
@@ -122,28 +123,12 @@ var jLoad = {
 		obj.style.filter = 'alpha(opacity=' + value + ')';
 	},
 	
-	_animateLoader: function() {
-		if(jLoad._loader) {
-			var animLen = jLoad._loaderAnimText.length;
-			if(animLen > 0) {
-				var frameNum = jLoad._loaderCounter++ % animLen;
-				jLoad._loaderTextBox.innerHTML = jLoad._loaderAnimText[frameNum];
-			} else {
-				clearInterval(jLoad._loaderInterval);
-				jLoad._loaderInterval = null;
-			}
-		}
-	},
-	
 	_loaded: function() {
+		$loader.off('progress', jLoad.progress);
 		jLoad.fadeOutLoader($loader.finish);
 	},
 	
-	hideLoader: function() {		
-		if(jLoad._loaderInterval) {
-			clearInterval(jLoad._loaderInterval);
-			jLoad._loaderInterval = null;
-		}
+	hideLoader: function() {
 		if(document.body && jLoad._loader && jLoad._loader.parentNode == document.body) {
 			document.body.removeChild(jLoad._loader);
 			jLoad._loader = null;

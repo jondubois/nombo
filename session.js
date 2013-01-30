@@ -18,7 +18,7 @@ var NCOMBO_IE = IE;
 var NCOMBO_IE_VERSION = IE_VERSION;
 var NCOMBO_APP_DEF = {{{appDef}}};
 var NCOMBO_RESOURCES = {{{resources}}};
-var NCOMBO_DEBUG = {{debug}}; 
+var NCOMBO_DEBUG = {{debug}};
 
 (function() {
 	var beginLoading = function() {

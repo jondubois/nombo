@@ -23,6 +23,7 @@ var $loader = {
 	
 	_skipPreload: null,
 	_timeout: 10000,
+	_booting: true,
 
 	ready: function(callback) {
 		$loader.on('ready', callback);
@@ -30,6 +31,10 @@ var $loader = {
 		if(!$loader._waitForReadyInterval) {
 			$loader._waitForReadyInterval = setInterval($loader._waitForReady, 20);
 		}
+	},
+	
+	progress: function(callback) {
+		$loader.on('progress', callback);
 	},
 	
 	init: function(appDefinition, resources, skipPreload) {
@@ -259,6 +264,7 @@ var $loader = {
 					}
 				} else {
 					if(++numLoaded >= $loader._resources.length) {
+						$loader._booting = false;
 						callback && callback();
 						$loader.emit('loadall');
 					}
@@ -287,6 +293,9 @@ var $loader = {
 		}
 	
 		var xmlhttp = $loader._getHTTPReqObject();
+		if(settings.progress) {
+			xmlhttp.onprogress = settings.progress;
+		}
 		xmlhttp.open(type, settings.url, true);
 		xmlhttp.onreadystatechange = function() {
 			if(xmlhttp.readyState == 4) {
@@ -358,9 +367,14 @@ var $loader = {
 		_embedQueue: [],
 		_extRegex: /[.][^\/\\]*$/,
 		_lessExtRegex: /[.]less$/,
+		_resourceSizeTotal: 0,
 		
 		init: function(options) {
 			$loader.grab._options = options;
+			var resourceSizeMap = options.resourceSizeMap;
+			for(i in resourceSizeMap) {
+				$loader.grab._resourceSizeTotal += resourceSizeMap[i];
+			}
 		},
 		
 		_triggerReady: function() {
@@ -947,6 +961,23 @@ var $loader = {
 			return $loader.grab._resourcesGrabbed.length < $loader.grab._resources.length;
 		},
 		
+		_progressTracker: {},
+		_updateProgressStatus: function(url, loaded) {
+			if($loader.grab._options.resourceSizeMap.hasOwnProperty(url)) {
+				$loader.grab._progressTracker[url] = loaded;
+				
+				var i;
+				var progressMap = $loader.grab._progressTracker;
+				var status = {loaded: 0, total: $loader.grab._resourceSizeTotal};
+				
+				for(i in progressMap) {
+					status.loaded += progressMap[i];
+				}
+				
+				$loader.emit('progress', status);
+			}
+		},
+		
 		_loadDeepResourceToCache: function(url, fresh, callback, rootURL) {
 			url = url.replace(/[?].*/, '');
 			if(!$loader.grab._resourcesLoadedMap[url]) {
@@ -967,9 +998,12 @@ var $loader = {
 					img.onload = function() {
 						if(url == rootURL) {
 							resourceData = img;
-						}	
+						}
 						$loader.grab._resourcesLoadedMap[url] = true;
 						$loader.grab._deepResourcesLoaded[rootURL].push(url);
+						if($loader._booting) {
+							$loader.grab._updateProgressStatus(url, $loader.grab._options.resourceSizeMap[url]);
+						}
 						
 						if($loader.grab._deepResourcesLoaded[rootURL].length >= $loader.grab._deepResources[rootURL].length) {
 							$loader.grab._resourcesLoaded.push(rootURL);
@@ -1011,13 +1045,9 @@ var $loader = {
 						tempURL = url;
 					}
 					
-					// all text-based files
-					$loader.ajax({
+					var ajaxSettings = {
 						url: tempURL,
 						type: "GET",
-						dataType: "html",
-						cache: true,
-						async: true,
 						success: function(data) {
 							if(url == rootURL) {
 								resourceData = data;
@@ -1046,8 +1076,9 @@ var $loader = {
 								for(i=0; i<len; i++) {
 									$loader.grab._loadDeepResourceToCache(nonLoadedURLs[i], fresh, callback, rootURL);
 								}
+								
 								$loader.grab._styleCodes[url] = data;
-							} else if(/[.]js$/.test(url)) {	
+							} else if(/[.]js$/.test(url)) {
 								$loader.grab._scriptCodes[url] = data;
 							}
 							
@@ -1065,7 +1096,16 @@ var $loader = {
 								callback('Failed to load resource at url: ' + url);
 							}
 						}
-					});
+					};
+					
+					if($loader._booting) {
+						ajaxSettings.progress = function(e) {
+							$loader.grab._updateProgressStatus(url, e.loaded);
+						}
+					}
+					
+					// all text-based files
+					$loader.ajax(ajaxSettings);
 				}
 			}
 		},

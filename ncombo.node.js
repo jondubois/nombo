@@ -580,6 +580,7 @@ var nCombo = function() {
 	self._minifiedScripts = null;
 	self._bundles = null;
 	self._bundledResources = [];
+	self._resourceSizes = {};
 	
 	self._spinJSURL = self._frameworkClientURL + 'libs/spin.js';
 	
@@ -693,6 +694,7 @@ var nCombo = function() {
 			appDef.appURL = self._appExternalURL;
 			appDef.ioResource = self._ioResourceExternalURL.replace(startSlashRegex, '');
 		}
+		
 		appDef.frameworkURL = self._frameworkURL;
 		appDef.virtualURL = appDef.appURL + '~virtual/';
 		appDef.appStyleBundleURL = appDef.virtualURL + 'styles.css';
@@ -715,6 +717,7 @@ var nCombo = function() {
 		appDef.wsEndpoint = self._wsEndpoint;
 		appDef.releaseMode = self._options.release;
 		appDef.timeout = self._options.timeout;
+		appDef.resourceSizeMap = self._resourceSizes;
 		
 		return appDef;
 	}
@@ -1056,7 +1059,10 @@ var nCombo = function() {
 	}
 	
 	self.bundle.app.asset = function(name) {
-		self._bundledResources.push(self._appInternalURL + 'assets/' + name);
+		var stats = fs.statSync(self._appDirPath + '/assets/' + name);
+		var url = pathManager.expand(self._appInternalURL + 'assets/' + name);
+		self._resourceSizes[url] = stats.size;
+		self._bundledResources.push(url);
 	}
 	
 	self.bundle.framework.lib = function(name) {
@@ -1698,8 +1704,9 @@ var nCombo = function() {
 				var cssBundle = styleBundle.bundle(cssURLFilter);
 				if(workers) {
 					var i;
+					var size = Buffer.byteLength(cssBundle, 'utf8');
 					for(i in workers) {
-						workers[i].send({action: 'update', url: appDef.appStyleBundleURL, content: cssBundle});
+						workers[i].send({action: 'update', url: appDef.appStyleBundleURL, content: cssBundle, size: size});
 					}
 				}
 				bundles[appDef.appStyleBundleURL] = cssBundle;
@@ -1717,8 +1724,9 @@ var nCombo = function() {
 				var htmlBundle = templateBundle.bundle();
 				if(workers) {
 					var i;
+					var size = Buffer.byteLength(htmlBundle, 'utf8');
 					for(i in workers) {
-						workers[i].send({action: 'update', url: appDef.appTemplateBundleURL, content: htmlBundle});
+						workers[i].send({action: 'update', url: appDef.appTemplateBundleURL, content: htmlBundle, size: size});
 					}
 				}
 				bundles[appDef.appTemplateBundleURL] = htmlBundle;
@@ -1745,8 +1753,9 @@ var nCombo = function() {
 				bundles[appDef.appLibBundleURL] = libBundle;
 				
 				if(workers) {
+					var size = Buffer.byteLength(libBundle, 'utf8');
 					for(i in workers) {
-						workers[i].send({action: 'update', url: appDef.appLibBundleURL, content: libBundle});
+						workers[i].send({action: 'update', url: appDef.appLibBundleURL, content: libBundle, size: size});
 					}
 				}
 			}
@@ -1773,8 +1782,9 @@ var nCombo = function() {
 				
 				if(workers) {
 					var i;
+					var size = Buffer.byteLength(jsBundle, 'utf8');
 					for(i in workers) {
-						workers[i].send({action: 'update', url: appDef.appScriptBundleURL, content: jsBundle});
+						workers[i].send({action: 'update', url: appDef.appScriptBundleURL, content: jsBundle, size: size});
 					}
 				}
 			}
@@ -1853,6 +1863,18 @@ var nCombo = function() {
 							}
 							
 							var launchWorker = function(lead) {
+								var i;
+								var resourceSizes = {};
+								for(i in bundles) {
+									resourceSizes[i] = Buffer.byteLength(bundles[i], 'utf8');
+								}
+								
+								var styleAssetSizeMap = styleBundle.getAssetSizeMap();
+								for(i in styleAssetSizeMap) {
+									// prepend with the relative path to root from style bundle url (styles will be inserted inside <style></style> tags in root document)
+									resourceSizes[externalAppDef.virtualURL + '../..' + i] = styleAssetSizeMap[i];
+								}
+								
 								var worker = cluster.fork();
 								worker.send({
 									action: 'init',
@@ -1862,6 +1884,7 @@ var nCombo = function() {
 									cacheVersion: self._cacheVersion,
 									minifiedScripts: minifiedScripts,
 									bundles: bundles,
+									resourceSizes: resourceSizes,
 									lead: lead ? 1 : 0
 								});
 								
@@ -1954,11 +1977,18 @@ var nCombo = function() {
 					self.id = data.workerId;
 					self.isLeader = data.lead;
 					self._bundles = data.bundles;
+					
+					var i;
+					for(i in data.resourceSizes) {
+						self._resourceSizes[pathManager.expand(i)] = data.resourceSizes[i];
+					}
+					
 					self._minifiedScripts = data.minifiedScripts;
 					self._cacheVersion = data.cacheVersion;
 					self._smartCacheManager = new SmartCacheManager(self._cacheVersion);
 					begin();
 				} else if(data.action == 'update') {
+					self._resourceSizes[data.url] = data.size;
 					self._cacheResponder.cache(data.url, data.content, true);
 				} else if(data.action == 'emit') {
 					self.emit(data.event, data.data);

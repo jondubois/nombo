@@ -1049,6 +1049,7 @@ var $loader = {
 						url: tempURL,
 						type: "GET",
 						success: function(data) {
+							$loader.grab._updateProgressStatus(url, $loader.grab._options.resourceSizeMap[url]);
 							if(url == rootURL) {
 								resourceData = data;
 							}

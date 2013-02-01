@@ -1286,6 +1286,7 @@ var nCombo = function() {
 		self.allowFullAuthResource(self._spinJSURL);
 		self.allowFullAuthResource(self._frameworkClientURL + 'assets/logo.png');
 		self.allowFullAuthResource(self._frameworkClientURL + 'scripts/failedconnection.js');
+		self.allowFullAuthResource(self._frameworkClientURL + 'scripts/cookiesdisabled.js');
 		self.allowFullAuthResource(self._frameworkClientURL + 'styles/ncombo.css');
 
 		self.allowFullAuthResource(self._frameworkURL + 'loader.js');

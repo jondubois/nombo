@@ -104,38 +104,70 @@ var NCOMBO_DEBUG = {{debug}};
 
 	var spinner = new Spinner(spinnerOpts).spin(spinnerDiv);
 
-	var appendSpinner = function() {
-		document.body.appendChild(spinnerDiv);
-	}
-
-	var bodyReadyInterval = setInterval(function() {
-		if(document.body) {
-			clearInterval(bodyReadyInterval);
-			appendSpinner();
-		}
-	}, 20);
-
 	function setCookie(name, value, expirySeconds) {
 		var exdate = null;
 		if(expirySeconds) {
 			exdate = new Date();
 			exdate.setTime(exdate.getTime() + Math.round(expirySeconds * 1000));
 		}
-		var value = escape(value) + '; path=/;' + ((exdate == null) ? "" : " expires=" + exdate.toUTCString() + ";");
-		document.cookie = name + "=" + value;
+		var value = escape(value) + '; path=/;' + ((exdate == null) ? '' : ' expires=' + exdate.toUTCString() + ';');
+		document.cookie = name + '=' + value;
 	}
 
 	function getCookie(name) {
-	    var i, x, y, ARRcookies = document.cookie.split(";");
+	    var i, x, y, ARRcookies = document.cookie.split(';');
 	    for(i = 0; i < ARRcookies.length; i++) {
-		x = ARRcookies[i].substr(0, ARRcookies[i].indexOf("="));
-		y = ARRcookies[i].substr(ARRcookies[i].indexOf("=") + 1);
-		x = x.replace(/^\s+|\s+$/g, "");
+		x = ARRcookies[i].substr(0, ARRcookies[i].indexOf('='));
+		y = ARRcookies[i].substr(ARRcookies[i].indexOf('=') + 1);
+		x = x.replace(/^\s+|\s+$/g, '');
 		if(x == name) {
 		    return unescape(y);
 		}
 	    }
 	}
+	
+	var cookiesEnabledResult = false;
+	
+	function areCookiesEnabled() {
+		if(cookiesEnabledResult) {
+			return true;
+		}
+		var cookieName = '__nccookiecheck';
+		setCookie(cookieName, '1');
+		if(getCookie(cookieName) != null) {
+			cookiesEnabledResult = true;
+			setCookie(cookieName, '', -1);
+		}
+		return cookiesEnabledResult;
+	}
+	
+	var appendSpinner = function() {
+		document.body.appendChild(spinnerDiv);
+	}
+
+	var readyInterval = setInterval(function() {
+		if(document.body) {
+			if(areCookiesEnabled()) {
+				clearInterval(readyInterval);
+				appendSpinner();
+			} else {
+				if(document.head) {
+					clearInterval(readyInterval);
+					var cookiesDisabledScript = document.createElement('script');
+					cookiesDisabledScript.type = 'text/javascript';
+					
+					url = NCOMBO_FRAMEWORK_CLIENT_URL + 'scripts/cookiesdisabled.js';
+					
+					if(!NCOMBO_DEBUG) {
+						url = smartCacheManager.setURLCacheVersion(url);
+					}
+					
+					cookiesDisabledScript.src = url;
+					document.head.appendChild(cookiesDisabledScript);
+				}
+			}
+		}
+	}, 20);
 
 	var _getHTTPReqObject = function() {
 		var xmlhttp = null;
@@ -275,25 +307,27 @@ var NCOMBO_DEBUG = {{debug}};
 	})();
 	
 	var ncBegin = function() {
-		var startLoader = function() {
-			if(document.getElementById('ncspinner')) {
-				document.body.removeChild(spinnerDiv);
-				beginLoading();
-			} else {
-				setTimeout(startLoader, 20);
+		if(areCookiesEnabled()) {
+			var startLoader = function() {
+				if(document.getElementById('ncspinner')) {
+					document.body.removeChild(spinnerDiv);
+					beginLoading();
+				} else {
+					setTimeout(startLoader, 20);
+				}
 			}
-		}
 
-		if(ncScriptLoaded) {
-			startLoader();
-		} else {
-			ncOnScriptLoad(loadScript, function() {
+			if(ncScriptLoaded) {
 				startLoader();
-			});
+			} else {
+				ncOnScriptLoad(loadScript, function() {
+					startLoader();
+				});
+			}
 		}
 	}
 	
-	if(NCOMBO_AUTO_SESSION) {		
+	if(NCOMBO_AUTO_SESSION) {
 		var handler = function(err, ssid) {
 			if(err) {
 				var head = document.getElementsByTagName('head');

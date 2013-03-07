@@ -489,6 +489,7 @@ var nCombo = function() {
 		origins: '*:*',
 		autoMinify: true,
 		autoSession: true,
+		publicResources: true,
 		matchOriginProtocol: true,
 		maxConnectionsPerAddress: 0,
 		pollingDuration: 30000,
@@ -827,7 +828,7 @@ var nCombo = function() {
 											endpoint: self._wsEndpoint, 
 											port: self._options.port,
 											frameworkURL: self._frameworkURL,
-											frameworkClientURL: self._frameworkClientURL, 
+											frameworkClientURL: self._frameworkClientURL,
 											autoSession: self._options.autoSession ? 1 : 0,
 											timeout: self._options.timeout,
 											appDef: JSON.stringify(appDef),
@@ -843,7 +844,7 @@ var nCombo = function() {
 					if(sid) {
 						req.session = new Session(sid, self._wsSocks, self._dataClient, self._retryTimeout);
 						next();
-					} else if(self._options.autoSession) {
+					} else if(!self._options.publicResources && self._options.autoSession) {
 						res.writeHead(500);
 						res.end('File cannot be accessed outside of a session');
 					} else {

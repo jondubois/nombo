@@ -1266,11 +1266,11 @@ var nCombo = function() {
 			}
 		}
 		
-		self._ssidRegex = new RegExp('(__ncssid' + self._appExternalURL + '=)([^;]*)')
-		
 		if(self._options.baseURL) {
 			self._setBaseURL(self._options.baseURL);
 		}
+		
+		self._ssidRegex = new RegExp('(__ncssid' + self._appExternalURL + '=)([^;]*)');
 		
 		self._options.appDirPath = self._appDirPath;
 		var appDef = self._getAppDef(true);

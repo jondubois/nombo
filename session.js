@@ -196,7 +196,7 @@ var NCOMBO_DEBUG = {{debug}};
 	}
 	
 	var cacheVersion = smartCacheManager.getCacheVersion();
-	var ncCacheCookieName = '__nccached:' + NCOMBO_PORT;
+	var ncCacheCookieName = '__nccached' + NCOMBO_APP_DEF.appURL;
 	var ncCacheCookie = getCookie(ncCacheCookieName);
 	
 	NCOMBO_IS_FRESH = (ncCacheCookie && ncCacheCookie == cacheVersion) ? false : true;
@@ -205,7 +205,7 @@ var NCOMBO_DEBUG = {{debug}};
 		var self = this;
 		var timeout = NCOMBO_TIMEOUT;
 		var sessionID = null;
-		var sessionCookieName = '__ncssid:' + NCOMBO_PORT;
+		var sessionCookieName = '__ncssid' + NCOMBO_APP_DEF.appURL;
 	
 		self._setIDCookies = function(soid) {
 			var ssid = getCookie(sessionCookieName);

@@ -772,7 +772,7 @@ var nCombo = function() {
 			var now = (new Date()).getTime();
 			var expiry = new Date(now + self._options.cacheLife);
 			res.setHeader('Content-Type', 'text/javascript');
-			res.setHeader('Set-Cookie', '__nccached:' + self._options.port + '=0; Path=/');
+			res.setHeader('Set-Cookie', '__nccached' + self._appExternalURL + '=0; Path=/');
 			res.setHeader('Cache-Control', 'private');
 			res.setHeader('Pragma', 'private');
 			res.setHeader('Expires', expiry.toUTCString());
@@ -1266,7 +1266,7 @@ var nCombo = function() {
 			}
 		}
 		
-		self._ssidRegex = new RegExp('(__ncssid:' + self._options.port + '=)([^;]*)')
+		self._ssidRegex = new RegExp('(__ncssid' + self._appExternalURL + '=)([^;]*)')
 		
 		if(self._options.baseURL) {
 			self._setBaseURL(self._options.baseURL);

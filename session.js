@@ -103,7 +103,7 @@ var NCOMBO_DEBUG = {{debug}};
 	spinnerDiv.style.top = '50%';
 
 	var spinner = new Spinner(spinnerOpts).spin(spinnerDiv);
-
+	
 	function setCookie(name, value, expirySeconds) {
 		var exdate = null;
 		if(expirySeconds) {
@@ -136,7 +136,7 @@ var NCOMBO_DEBUG = {{debug}};
 		setCookie(cookieName, '1');
 		if(getCookie(cookieName) != null) {
 			cookiesEnabledResult = true;
-			setCookie(cookieName, '', -1);
+			setCookie(cookieName, '', -100);
 		}
 		return cookiesEnabledResult;
 	}
@@ -194,25 +194,25 @@ var NCOMBO_DEBUG = {{debug}};
 		}
 		return xmlhttp;
 	}
-
+	
 	var cacheVersion = smartCacheManager.getCacheVersion();
 	var ncCacheCookieName = '__nccached:' + NCOMBO_PORT;
 	var ncCacheCookie = getCookie(ncCacheCookieName);
-
+	
 	NCOMBO_IS_FRESH = (ncCacheCookie && ncCacheCookie == cacheVersion) ? false : true;
 	
 	NCOMBO_SESSION_MANAGER = new (function() {
 		var self = this;
 		var timeout = NCOMBO_TIMEOUT;
 		var sessionID = null;
+		var sessionCookieName = '__ncssid:' + NCOMBO_PORT;
 	
 		self._setIDCookies = function(soid) {
-			var ssid = getCookie('__ncssid');
+			var ssid = getCookie(sessionCookieName);
 			if(!ssid) {
 				ssid = soid;
-				setCookie('__ncssid', ssid);
+				setCookie(sessionCookieName, ssid);
 			}
-			setCookie('__ncsoid', soid);
 			return ssid;
 		}
 		

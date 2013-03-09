@@ -519,6 +519,7 @@ var nCombo = function() {
 	self._appDirPath = path.dirname(require.main.filename);
 	self._appName = path.basename(self._appDirPath);
 	
+	self._ssidRegex = null;
 	var slashSequenceRegex = /\/+/g;
 	
 	self._setBaseURL = function(url) {
@@ -661,17 +662,7 @@ var nCombo = function() {
 	
 	self._parseSID = function(cookieString) {
 		if(cookieString) {
-			var result = cookieString.match(/(__ncssid=)([^;]*)/);
-			if(result) {
-				return result[2]
-			}
-		}
-		return null;
-	}
-	
-	self._parseSocketID = function(cookieString) {
-		if(cookieString) {
-			var result = cookieString.match(/(__ncsoid=)([^;]*)/);
+			var result = cookieString.match(self._ssidRegex);
 			if(result) {
 				return result[2]
 			}
@@ -781,7 +772,7 @@ var nCombo = function() {
 			var now = (new Date()).getTime();
 			var expiry = new Date(now + self._options.cacheLife);
 			res.setHeader('Content-Type', 'text/javascript');
-			res.setHeader('Set-Cookie', '__nccached:' + self._options.port + '=0;');
+			res.setHeader('Set-Cookie', '__nccached:' + self._options.port + '=0; Path=/');
 			res.setHeader('Cache-Control', 'private');
 			res.setHeader('Pragma', 'private');
 			res.setHeader('Expires', expiry.toUTCString());
@@ -1274,6 +1265,8 @@ var nCombo = function() {
 				self._options[i] = options[i];
 			}
 		}
+		
+		self._ssidRegex = new RegExp('(__ncssid:' + self._options.port + '=)([^;]*)')
 		
 		if(self._options.baseURL) {
 			self._setBaseURL(self._options.baseURL);

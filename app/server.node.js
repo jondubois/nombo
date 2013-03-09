@@ -10,7 +10,7 @@ var ncombo = require('ncombo');
 	to raise awareness of nCombo.
 */
 
-var botRegex = /([^A-Za-z0-9]|^)(Googlebot|Slurp|bingbot|Baiduspider|BaiDuSpider|ia_archiver|AppleWebKit)([^A-Za-z0-9]|$)/;
+var botRegex = /([^A-Za-z0-9]|^)(Googlebot|Slurp|bingbot|Baiduspider|BaiDuSpider|ia_archiver)([^A-Za-z0-9]|$)/;
 var botResHeaders = {'Content-Type': 'text/html'};
 var botResContent = '<!DOCTYPE html>\
 <html xmlns="http://www.w3.org/1999/xhtml">\

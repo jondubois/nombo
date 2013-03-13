@@ -29,17 +29,6 @@ var NCOMBO_DEBUG = {{debug}};
 	if(head) {
 		head = head[0];
 	}
-	
-	var nComboStyle = document.createElement('link');
-	nComboStyle.rel = 'stylesheet';
-	nComboStyle.type = 'text/css';
-	var url = NCOMBO_FRAMEWORK_CLIENT_URL + 'styles/ncombo.css';
-	
-	if(!NCOMBO_DEBUG) {
-		url = smartCacheManager.setURLCacheVersion(url);
-	}
-	
-	nComboStyle.href = url;
 
 	var ncOnScriptLoad = function(scriptTag, callback) {
 		if(!NCOMBO_IE || NCOMBO_IE_VERSION > 8) {
@@ -71,8 +60,7 @@ var NCOMBO_DEBUG = {{debug}};
 	ncOnScriptLoad(loadScript, function() {
 		ncScriptLoaded = true;
 	});
-
-	head.appendChild(nComboStyle);
+	
 	head.appendChild(loadScript);
 
 	var spinnerOpts = {

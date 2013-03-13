@@ -1077,9 +1077,12 @@ var nCombo = function() {
 		self._bundledResources.push(self._frameworkClientURL + 'assets/' + name);
 	}
 	
+	self.useStyle(self._frameworkClientURL + 'styles/ncombo.css');
 	self.useScript(self._frameworkClientURL + 'libs/jquery.js');
 	self.useScript(self._frameworkClientURL + 'libs/handlebars.js');
 	self.useScript(self._frameworkClientURL + 'libs/json2.js');
+	self.useScript(self._frameworkClientURL + 'libs/underscore.js');
+	self.useScript(self._frameworkClientURL + 'libs/backbone.js');
 	
 	self.useScript(self._frameworkURL + 'ncombo-client.js');
 	
@@ -1281,7 +1284,6 @@ var nCombo = function() {
 		self.allowFullAuthResource(self._frameworkClientURL + 'assets/logo.png');
 		self.allowFullAuthResource(self._frameworkClientURL + 'scripts/failedconnection.js');
 		self.allowFullAuthResource(self._frameworkClientURL + 'scripts/cookiesdisabled.js');
-		self.allowFullAuthResource(self._frameworkClientURL + 'styles/ncombo.css');
 
 		self.allowFullAuthResource(self._frameworkURL + 'loader.js');
 		
@@ -1675,21 +1677,12 @@ var nCombo = function() {
 			self._smartCacheManager = new SmartCacheManager(self._cacheVersion);
 			
 			var newURL;
-			var appDirRegex = new RegExp('^' + pathManager.toUnixSep(self._appDirPath));
-			var frameworkStylesPath = pathManager.toUnixSep(pathManager.urlToPath(appDef.frameworkStylesURL)).replace(/\/*$/, '');
-			var frameworkStylesDirRegex = new RegExp('^' + frameworkStylesPath);
-			
 			var externalAppDef = self._getAppDef();
-			
 			var pathToRoot = '../..';
 			
 			var cssURLFilter = function(url, rootDir) {
 				rootDir = pathManager.toUnixSep(rootDir);
-				if(appDirRegex.test(rootDir)) {
-					newURL = pathToRoot + pathManager.pathToURL(rootDir) + '/' + url;
-				} else {
-					newURL = pathToRoot + pathManager.pathToURL(rootDir) + '/' + url;
-				}
+				newURL = pathToRoot + pathManager.pathToURL(rootDir) + '/' + url;
 				newURL = pathManager.toUnixSep(path.normalize(newURL));
 				if(self._options.release) {
 					newURL = self._smartCacheManager.setURLCacheVersion(newURL);
@@ -1987,6 +1980,7 @@ var nCombo = function() {
 					begin();
 				} else if(data.action == 'update') {
 					self._resourceSizes[data.url] = data.size;
+					self._cacheResponder.uncache(data.url);
 					self._cacheResponder.cache(data.url, data.content, true);
 				} else if(data.action == 'emit') {
 					self.emit(data.event, data.data);

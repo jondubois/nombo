@@ -87,3 +87,11 @@ clientA.set('this.is.an.object', obj, function(err) {
 		console.log('getRange 7:', value);
 	});
 });
+
+clientA.set('that.8a788b9c-c50e-0b3f-bd47-ec0c63327bf1', [1,2,3,4,5], function(err) {
+	clientA.set('that.8a788b9c-c50e-0b3f-bd47-ec0c63327bf2', [6,7,8], function(err) {
+		clientA.get('that', function(err, value) {
+			console.log('get 1:', value);
+		});
+	});
+});

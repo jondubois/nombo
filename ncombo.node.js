@@ -57,6 +57,16 @@ var AbstractDataClient = function(dataClient, keyTransformFunction) {
 		dataClient.get.apply(dataClient, arguments);
 	}
 	
+	self.getRange = function() {
+		arguments[0] = keyTransformFunction(arguments[0]);
+		dataClient.getRange.apply(dataClient, arguments);
+	}
+	
+	self.getAll = function(callback) {
+		var clientRootKey = keyTransformFunction();
+		dataClient.get.call(dataClient, clientRootKey, callback);
+	}
+	
 	self.count = function() {
 		arguments[0] = keyTransformFunction(arguments[0]);
 		dataClient.count.apply(dataClient, arguments);
@@ -65,6 +75,16 @@ var AbstractDataClient = function(dataClient, keyTransformFunction) {
 	self.remove = function() {
 		arguments[0] = keyTransformFunction(arguments[0]);
 		dataClient.remove.apply(dataClient, arguments);
+	}
+	
+	self.removeRange = function() {
+		arguments[0] = keyTransformFunction(arguments[0]);
+		dataClient.removeRange.apply(dataClient, arguments);
+	}
+	
+	self.removeAll = function(callback) {
+		var clientRootKey = keyTransformFunction();
+		dataClient.set.call(dataClient, clientRootKey, {}, callback);
 	}
 	
 	self.pop = function() {
@@ -139,7 +159,7 @@ var Session = nmix(function(sessionID, socketManager, dataClient, retryTimeout) 
 	
 	self._getDataKey = function(key) {
 		if(key) {
-			return '__sessiondata.' + dataClient.escape(self.id) + '.' + dataClient.escape(key);
+			return '__sessiondata.' + dataClient.escape(self.id) + '.' + key;
 		} else {
 			return '__sessiondata.' + dataClient.escape(self.id);
 		}
@@ -147,7 +167,7 @@ var Session = nmix(function(sessionID, socketManager, dataClient, retryTimeout) 
 	
 	self._getEventKey = function(event) {
 		if(event) {
-			return '__sessionevent.' + dataClient.escape(self.id) + '.' + dataClient.escape(event);
+			return '__sessionevent.' + dataClient.escape(self.id) + '.' + event;
 		} else {
 			return '__sessionevent.' + dataClient.escape(self.id);
 		}
@@ -279,7 +299,7 @@ var GlobalEmitter = function(namespace, socketManager, dataClient) {
 	
 	self._getSessionEventKey = function(sessionID, key) {
 		if(key) {
-			return '__sessionevent.' + dataClient.escape(sessionID) + '.' + dataClient.escape(key);
+			return '__sessionevent.' + dataClient.escape(sessionID) + '.' + key;
 		} else {
 			return '__sessionevent.' + dataClient.escape(sessionID);
 		}
@@ -317,7 +337,11 @@ var Global = nmix(function(socketManager, dataClient, frameworkDirPath, appDirPa
 	var self = this;
 	
 	self._getDataKey = function(key) {
-		return '__globaldata.' + dataClient.escape(key);
+		if(key) {
+			return '__globaldata.' + key;
+		} else {
+			return '__globaldata';
+		}
 	}
 	
 	self.initMixin(AbstractDataClient, dataClient, self._getDataKey);
@@ -1081,9 +1105,6 @@ var nCombo = function() {
 	self.useScript(self._frameworkClientURL + 'libs/jquery.js');
 	self.useScript(self._frameworkClientURL + 'libs/handlebars.js');
 	self.useScript(self._frameworkClientURL + 'libs/json2.js');
-	self.useScript(self._frameworkClientURL + 'libs/underscore.js');
-	self.useScript(self._frameworkClientURL + 'libs/backbone.js');
-	
 	self.useScript(self._frameworkURL + 'ncombo-client.js');
 	
 	var i, nurl;

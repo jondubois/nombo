@@ -500,6 +500,8 @@ var nCombo = function() {
 		port: 8000,
 		release: false,
 		title: 'nCombo App',
+		angular: true,
+		angularMainModule: null,
 		protocol: 'http',
 		protocolOptions: {},
 		transports: ['websocket', 'htmlfile', 'xhr-polling', 'jsonp-polling'],
@@ -770,7 +772,22 @@ var nCombo = function() {
 			includeString += self._getScriptTag(self._frameworkURL + 'socket.io.min.js', 'text/javascript') + "\n\t";
 			includeString += self._getScriptTag(self._appExternalURL + self._frameworkURL + 'session.js', 'text/javascript');
 			
-			var html = self._rootTemplate({title: self._options.title, includes: new handlebars.SafeString(includeString)});
+			var angularEnabledAttr = '';
+			var angularMainModuleString = '';
+			
+			if(self._options.angular) {
+				angularEnabledAttr = ' ng-app';			
+				if(self._options.angularMainModule) {
+					angularMainModuleString = '="' + self._options.angularMainModule + '"';
+				}
+			}
+			
+			var html = self._rootTemplate({
+					title: self._options.title,
+					includes: new handlebars.SafeString(includeString),
+					angularEnabledAttr: angularEnabledAttr,
+					angularMainModule: angularMainModuleString
+					});
 			self._respond(req, res, html, 'text/html', true);
 		}
 	}
@@ -1231,6 +1248,9 @@ var nCombo = function() {
 			title: function() {
 				return (typeof arguments[0] == 'string') ? null : 'expecting a string';
 			},
+			angularMainModule: function() {
+				return (typeof arguments[0] == 'string') ? null : 'expecting a string';
+			},
 			protocol: function() {
 				return (arguments[0] == 'http' || arguments[0] == 'https') ? null : "must be either 'http' or 'https'";
 			},
@@ -1307,6 +1327,10 @@ var nCombo = function() {
 		self.allowFullAuthResource(self._frameworkClientURL + 'scripts/cookiesdisabled.js');
 
 		self.allowFullAuthResource(self._frameworkURL + 'loader.js');
+		
+		if(self._options.angular) {
+			self.bundle.framework.lib('angular.js');
+		}
 		
 		var begin = function() {
 			self._options.cacheVersion = self._cacheVersion;

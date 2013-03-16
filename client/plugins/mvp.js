@@ -178,7 +178,7 @@ $n.mvp = {
 		} else {
 			self.load(function() {
 				self._loaded = true;
-				self._templateString = self._defaultTemplate.getText();
+				self._templateString = self._defaultTemplate.toString();
 				self._mainTemplate = self._defaultTemplate.getRenderer();
 				self._template = self._mainTemplate;
 			});

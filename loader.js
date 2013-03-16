@@ -1288,7 +1288,7 @@ $loader.Template = function(resourceName) {
 		return self.loader.renderer(data);
 	}
 	
-	self.getText = function() {
+	self.toString = function() {
 		return self.loader.text;
 	}
 	

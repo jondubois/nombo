@@ -772,21 +772,21 @@ var nCombo = function() {
 			includeString += self._getScriptTag(self._frameworkURL + 'socket.io.min.js', 'text/javascript') + "\n\t";
 			includeString += self._getScriptTag(self._appExternalURL + self._frameworkURL + 'session.js', 'text/javascript');
 			
-			var angularEnabledAttr = '';
-			var angularMainModuleString = '';
+			var htmlAttr = '';
 			
 			if(self._options.angular) {
-				angularEnabledAttr = ' ng-app';			
+				htmlAttr = ' ng-app';			
 				if(self._options.angularMainModule) {
-					angularMainModuleString = '="' + self._options.angularMainModule + '"';
+					htmlAttr += '="' + self._options.angularMainModule + '"';
 				}
+			} else {
+				htmlAttr = ' xmlns="http://www.w3.org/1999/xhtml"';
 			}
 			
 			var html = self._rootTemplate({
 					title: self._options.title,
 					includes: new handlebars.SafeString(includeString),
-					angularEnabledAttr: angularEnabledAttr,
-					angularMainModule: angularMainModuleString
+					htmlAttr: htmlAttr
 					});
 			self._respond(req, res, html, 'text/html', true);
 		}

@@ -1,9 +1,11 @@
 // These have already been bundled into the app, grabbing them will not reload them
-var mainTemplate = $n.grab.app.template('main');
+//var mainTemplate = $n.grab.app.template('index.html');
 
 var stage = $(document.body);
 
-// Once all our scripts and styles are loaded
+window.TodoCtrl = require('./todo-ctrl').TodoCtrl;
+
 $n.ready(function() {
-	stage.html(mainTemplate.toString());
+	//$n.mvp.setMainView(mainTemplate.toString());
+	//stage.html(mainTemplate.toString());
 });

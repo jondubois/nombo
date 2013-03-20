@@ -2,5 +2,5 @@
 	"webServiceEndpoint": "/ws",
 	"customSIMExtension": "node.js",
 	"privateExtensions": ["node.js", "node.json"],
-	"clientIncludes": ["./client/libs/async.js", "./client/plugins/mvp.js"]
+	"clientIncludes": ["./client/libs/async.js"]
 }

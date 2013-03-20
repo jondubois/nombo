@@ -502,6 +502,7 @@ var nCombo = function() {
 		title: 'nCombo App',
 		angular: true,
 		angularMainModule: null,
+		angularMainTemplate: 'index.html',
 		protocol: 'http',
 		protocolOptions: {},
 		transports: ['websocket', 'htmlfile', 'xhr-polling', 'jsonp-polling'],
@@ -513,7 +514,6 @@ var nCombo = function() {
 		cacheType: 'private',
 		cacheVersion: null,
 		origins: '*:*',
-		autoMinify: true,
 		autoSession: true,
 		publicResources: true,
 		matchOriginProtocol: true,
@@ -736,6 +736,8 @@ var nCombo = function() {
 		appDef.releaseMode = self._options.release;
 		appDef.timeout = self._options.timeout;
 		appDef.resourceSizeMap = self._resourceSizes;
+		appDef.angular = self._options.angular;
+		appDef.angularMainTemplate = self._options.angularMainTemplate;
 		
 		return appDef;
 	}
@@ -1251,6 +1253,9 @@ var nCombo = function() {
 			angularMainModule: function() {
 				return (typeof arguments[0] == 'string') ? null : 'expecting a string';
 			},
+			angularMainTemplate: function() {
+				return (typeof arguments[0] == 'string') ? null : 'expecting a string';
+			},
 			protocol: function() {
 				return (arguments[0] == 'http' || arguments[0] == 'https') ? null : "must be either 'http' or 'https'";
 			},
@@ -1330,6 +1335,7 @@ var nCombo = function() {
 		
 		if(self._options.angular) {
 			self.bundle.framework.lib('angular.js');
+			self._options.angularMainTemplate && self.bundle.app.template(self._options.angularMainTemplate);
 		}
 		
 		var begin = function() {

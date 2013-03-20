@@ -1,25 +1,16 @@
 .main {
+	margin-top: 20px;
+	margin-right: auto;
+	margin-left: auto;
+	width: 300px;
+	height: 200px;
 	padding: 20px;
+	background: #eee;
+	-moz-border-radius: 10px;
+	border-radius: 10px;
 }
 
-.login-screen {
-	position: absolute;
-	width: 220px;
-	height: 160px;
-	left: 50%;
-	top: 50%;
-	margin-left: -110px;
-	margin-top: -80px;
-}
-
-.main {
-	padding: 20px;
-}
-
-.error-text {
-	color: #e00;
-}
-
-.dialog {
-	display: none;
+.done-true {
+  text-decoration: line-through;
+  color: grey;
 }

@@ -4,24 +4,10 @@ var release = arguments[1] == 'release' ? true : false;
 
 var ncombo = require('ncombo');
 
-ncombo.addMiddleware(ncombo.MIDDLEWARE_SOCKET_IO, function(req, res, next) {
-	if(req.sim == 'auth') {
-		// Do not need to login to use auth server interface module
-		next();
-	} else {
-		// For any other sim, check if current session is authorized
-		req.session.get('loggedIn', function(err, loggedIn) {
-			if(loggedIn) {
-				next();
-			} else {
-				res.error('Socket communication not authorized');
-			}
-		});
-	}
-});
-
 // These files will be included as part of preload process
-ncombo.bundle.app.template('main');
+ncombo.bundle.app.template('index.html');
+ncombo.bundle.framework.style('bootstrap');
+ncombo.bundle.app.style('main');
 
 // Session will be destroyed if all windows relating to it are closed for 5 seconds
 ncombo.start({port: port, release: release, sessionTimeout: 5000, title: 'Memo App'});

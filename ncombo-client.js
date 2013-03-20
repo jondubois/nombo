@@ -51,8 +51,13 @@ var $n = {
 		$n._cacheVersion = NCOMBO_CACHE_VERSION;
 		
 		$n.initIO();
-		
 		$n.local.init();
+		
+		$n.ready(function() {
+			if(appDefinition.angular && appDefinition.angularMainTemplate) {
+				$(document.body).html($n.grab.app.template(appDefinition.angularMainTemplate).toString());
+			}
+		});
 	},
 	
 	session: {

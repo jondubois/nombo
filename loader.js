@@ -1289,6 +1289,9 @@ $loader.Template = function(resourceName) {
 	}
 	
 	self.toString = function() {
+		if(!self.loader.loaded) {
+			throw 'The template has not been loaded';
+		}
 		return self.loader.text;
 	}
 	

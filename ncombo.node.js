@@ -738,6 +738,7 @@ var nCombo = function() {
 		appDef.resourceSizeMap = self._resourceSizes;
 		appDef.angular = self._options.angular;
 		appDef.angularMainTemplate = self._options.angularMainTemplate;
+		appDef.angularMainModule = self._options.angularMainModule;
 		
 		return appDef;
 	}
@@ -777,10 +778,8 @@ var nCombo = function() {
 			var htmlAttr = '';
 			
 			if(self._options.angular) {
-				htmlAttr = ' ng-app';			
-				if(self._options.angularMainModule) {
-					htmlAttr += '="' + self._options.angularMainModule + '"';
-				}
+				htmlAttr = ' xmlns:ng="http://angularjs.org"';			
+				// self._options.angularMainModule
 			} else {
 				htmlAttr = ' xmlns="http://www.w3.org/1999/xhtml"';
 			}
@@ -1017,7 +1016,7 @@ var nCombo = function() {
 		return url.replace(/\\/g, '/');
 	}
 	
-	self.useScript = function(url, type) {
+	self.useScript = function(url, type, index) {
 		var normalURL = self._normalizeURL(url);
 		var filePath = pathManager.urlToPath(normalURL);
 		var obj = {};
@@ -1032,7 +1031,11 @@ var nCombo = function() {
 			if(type) {
 				obj['type'] = type;
 			}
-			self._clientScripts.push(obj);
+			if(index !== null) {
+				self._clientScripts.splice(index, 0, obj);
+			} else {
+				self._clientScripts.push(obj);
+			}
 			self._clientScriptMap[normalURL] = true;
 		}
 	}
@@ -1081,8 +1084,8 @@ var nCombo = function() {
 	self.bundle.style = self.useStyle;
 	self.bundle.template = self.useTemplate;
 	
-	self.bundle.app.lib = function(name) {
-		self.useScript(self._appInternalURL + 'libs/' + name);
+	self.bundle.app.lib = function(name, index) {
+		self.useScript(self._appInternalURL + 'libs/' + name, null, index);
 	}
 	
 	self.bundle.app.template = function(name) {
@@ -1100,16 +1103,16 @@ var nCombo = function() {
 		self._bundledResources.push(url);
 	}
 	
-	self.bundle.framework.lib = function(name) {
-		self.useScript(self._frameworkClientURL + 'libs/' + name);
+	self.bundle.framework.lib = function(name, index) {
+		self.useScript(self._frameworkClientURL + 'libs/' + name, null, index);
 	}
 	
-	self.bundle.framework.script = function(name) {
-		self.useScript(self._frameworkClientURL + 'scripts/' + name);
+	self.bundle.framework.script = function(name, index) {
+		self.useScript(self._frameworkClientURL + 'scripts/' + name, null, index);
 	}
 	
-	self.bundle.framework.plugin = function(name) {
-		self.useScript(self._frameworkClientURL + 'plugins/' + name);
+	self.bundle.framework.plugin = function(name, index) {
+		self.useScript(self._frameworkClientURL + 'plugins/' + name, null, index);
 	}
 	
 	self.bundle.framework.style = function(name) {
@@ -1334,7 +1337,7 @@ var nCombo = function() {
 		self.allowFullAuthResource(self._frameworkURL + 'loader.js');
 		
 		if(self._options.angular) {
-			self.bundle.framework.lib('angular.js');
+			self.bundle.framework.lib('angular.js', 0);
 			self._options.angularMainTemplate && self.bundle.app.template(self._options.angularMainTemplate);
 			scriptManager.init(self._frameworkURL, self._appExternalURL, self._options.minifyMangle);
 		}

@@ -56,6 +56,11 @@ var $n = {
 		$n.ready(function() {
 			if(appDefinition.angular && appDefinition.angularMainTemplate) {
 				$(document.body).html($n.grab.app.template(appDefinition.angularMainTemplate).toString());
+				if(appDefinition.angularMainModule) {
+					angular.bootstrap(document, [appDefinition.angularMainModule]);
+				} else {
+					angular.bootstrap(document);
+				}			
 			}
 		});
 	},

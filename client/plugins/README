@@ -1,0 +1,2 @@
+This directory contains client side scripts which extend the client side functionality of nCombo.
+Unlike libs which are standalone, plugins depend and make explicit reference to the nCombo client side code.

@@ -1,0 +1,2 @@
+This directory contains convenience libs which can be bundled into apps.
+Libs are loaded into the global scope so care must be taken to ensure that no two framework library uses the same namespace.

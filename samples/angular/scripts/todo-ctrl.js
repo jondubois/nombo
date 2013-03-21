@@ -24,5 +24,3 @@ exports.TodoCtrl = function($scope) {
     });
   };
 };
-
-exports.TodoCtrl.$inject = ['$scope'];

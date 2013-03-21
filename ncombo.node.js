@@ -516,6 +516,7 @@ var nCombo = function() {
 		origins: '*:*',
 		autoSession: true,
 		publicResources: true,
+		minifyMangle: false,
 		matchOriginProtocol: true,
 		maxConnectionsPerAddress: 0,
 		pollingDuration: 30000,
@@ -566,7 +567,6 @@ var nCombo = function() {
 	self._appScriptsURLRegex = new RegExp('^/scripts(\/|$)');
 	
 	pathManager.init(self._frameworkURL, self._frameworkDirPath, self._appDirPath, self._appExternalURL);
-	scriptManager.init(self._frameworkURL, self._appExternalURL);
 	
 	self._retryTimeout = 10000;
 	
@@ -1336,6 +1336,7 @@ var nCombo = function() {
 		if(self._options.angular) {
 			self.bundle.framework.lib('angular.js');
 			self._options.angularMainTemplate && self.bundle.app.template(self._options.angularMainTemplate);
+			scriptManager.init(self._frameworkURL, self._appExternalURL, self._options.minifyMangle);
 		}
 		
 		var begin = function() {

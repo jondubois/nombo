@@ -184,7 +184,7 @@ var NCOMBO_DEBUG = {{debug}};
 	}
 	
 	var cacheVersion = smartCacheManager.getCacheVersion();
-	var ncCacheCookieName = '__nccached' + NCOMBO_APP_DEF.appURL;
+	var ncCacheCookieName = '__' + NCOMBO_APP_DEF.appURL + 'nccached';
 	var ncCacheCookie = getCookie(ncCacheCookieName);
 	
 	NCOMBO_IS_FRESH = (ncCacheCookie && ncCacheCookie == cacheVersion) ? false : true;
@@ -193,7 +193,7 @@ var NCOMBO_DEBUG = {{debug}};
 		var self = this;
 		var timeout = NCOMBO_TIMEOUT;
 		var sessionID = null;
-		var sessionCookieName = '__ncssid' + NCOMBO_APP_DEF.appURL;
+		var sessionCookieName = '__' + NCOMBO_APP_DEF.appURL + 'ncssid';
 	
 		self._setIDCookies = function(soid) {
 			var ssid = getCookie(sessionCookieName);

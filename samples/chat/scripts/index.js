@@ -18,14 +18,20 @@ $(document.body).html('Loading Dynamic Libraries...');
 	If you want to grab the template directly, you should use the $n.grab.template("chatbox") method directly - You can then get the string representation of
 	this template by calling its render() method (with an optional data argument).
 */
-var chatView = $n.grab.app.view("chatbox");
-var chatListView = $n.grab.app.view("chatlist");
+var chatView = $n.grab.app.template("chatbox");
+var chatListView = $n.grab.app.template("chatlist");
 
 var prevList = "";
 
-var chatHandler = function(data) {
-	var messages = {messages: data};
-	chatListView.setData(messages);
+var chatHandler = function(messages) {
+	var msgStr = '';
+	
+	var i;
+	for(i in messages) {
+		msgStr += '<li>' + messages[i].user + ': ' + messages[i].message + '</li>';
+	}
+	
+	$('.messageContainer').html(msgStr);
 }
 /*
 	This is a presenter (look up Model View Presenter pattern), it handles data from the chat serverinterface
@@ -35,7 +41,7 @@ var chatHandler = function(data) {
 */
 var showChat = function(err, data) {
 	if(err) {
-		chatListView.setData({messages: [{user:"System", message: "Couldn't load chat: " + err}]});
+		chatHandler([{user:"System", message: "Couldn't load chat: " + err}]);
 	} else {
 		chatHandler(data);
 	}
@@ -70,14 +76,14 @@ $n.ready(function() {
 		This is a method of the $n.mvp.View class, it fills the {{chatArea}} handlebars segment with the given $n.mvp.View object (also accepts HTML strings)
 		See http://handlebarsjs.com/ for more info on handlebars templates
 	*/
-	chatView.setData({"chatArea": chatListView});
+	var chatString = chatView.render({"chatArea": chatListView.render()});
 	
 	/*
 		Sets the root view of your application - You only need this if you're using the full MVP approach, otherwise you can just use $(document.body).html()
 		Just make sure to choose one way, not both - Here we chose to go with the MVP component-based approach, but there is no right way to do this provided that you can
 		keep your code under control
 	*/
-	$n.mvp.setMainView(chatView);
+	$(document.body).html(chatString);
 	
 	// Call the chat server interfaces' getChatLog method - The chatHandler object will handle the result (through its success property)
 	$n.local.exec('chat', 'getChatLog', showChat);

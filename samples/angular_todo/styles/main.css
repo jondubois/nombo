@@ -1,0 +1,20 @@
+.main {
+	margin-top: 20px;
+	margin-right: auto;
+	margin-left: auto;
+	width: 300px;
+	min-height: 200px;
+	padding: 20px;
+	background: #eee;
+	-moz-border-radius: 10px;
+	border-radius: 10px;
+}
+
+.main input {
+	margin-right: 5px;
+}
+
+.done-true {
+  text-decoration: line-through;
+  color: grey;
+}

@@ -192,7 +192,7 @@ var Session = nmix(function(sessionID, socketManager, dataClient, retryTimeout) 
 		self._emitterNamespace.emit(event, data);
 	}
 	
-	self._emit = function(event, data, callback) {
+	self._serverSideEmit = function(event, data, callback) {
 		dataClient.broadcast(self._getEventKey(event), data, callback);
 	}
 	
@@ -290,7 +290,7 @@ var Session = nmix(function(sessionID, socketManager, dataClient, retryTimeout) 
 		
 		var emitSessionDestroyOp = retry.operation(self._retryOptions);
 		emitSessionDestroyOp.attempt(function() {
-			self._emit(self.EVENT_DESTROY, null, function(err) {
+			self._serverSideEmit(self.EVENT_DESTROY, null, function(err) {
 				_extendRetryOperation(emitSessionDestroyOp);
 				if(emitSessionDestroyOp.retry(err)) {
 					return;
@@ -508,7 +508,7 @@ var nCombo = function() {
 		port: 8000,
 		release: false,
 		title: 'nCombo App',
-		angular: true,
+		angular: false,
 		angularMainModule: null,
 		angularMainTemplate: 'index.html',
 		protocol: 'http',
@@ -784,10 +784,11 @@ var nCombo = function() {
 			includeString += self._getScriptTag(self._appExternalURL + self._frameworkURL + 'session.js', 'text/javascript');
 			
 			var htmlAttr = '';
+			var bodyAttr = '';
 			
 			if(self._options.angular) {
-				htmlAttr = ' xmlns:ng="http://angularjs.org"';			
-				// self._options.angularMainModule
+				htmlAttr = ' xmlns:ng="http://angularjs.org"';
+				bodyAttr = ' ng-cloak';
 			} else {
 				htmlAttr = ' xmlns="http://www.w3.org/1999/xhtml"';
 			}
@@ -795,7 +796,8 @@ var nCombo = function() {
 			var html = self._rootTemplate({
 					title: self._options.title,
 					includes: new handlebars.SafeString(includeString),
-					htmlAttr: htmlAttr
+					htmlAttr: htmlAttr,
+					bodyAttr: bodyAttr
 					});
 			self._respond(req, res, html, 'text/html', true);
 		}
@@ -822,7 +824,7 @@ var nCombo = function() {
 			var now = (new Date()).getTime();
 			var expiry = new Date(now + self._options.cacheLife);
 			res.setHeader('Content-Type', 'text/javascript');
-			res.setHeader('Set-Cookie', '__nccached' + self._appExternalURL + '=0; Path=/');
+			res.setHeader('Set-Cookie', '__' + self._appExternalURL + 'nccached=0; Path=/');
 			res.setHeader('Cache-Control', 'private');
 			res.setHeader('Pragma', 'private');
 			res.setHeader('Expires', expiry.toUTCString());
@@ -1039,10 +1041,10 @@ var nCombo = function() {
 			if(type) {
 				obj['type'] = type;
 			}
-			if(index !== null) {
-				self._clientScripts.splice(index, 0, obj);
-			} else {
+			if(index == null) {
 				self._clientScripts.push(obj);
+			} else {
+				self._clientScripts.splice(index, 0, obj);
 			}
 			self._clientScriptMap[normalURL] = true;
 		}
@@ -1330,7 +1332,7 @@ var nCombo = function() {
 			self._setBaseURL(self._options.baseURL);
 		}
 		
-		self._ssidRegex = new RegExp('(__ncssid' + self._appExternalURL + '=)([^;]*)');
+		self._ssidRegex = new RegExp('(__' + self._appExternalURL + 'ncssid=)([^;]*)');
 		
 		self._options.appDirPath = self._appDirPath;
 		var appDef = self._getAppDef(true);

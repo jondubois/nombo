@@ -39,7 +39,6 @@ module.exports.addMessage = function(req, res) {
 						The emit method allows you to emit the event to a specific session (by ID) while the broadcast method sends the event to every client that is connected to nCombo
 					*/
 					req.global.broadcast('updatemessages', messages);
-					
 					res.end();
 				}
 			});

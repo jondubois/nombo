@@ -197,6 +197,24 @@ var Client = function(port, host, secretKey, timeout) {
 		return self.escape(value);	
 	}
 	
+	self.extractKeys = function(object) {
+		var i;
+		var array = [];
+		for(i in object) {
+			array.push(i);
+		}
+		return array;
+	}
+	
+	self.extractValues = function(object) {
+		var i;
+		var array = [];
+		for(i in object) {
+			array.push(object[i]);
+		}
+		return array;
+	}
+	
 	self.watch = function(event, handler, ackCallback) {
 		var command = {
 			event: event,

@@ -3,14 +3,17 @@
 	margin-right: auto;
 	margin-left: auto;
 	width: 300px;
-	height: 200px;
+	min-height: 200px;
 	padding: 20px;
 	background: #eee;
 	-moz-border-radius: 10px;
 	border-radius: 10px;
 }
 
-.done-true {
-  text-decoration: line-through;
-  color: grey;
+.main table {
+	margin-top: 10px;
+}
+
+.main td {
+	padding-right: 10px;
 }

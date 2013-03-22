@@ -109,6 +109,14 @@ var AbstractDataClient = function(dataClient, keyTransformFunction) {
 		return dataClient.input(value);
 	}
 	
+	self.extractKeys = function(object) {
+		return dataClient.extractKeys(object);
+	}
+	
+	self.extractValues = function(object) {
+		return dataClient.extractValues(object);
+	}
+	
 	self.query = function(query, data) {
 		var i;
 		for(i in data) {

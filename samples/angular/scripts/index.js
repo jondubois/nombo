@@ -1,7 +1,7 @@
-require('./mongolab');
+require('./store');
 
-angular.module('project', ['mongolab']).
-  config(function($routeProvider) {
+angular.module('project', ['store']).
+  config(function($routeProvider, $locationProvider) {
     $routeProvider.
       when('/', {controller:ListCtrl, templateUrl:'/templates/list.html'}).
       when('/edit/:projectId', {controller:EditCtrl, templateUrl:'/templates/detail.html'}).
@@ -9,41 +9,44 @@ angular.module('project', ['mongolab']).
       otherwise({redirectTo:'/'});
   });
  
- 
 function ListCtrl($scope, Project) {
-  $scope.projects = Project.query();
+	Project.get(function(err, projects) {
+		$scope.$apply(function() {
+			$scope.projects = projects;
+		});
+	});
 }
- 
- 
+
 function CreateCtrl($scope, $location, Project) {
-  $scope.save = function() {
-    Project.save($scope.project, function(project) {
-      $location.path('/edit/' + project._id.$oid);
-    });
-  }
+	$scope.save = function() {
+		Project.save($scope.project, function(err, project) {
+			$location.path('/edit/' + project._id);
+		});
+	}
 }
 
 function EditCtrl($scope, $location, $routeParams, Project) {
   var self = this;
  
-  Project.get({id: $routeParams.projectId}, function(project) {
+  Project.get({_id: $routeParams.projectId}, function(err, project) {
     self.original = project;
-    $scope.project = new Project(self.original);
+	$scope.$apply(function() {
+		$scope.project = self.original;
+	});
   });
  
-  $scope.isClean = function() {
-    return angular.equals(self.original, $scope.project);
-  }
- 
   $scope.destroy = function() {
-    self.original.destroy(function() {
+	Project.remove(self.original, function(err) {
       $location.path('/list');
     });
   };
  
   $scope.save = function() {
-    $scope.project.update(function() {
-      $location.path('/');
+	Project.save(self.original, function(err) {
+		console.log(4444);
+		$scope.$apply(function() {
+		$location.path('/');
+		});
     });
   };
 }

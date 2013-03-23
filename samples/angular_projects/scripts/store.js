@@ -34,6 +34,15 @@ factory('Project', function () {
 				callback = arguments[0]
 			}
 			$n.local.exec(projectsModelName, 'remove', data, callback);
+		},
+		
+		projectsChanged: function(callback) {
+			/*
+				Watch for changes to the project list on the server.
+				This event will be triggered if another open tab within the same session updates the projects data.
+				This will keep all open tabs in sync.
+			*/
+			$n.local.watchOnce('projectschanged', callback);
 		}
 	};
 

@@ -131,7 +131,7 @@ var AbstractDataClient = function(dataClient, keyTransformFunction) {
 	}
 }
 
-var SessionEmitter = function(sessionID, namespace, socketManager, dataClient, retryTimeout) {
+var SessionEmitter = function(sessionID, namespace, socketManager, dataClient, socket, retryTimeout) {
 	var self = this;
 	self._namespace = namespace;
 	
@@ -145,24 +145,41 @@ var SessionEmitter = function(sessionID, namespace, socketManager, dataClient, r
 		self.emitRaw(eventObject);
 	}
 	
-	self.emitRaw = function(eventData) {
+	self.emitOut = function(event, data) {
+		var eventObject = {
+			ns: self._namespace,
+			event: event,
+			data: data
+		}
+		
+		if(socket) {
+			self.emitRaw(eventObject, socket.id);
+		} else  {
+			self.emitRaw(eventObject);
+		}
+	}
+	
+	self.emitRaw = function(eventData, skipSockID) {
 		dataClient.get('__opensessions.' + dataClient.escape(sessionID), function(err, socks) {
 			if(err) {
 				console.log('   nCombo Error - Failed to get active socket list');
 			} else {
 				var i;
 				for(i in socks) {
-					socketManager.socket(i).emit('event', eventData);
+					if(i != skipSockID) {
+						socketManager.socket(i).emit('event', eventData);
+					}
 				}
 			}
 		});
 	}
 }
 
-var Session = nmix(function(sessionID, socketManager, dataClient, retryTimeout) {
+var Session = nmix(function(sessionID, socketManager, dataClient, socket, retryTimeout) {
 	var self = this;
 	self.id = sessionID;
 	
+	self._socket = socket;
 	self._listeners = {};
 	
 	self._getDataKey = function(key) {
@@ -185,11 +202,19 @@ var Session = nmix(function(sessionID, socketManager, dataClient, retryTimeout) 
 	
 	self.EVENT_DESTROY = 'destroy';
 	
-	self._emitterNamespace = new SessionEmitter(self.id, '__main', socketManager, dataClient, retryTimeout);
+	self._emitterNamespace = new SessionEmitter(self.id, '__main', socketManager, dataClient, self._socket, retryTimeout);
 	self._namespaces = {'__main': self._emitterNamespace};
+	
+	self.getSocket = function() {
+		return self._socket;
+	}
 	
 	self.emit = function(event, data) {
 		self._emitterNamespace.emit(event, data);
+	}
+	
+	self.emitOut = function(event, data) {
+		self._emitterNamespace.emitOut(event, data);
 	}
 	
 	self._serverSideEmit = function(event, data, callback) {
@@ -222,7 +247,7 @@ var Session = nmix(function(sessionID, socketManager, dataClient, retryTimeout) 
 	
 	self.ns = function(namespace) {
 		if(!self._namespaces[namespace]) {
-			self._namespaces[namespace] = new SessionEmitter(self.id, namespace, dataClient, socketManager, retryTimeout);
+			self._namespaces[namespace] = new SessionEmitter(self.id, namespace, socketManager, dataClient, self._socket, retryTimeout);
 		}
 		return self._namespaces[namespace];
 	}
@@ -1528,7 +1553,7 @@ var nCombo = function() {
 						}
 					});
 					
-					var session = new Session(sid, self._wsSocks, self._dataClient, self._retryTimeout);
+					var session = new Session(sid, self._wsSocks, self._dataClient, socket, self._retryTimeout);
 					
 					if(auth !== undefined) {
 						session.setAuth(auth, function(err) {

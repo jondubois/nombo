@@ -259,6 +259,15 @@ $n.NS = function(namespace, wsSocket) {
 		}
 	}
 	
+	self.watchOnce = function(event, handler, ackCallback) {
+		if(self.isWatching(event)) {
+			self._serverWatchMap[event] = [handler];
+			ackCallback && ackCallback();
+		} else {
+			self.watch(event, handler, ackCallback);
+		}
+	}
+	
 	self.unwatch = function(event, handler, ackCallback) {
 		var ackCalled = false;
 		var timeout = setTimeout(function() {
@@ -312,18 +321,22 @@ $n.NS = function(namespace, wsSocket) {
 	}
 	
 	self._getWatcher = function(event, handler) {
-		if(!event || !handler) {
+		if(!event) {
 			throw "Exception: One or more required parameters were undefined";
 		}
 		
 		if(self._serverWatchMap[event]) {
 			var watchers = self._serverWatchMap[event];
-			var len = watchers.length;
-			var i;
-			for(i=0; i<len; i++) {
-				if(watchers[i] == handler) {
-					return watchers[i];
+			if(handler) {
+				var len = watchers.length;
+				var i;
+				for(i=0; i<len; i++) {
+					if(watchers[i] == handler) {
+						return watchers[i];
+					}
 				}
+			} else {
+				return watchers;
 			}
 		}
 		return null;
@@ -406,6 +419,15 @@ $n.RemoteNS = function(host, port, secure, wsEndpoint, namespace, wsSocket) {
 		}
 	}
 	
+	self.watchOnce = function(event, handler, ackCallback) {
+		if(self.isWatching(event, handler)) {
+			self._serverWatchMap[event] = [handler];
+			ackCallback && ackCallback();
+		} else {
+			self.watch(event, handler, ackCallback);
+		}
+	}
+	
 	self.unwatch = function(event, handler, ackCallback) {
 		var ackCalled = false;
 		var timeout = setTimeout(function() {
@@ -464,18 +486,22 @@ $n.RemoteNS = function(host, port, secure, wsEndpoint, namespace, wsSocket) {
 	}
 	
 	self._getWatcher = function(event, handler) {
-		if(!event || !handler) {
+		if(!event) {
 			throw "Exception: One or more required parameters were undefined";
 		}
 		
 		if(self._serverWatchMap[event]) {
 			var watchers = self._serverWatchMap[event];
-			var len = watchers.length;
-			var i;
-			for(i=0; i<len; i++) {
-				if(watchers[i] == handler) {
-					return watchers[i];
+			if(handler) {
+				var len = watchers.length;
+				var i;
+				for(i=0; i<len; i++) {
+					if(watchers[i] == handler) {
+						return watchers[i];
+					}
 				}
+			} else {
+				return watchers;
 			}
 		}
 		return null;
@@ -568,6 +594,10 @@ $n.remote = function(host, port, secure, wsEndpoint) {
 				self._mainNamespace.watch.apply(null, arguments);
 			}
 			
+			self.watchOnce = function() {
+				self._mainNamespace.watchOnce.apply(null, arguments);
+			}
+			
 			self.unwatch = function() {
 				self._mainNamespace.unwatch.apply(null, arguments);
 			}
@@ -634,6 +664,10 @@ $n.local = new (function($n) {
 	
 	self.watch = function() {
 		self._mainNamespace.watch.apply(null, arguments);
+	}
+	
+	self.watchOnce = function() {
+		self._mainNamespace.watchOnce.apply(null, arguments);
 	}
 	
 	self.unwatch = function() {

@@ -21,19 +21,27 @@ config(function ($routeProvider, $locationProvider) {
 });
 
 function ListCtrl($scope, Project) {
-	Project.get(function (err, projects) {
+	var loadProjects = function(projects) {
 		$scope.$apply(function () {
 			$scope.projects = projects;
 		});
+	}
+	Project.get(function (err, projects) {
+		loadProjects(projects);
 	});
+	
+	/*
+		Register a callback which will be called whenever the project list is changed on the server side.
+		This is used to keep data in sync across all open tabs which share the same session.
+	*/
+	Project.projectsChanged(loadProjects);
 }
 
 function CreateCtrl($scope, $location, Project) {
 	$scope.save = function () {
 		Project.save($scope.project, function (err, project) {
-			$location.path('/edit/' + project._id);
 			$scope.$apply(function () {
-
+				$location.path('/edit/' + project._id);
 			});
 		});
 	}

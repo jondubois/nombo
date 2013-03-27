@@ -1,7 +1,7 @@
 var fork = require('child_process').fork;
 var EventEmitter = require('events').EventEmitter;
-var ComSocket = require('./com').ComSocket;
-var FlexiMap = require('./fleximap').FlexiMap;
+var ComSocket = require('ncom').ComSocket;
+var FlexiMap = require('fleximap').FlexiMap;
 var json = require('json');
 
 var DEFAULT_PORT = 9435;

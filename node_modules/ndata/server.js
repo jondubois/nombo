@@ -4,14 +4,13 @@ var HOST = '127.0.0.1';
 
 var initialized = {};
 
-var com = require('./com');
-var FlexiMap = require('./fleximap').FlexiMap;
+var com = require('ncom');
+var FlexiMap = require('fleximap').FlexiMap;
 
 var escapeStr = '\\u001b';
 var escapeArr = escapeStr.split('');
 var escapeRegex = /\\+u001b/g;
 
-var dotSubstitute = '\\u001a';
 var dotSubRegex = /\\+u001a/g;
 
 var unsimplifyFilter = function(str) {
@@ -280,10 +279,6 @@ var substitute = function(str) {
 	return DataMap.get(str);
 }
 
-var simplify = function(str) {
-	return str.replace(/[.]/g, dotSubstitute);
-}
-
 var convertToString = function(object) {
 	var str;
 	if(typeof object == 'string') {
@@ -373,8 +368,7 @@ var compile = function(str, macroMap, macroName) {
 
 var macros = {
 	'%': evaluate,
-	'$': substitute,
-	'#': simplify
+	'$': substitute
 };
 
 server.on('connection', function(sock) {

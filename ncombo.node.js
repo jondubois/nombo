@@ -891,6 +891,20 @@ var nCombo = function() {
 									data = template({cacheVersion: '*/ = ' + self._cacheVersion + ' /*'});
 								} else if(url == self._frameworkURL + 'session.js') {
 									var appDef = self._getAppDef();
+									
+									if(self._resourceSizes[appDef.appStyleBundleURL] <= 0) {
+										delete appDef.appStyleBundleURL;
+									}
+									if(self._resourceSizes[appDef.appLibBundleURL] <= 0) {
+										delete appDef.appLibBundleURL;
+									}
+									if(self._resourceSizes[appDef.appTemplateBundleURL] <= 0) {
+										delete appDef.appTemplateBundleURL;
+									}
+									if(self._resourceSizes[appDef.appScriptBundleURL] <= 0) {
+										delete appDef.appScriptBundleURL;
+									}
+									
 									var template = handlebars.compile(data.toString());
 									data = template({
 											endpoint: self._wsEndpoint, 
@@ -1374,8 +1388,8 @@ var nCombo = function() {
 		if(self._options.angular) {
 			self.bundle.framework.lib('angular.js', 0);
 			self._options.angularMainTemplate && self.bundle.app.template(self._options.angularMainTemplate);
-			scriptManager.init(self._frameworkURL, self._appExternalURL, self._options.minifyMangle);
 		}
+		scriptManager.init(self._frameworkURL, self._appExternalURL, self._options.minifyMangle);
 		
 		var begin = function() {
 			self._options.cacheVersion = self._cacheVersion;
@@ -1984,6 +1998,7 @@ var nCombo = function() {
 								
 							var launchWorkers = function() {
 								initBundles();
+								
 								var i;
 								
 								if(self._options.workers > 0) {

@@ -40,10 +40,19 @@ var $loader = {
 	init: function(appDefinition, resources, skipPreload) {
 		$loader._resources = [];
 		$loader._appDefinition = appDefinition;
-		$loader._resources.push($loader._appDefinition.appStyleBundleURL);
-		$loader._resources.push($loader._appDefinition.appLibBundleURL);
-		$loader._resources.push($loader._appDefinition.appTemplateBundleURL);
-		$loader._resources.push($loader._appDefinition.appScriptBundleURL);
+		if($loader._appDefinition.appStyleBundleURL) {
+			$loader._resources.push($loader._appDefinition.appStyleBundleURL);
+		}
+		if($loader._appDefinition.appLibBundleURL) {
+			$loader._resources.push($loader._appDefinition.appLibBundleURL);
+		}
+		if($loader._appDefinition.appTemplateBundleURL) {
+			$loader._resources.push($loader._appDefinition.appTemplateBundleURL);
+		}
+		if($loader._appDefinition.appScriptBundleURL) {
+			$loader._resources.push($loader._appDefinition.appScriptBundleURL);
+		}
+		
 		if(resources) {
 			$loader._resources = $loader._resources.concat(resources);
 		}

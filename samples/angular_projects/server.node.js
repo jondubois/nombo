@@ -9,4 +9,4 @@ ncombo.bundle.framework.style('bootstrap');
 ncombo.bundle.app.style('main');
 
 // Session will be destroyed if all windows relating to it are closed for 5 seconds
-ncombo.start({port: port, release: release, sessionTimeout: 5000, title: 'Memo App', angular: true, angularMainModule: 'project'});
+ncombo.start({port: port, release: release, sessionTimeout: 5000, title: 'Projects App', angular: true, angularMainModule: 'project'});

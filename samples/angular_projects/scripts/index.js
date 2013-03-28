@@ -2,18 +2,27 @@ require('./store');
 
 angular.module('project', ['store']).
 config(function ($routeProvider, $locationProvider) {
+	/*
+		The $n.grab.app.templateURL() is optional, you also simply type out the full URL.
+		Note that nCombo app URLs have a short from and a long form - The long form should be used when
+		multiple apps are sharing the same domain name.
+		The short URL for 'list.html' is simply: /template/list.html
+		and the long URL is /angular_projects/scripts/list.html (the /angular_projects/ bit can be 
+		used for URL rewriting as a way to distinguish this app from others on the same domain.
+		$n.grab.app.templateURL('list.html') expands into the long URL.
+	*/
 	$routeProvider.
 	when('/', {
 		controller: ListCtrl,
-		templateUrl: '/templates/list.html'
+		templateUrl: $n.grab.app.templateURL('list.html')
 	}).
 	when('/edit/:projectId', {
 		controller: EditCtrl,
-		templateUrl: '/templates/detail.html'
+		templateUrl: $n.grab.app.templateURL('detail.html')
 	}).
 	when('/new', {
 		controller: CreateCtrl,
-		templateUrl: '/templates/detail.html'
+		templateUrl: $n.grab.app.templateURL('detail.html')
 	}).
 	otherwise({
 		redirectTo: '/'

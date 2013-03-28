@@ -25,7 +25,7 @@ var http = require('http'),
 	cssBundler = require('ncombo/css-bundler'),
 	templateBundler = require('ncombo/template-bundler'),
 	SmartCacheManager = require("./smartcachemanager").SmartCacheManager,
-	chokidar = require('chokidar'),
+	watchr = require('watchr'),
 	domain = require('domain'),
 	retry = require('retry');
 
@@ -1777,7 +1777,9 @@ var nCombo = function() {
 				stylePaths.push(self._clientStyles[i].path);
 			}
 			
-			var styleBundle = cssBundler({files: stylePaths, watch: !self._options.release});
+			var styleDirs = [pathManager.urlToPath(appDef.frameworkStylesURL), pathManager.urlToPath(appDef.appStylesURL)];
+			
+			var styleBundle = cssBundler({watchDirs: styleDirs, files: stylePaths, watch: !self._options.release});
 			self._smartCacheManager = new SmartCacheManager(self._cacheVersion);
 			
 			var newURL;
@@ -1813,7 +1815,8 @@ var nCombo = function() {
 				templatePaths.push(self._clientTemplates[i].path);
 			}
 			
-			var templateBundle = templateBundler({files: templatePaths, watch: !self._options.release});
+			var templateDirs = [pathManager.urlToPath(appDef.appTemplatesURL)];
+			var templateBundle = templateBundler({watchDirs: templateDirs, files: templatePaths, watch: !self._options.release});
 			
 			var updateTemplateBundle = function() {
 				var htmlBundle = templateBundle.bundle();
@@ -1839,7 +1842,9 @@ var nCombo = function() {
 				var libArray = [];
 				var i;
 				for(i in jsLibCodes) {
-					libArray.push(jsLibCodes[i]);
+					if(jsLibCodes[i]) {
+						libArray.push(jsLibCodes[i]);
+					}
 				}
 				var libBundle = libArray.join('\n');
 				if(self._options.release) {
@@ -1855,20 +1860,20 @@ var nCombo = function() {
 				}
 			}
 			
-			var updateLibBundle = function(filePath) {
-				jsLibCodes[filePath] = fs.readFileSync(filePath, 'utf8');
+			var updateLibBundle = function(event, filePath) {
+				if(event == 'delete') {
+					jsLibCodes[filePath] = null;
+				} else if((event == 'create' || event == 'update') && jsLibCodes.hasOwnProperty(filePath)) {
+					jsLibCodes[filePath] = fs.readFileSync(filePath, 'utf8');
+				}
 				makeLibBundle();
 			}
 			
-			var bundleOptions = {};
-			bundleOptions.watch = !self._options.release;
-			bundleOptions.debug = !self._options.release;
-			bundleOptions.exports = 'require';
-			
+			var bundleOptions = {debug: !self._options.release, watch: !self._options.release, exports: 'require'};
 			var scriptBundle = browserify(bundleOptions);
 			scriptBundle.addEntry(pathManager.urlToPath(appDef.appScriptsURL + 'index.js'));
 			
-			var updateScriptBundle = function() {
+			var updateScriptBundle = function(callback) {
 				var jsBundle = scriptBundle.bundle();
 				if(self._options.release) {
 					jsBundle = scriptManager.minify(jsBundle);
@@ -1882,16 +1887,17 @@ var nCombo = function() {
 						workers[i].send({action: 'update', url: appDef.appScriptBundleURL, content: jsBundle, size: size});
 					}
 				}
+				callback && callback();
 			}
 			
-			var initBundles = function() {
+			var initBundles = function(callback) {
 				updateCSSBundle();
 				updateTemplateBundle();
 				makeLibBundle();
-				updateScriptBundle();
+				updateScriptBundle(callback);
 			}
 			
-			var autoRebundle = function() {			
+			var autoRebundle = function() {		
 				// The master process does not handle requests so it's OK to do sync operations at runtime
 				styleBundle.on('bundle', function() {
 					updateCSSBundle();
@@ -1901,13 +1907,10 @@ var nCombo = function() {
 					updateTemplateBundle();
 				});
 				
-				var libRebundler = function(filePath) {
-					updateLibBundle(filePath);
-				}
-					
-				var libWatcher = chokidar.watch(libPaths);
-				libWatcher.on('change', libRebundler);
-				libWatcher.on('unlink', libRebundler);
+				watchr.watch({
+					paths: [pathManager.urlToPath(appDef.frameworkLibsURL), pathManager.urlToPath(appDef.appLibsURL)],
+					listener: updateLibBundle
+				});
 				
 				scriptBundle.on('bundle', function() {
 					updateScriptBundle();
@@ -1966,7 +1969,7 @@ var nCombo = function() {
 								
 								var styleAssetSizeMap = styleBundle.getAssetSizeMap();
 								for(i in styleAssetSizeMap) {
-									// prepend with the relative path to root from style bundle url (styles will be inserted inside <style></style> tags in root document)
+									// Prepend with the relative path to root from style bundle url (styles will be inserted inside <style></style> tags in root document)
 									resourceSizes[externalAppDef.virtualURL + '../..' + i] = styleAssetSizeMap[i];
 								}
 								
@@ -1997,18 +2000,19 @@ var nCombo = function() {
 							}
 								
 							var launchWorkers = function() {
-								initBundles();
-								
-								var i;
-								
-								if(self._options.workers > 0) {
-									launchWorker(true);
+								initBundles(function() {
+									var i;
 									
-									for(i=1; i<self._options.workers; i++) {
-										launchWorker();
+									if(self._options.workers > 0) {
+										launchWorker(true);
+										
+										for(i=1; i<self._options.workers; i++) {
+											launchWorker();
+										}
+										
+										!self._options.release && autoRebundle();
 									}
-									autoRebundle();
-								}
+								});
 							}
 							
 							cluster.on('exit', function(worker, code, signal) {

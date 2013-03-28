@@ -489,6 +489,18 @@ var $loader = {
 				return $loader.grab.template(resourceName, fresh);
 			},
 			
+			templateURL: function(nameWithExtension, fresh) {
+				if(fresh) {
+					return smartCacheManager.setCacheKiller($loader._appDefinition.appTemplatesURL + nameWithExtension);
+				} else {
+					if($loader.grab._options.releaseMode) {
+						return smartCacheManager.setURLCacheVersion($loader._appDefinition.appTemplatesURL + nameWithExtension);
+					} else {
+						return $loader._appDefinition.appTemplatesURL + nameWithExtension;
+					}
+				}
+			},
+			
 			assetURL: function(nameWithExtension, fresh) {
 				if(fresh) {
 					return smartCacheManager.setCacheKiller($loader.grab._options.appAssetsURL + nameWithExtension);

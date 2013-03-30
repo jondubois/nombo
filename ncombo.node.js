@@ -555,6 +555,7 @@ var nCombo = function() {
 		pollingDuration: 30000,
 		heartbeatInterval: 25000,
 		heartbeatTimeout: 60000,
+		allowUploads: false,
 		baseURL: null
 	};
 	
@@ -1017,7 +1018,11 @@ var nCombo = function() {
 	self._routStepper.setTail(self._httpMethodJunction);
 	
 	self._middleware[self.MIDDLEWARE_POST] = stepper.create();
-	self._middleware[self.MIDDLEWARE_POST].setTail(self._fileUploader.upload);
+	self._middleware[self.MIDDLEWARE_POST].setTail(function() {
+		if(self._options.allowUploads) {
+			self._fileUploader.upload.apply(this, arguments);
+		}
+	});
 	
 	self._middleware[self.MIDDLEWARE_HTTP].setTail(self._routStepper);
 	

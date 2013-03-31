@@ -574,9 +574,9 @@ var nCombo = function() {
 	self._frameworkDirPath = __dirname;
 	self._frameworkClientDirPath = self._frameworkDirPath + '/client';
 	self._frameworkClientURL = self._frameworkURL + 'client/';
+	self._frameworkSocketIOClientURL = self._frameworkURL + 'socket.io.min.js';
 	
 	self._frameworkModulesURL = self._frameworkURL + 'node_modules/';
-	self._frameworkSocketIOClientURL = self._frameworkModulesURL + 'socket.io-client/dist/socket.io.min.js';
 	
 	self._appDirPath = path.dirname(require.main.filename);
 	self._appName = path.basename(self._appDirPath);
@@ -1385,6 +1385,7 @@ var nCombo = function() {
 				self._frameworkURL + 'loader.js'];
 		
 		self.allowFullAuthResource(self._spinJSURL);
+		self.allowFullAuthResource(self._frameworkSocketIOClientURL);
 		self.allowFullAuthResource(self._frameworkClientURL + 'assets/logo.png');
 		self.allowFullAuthResource(self._frameworkClientURL + 'scripts/failedconnection.js');
 		self.allowFullAuthResource(self._frameworkClientURL + 'scripts/cookiesdisabled.js');

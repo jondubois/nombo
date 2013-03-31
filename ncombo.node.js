@@ -576,6 +576,7 @@ var nCombo = function() {
 	self._frameworkClientURL = self._frameworkURL + 'client/';
 	
 	self._frameworkModulesURL = self._frameworkURL + 'node_modules/';
+	self._frameworkSocketIOClientURL = self._frameworkModulesURL + 'socket.io-client/dist/socket.io.min.js';
 	
 	self._appDirPath = path.dirname(require.main.filename);
 	self._appName = path.basename(self._appDirPath);
@@ -806,7 +807,7 @@ var nCombo = function() {
 			var includeString = self._getScriptTag(self._frameworkURL + 'smartcachemanager.js', 'text/javascript') + "\n\t";
 			includeString += self._getScriptTag(self._timeCacheExternalURL, 'text/javascript') + "\n\t";
 			includeString += self._getScriptTag(self._spinJSURL, 'text/javascript') + "\n\t";
-			includeString += self._getScriptTag(self._frameworkURL + 'socket.io.min.js', 'text/javascript') + "\n\t";
+			includeString += self._getScriptTag(self._frameworkSocketIOClientURL, 'text/javascript') + "\n\t";
 			includeString += self._getScriptTag(self._appExternalURL + self._frameworkURL + 'session.js', 'text/javascript');
 			
 			var htmlAttr = '';
@@ -876,7 +877,7 @@ var nCombo = function() {
 				var cacheKey = encoding + ':' + url;
 				var skipCache = (url == self._frameworkURL + 'smartcachemanager.js');
 				
-				if(skipCache || url == self._frameworkURL + 'socket.io.min.js' || url == self._frameworkURL + 'session.js'
+				if(skipCache || url == self._frameworkSocketIOClientURL || url == self._frameworkURL + 'session.js'
 						|| self.isFullAuthResource(url)) {
 					
 					if(self._options.release && cache.has(cacheKey)) {

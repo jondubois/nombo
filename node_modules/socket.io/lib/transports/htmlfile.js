@@ -52,7 +52,9 @@ HTMLFile.prototype.handleRequest = function (req) {
 
   if (req.method == 'GET') {
     req.res.writeHead(200, {
-      'Content-Type': 'text/html; charset=UTF-8'
+        'Content-Type': 'text/html; charset=UTF-8'
+      , 'Connection': 'keep-alive'
+      , 'Transfer-Encoding': 'chunked'
     });
 
     req.res.write(

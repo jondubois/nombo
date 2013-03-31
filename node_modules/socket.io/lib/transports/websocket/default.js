@@ -74,8 +74,7 @@ WebSocket.prototype.protocolVersion = 'hixie-76';
  */
 
 WebSocket.prototype.onSocketConnect = function () {
-  var self = this
-    , location;
+  var self = this;
 
   this.socket.setNoDelay(true);
 
@@ -90,11 +89,11 @@ WebSocket.prototype.onSocketConnect = function () {
 
   var origin = this.req.headers['origin']
   , waitingForNonce = false;
-  if (this.manager.settings['match origin protocol']) {
+  if(this.manager.settings['match origin protocol']){
     location = (origin.indexOf('https')>-1 ? 'wss' : 'ws') + '://' + this.req.headers.host + this.req.url;
-  } else if (this.socket.encrypted){
+  }else if(this.socket.encrypted){
     location = 'wss://' + this.req.headers.host + this.req.url;
-  } else {
+  }else{
     location = 'ws://' + this.req.headers.host + this.req.url;
   }
 

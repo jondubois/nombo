@@ -1,3 +1,4 @@
+
 /*!
  * socket.io-node
  * Copyright(c) 2011 LearnBoost <dev@learnboost.com>
@@ -9,7 +10,8 @@
  */
 
 var crypto = require('crypto')
-  , Store = require('../store');
+  , Store = require('../store')
+  , assert = require('assert');
 
 /**
  * Exports the constructor.

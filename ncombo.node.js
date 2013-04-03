@@ -615,6 +615,7 @@ var nCombo = function() {
 	self._router = require('ncombo/router/router.node.js');
 	self._preprocessor = require('ncombo/router/preprocessor.node.js');
 	self._compressor = require('ncombo/router/compressor.node.js');
+	self._headerAdder = require('ncombo/router/headeradder.node.js');
 	self._responder = require('ncombo/router/responder.node.js');
 	
 	self._fileUploader = require('ncombo/fileuploader');
@@ -796,13 +797,12 @@ var nCombo = function() {
 	
 	self._writeSessionStartScreen = function(req, res) {
 		var encoding = self._getReqEncoding(req);
-		var cacheKey = encoding + ':' + req.url;
 		
 		res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, HEAD, GET, POST');
 		res.setHeader('Access-Control-Allow-Origin', '*');
 		
-		if(self._options.release && cache.has(cacheKey)) {
-			self._respond(req, res, cache.get(cacheKey), 'text/html', true);
+		if(self._options.release && cache.has(encoding, req.url)) {
+			self._respond(req, res, cache.get(encoding, req.url), 'text/html', true);
 		} else {
 			var includeString = self._getScriptTag(self._frameworkURL + 'smartcachemanager.js', 'text/javascript') + "\n\t";
 			includeString += self._getScriptTag(self._timeCacheExternalURL, 'text/javascript') + "\n\t";
@@ -874,14 +874,13 @@ var nCombo = function() {
 				self._writeSessionStartScreen(req, res);
 			} else {
 				var encoding = self._getReqEncoding(req);
-				var cacheKey = encoding + ':' + url;
 				var skipCache = (url == self._frameworkURL + 'smartcachemanager.js');
 				
 				if(skipCache || url == self._frameworkSocketIOClientURL || url == self._frameworkURL + 'session.js'
 						|| self.isFullAuthResource(url)) {
 					
-					if(self._options.release && cache.has(cacheKey)) {
-						self._respond(req, res, cache.get(cacheKey), null, skipCache);
+					if(self._options.release && cache.has(encoding, url)) {
+						self._respond(req, res, cache.get(encoding, url), null, skipCache);
 					} else {
 						fs.readFile(filePath, function(err, data) {
 							if(err) {
@@ -966,6 +965,7 @@ var nCombo = function() {
 	self._tailGetStepper.addFunction(self._router.run);
 	self._tailGetStepper.addFunction(self._preprocessor.run);
 	self._tailGetStepper.addFunction(self._compressor.run);
+	self._tailGetStepper.addFunction(self._headerAdder.run);
 	self._tailGetStepper.setTail(self._responder.run);
 	
 	self._respond = function(req, res, data, mimeType, skipCache) {
@@ -1409,6 +1409,7 @@ var nCombo = function() {
 			
 			self._router.init(self._privateExtensionRegex);
 			self._preprocessor.init(self._options);
+			self._headerAdder.init(self._options);
 			
 			self._dataClient = ndata.createClient(dataPort, dataKey);
 			var nStore = new nDataStore({client: self._dataClient, useExistingServer: true});

@@ -611,11 +611,11 @@ var nCombo = function() {
 	self._config = conf.parseConfig(__dirname + '/config.node.json');
 	
 	self._prerouter = require('ncombo/router/prerouter.node.js');
+	self._headerAdder = require('ncombo/router/headeradder.node.js');
 	self._cacheResponder = require('ncombo/router/cacheresponder.node.js');
 	self._router = require('ncombo/router/router.node.js');
 	self._preprocessor = require('ncombo/router/preprocessor.node.js');
 	self._compressor = require('ncombo/router/compressor.node.js');
-	self._headerAdder = require('ncombo/router/headeradder.node.js');
 	self._responder = require('ncombo/router/responder.node.js');
 	
 	self._fileUploader = require('ncombo/fileuploader');
@@ -961,11 +961,11 @@ var nCombo = function() {
 	
 	self._tailGetStepper = stepper.create();
 	self._tailGetStepper.addFunction(self._prerouter.run);
+	self._tailGetStepper.addFunction(self._headerAdder.run);
 	self._tailGetStepper.addFunction(self._cacheResponder.run);
 	self._tailGetStepper.addFunction(self._router.run);
 	self._tailGetStepper.addFunction(self._preprocessor.run);
 	self._tailGetStepper.addFunction(self._compressor.run);
-	self._tailGetStepper.addFunction(self._headerAdder.run);
 	self._tailGetStepper.setTail(self._responder.run);
 	
 	self._respond = function(req, res, data, mimeType, skipCache) {
@@ -1401,11 +1401,19 @@ var nCombo = function() {
 		var begin = function() {
 			self._options.cacheVersion = self._cacheVersion;
 			self._prerouter.init(self._options);
+			var j;
+			
 			if(self._options.release) {
-				self._cacheResponder.cacheMap(self._minifiedScripts);
+				for(j in self._minifiedScripts) {
+					cache.set(cache.ENCODING_PLAIN, j, self._minifiedScripts[j]);
+					self._cacheResponder.setUnrefreshable(j);
+				}
 			}
 			
-			self._cacheResponder.cacheMap(self._bundles, true);
+			for(j in self._bundles) {
+				cache.set(cache.ENCODING_PLAIN, j, self._bundles[j]);
+				self._cacheResponder.setUnrefreshable(j);
+			}
 			
 			self._router.init(self._privateExtensionRegex);
 			self._preprocessor.init(self._options);
@@ -2097,8 +2105,9 @@ var nCombo = function() {
 					begin();
 				} else if(data.action == 'update') {
 					self._resourceSizes[data.url] = data.size;
-					self._cacheResponder.uncache(data.url);
-					self._cacheResponder.cache(data.url, data.content, true);
+					cache.clearMatches(new RegExp(cache.ENCODING_SEPARATOR + data.url + '$'));
+					cache.set(cache.ENCODING_PLAIN, data.url, data.content);
+					
 				} else if(data.action == 'emit') {
 					self.emit(data.event, data.data);
 				}

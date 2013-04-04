@@ -1,6 +1,11 @@
 var SmartCacheManager = function(cacheVersion) {
 	var self = this;
+	self._versioning = true;
 	self._ckid = 1;
+	
+	self.versionURLs = function(enable) {
+		self._versioning = enable;
+	}
 	
 	self.setParam = function(url, paramName, paramValue) {
 		var match = url.match(/(^[^?]*)(([?])(.*))?/);
@@ -39,7 +44,10 @@ var SmartCacheManager = function(cacheVersion) {
 	}
 	
 	self.setURLCacheVersion = function(url) {
-		return self.setParam(url, 'cv', cacheVersion);
+		if(self._versioning) {
+			return self.setParam(url, 'cv', cacheVersion);
+		}
+		return url;
 	}
 	
 	self.setCacheKiller = function(url, value) {

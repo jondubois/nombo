@@ -7,6 +7,7 @@ botImage.x = 200;
 botImage.y = 200;
 console.log($n.grab.app.assetURL("bot.png"));
 stage.addChild(botImage);
+//alert(111);
 //createjs.Ticker.setFPS(40);
 //createjs.Ticker.addEventListener("tick", handleTick);
 stage.update();

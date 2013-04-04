@@ -384,6 +384,8 @@ var $loader = {
 			for(i in resourceSizeMap) {
 				$loader.grab._resourceSizeTotal += resourceSizeMap[i];
 			}
+			
+			smartCacheManager.versionURLs($loader.grab._options.releaseMode);
 		},
 		
 		_triggerReady: function() {
@@ -493,11 +495,7 @@ var $loader = {
 				if(fresh) {
 					return smartCacheManager.setCacheKiller($loader._appDefinition.appTemplatesURL + nameWithExtension);
 				} else {
-					if($loader.grab._options.releaseMode) {
-						return smartCacheManager.setURLCacheVersion($loader._appDefinition.appTemplatesURL + nameWithExtension);
-					} else {
-						return $loader._appDefinition.appTemplatesURL + nameWithExtension;
-					}
+					return smartCacheManager.setURLCacheVersion($loader._appDefinition.appTemplatesURL + nameWithExtension);
 				}
 			},
 			
@@ -505,11 +503,7 @@ var $loader = {
 				if(fresh) {
 					return smartCacheManager.setCacheKiller($loader.grab._options.appAssetsURL + nameWithExtension);
 				} else {
-					if($loader.grab._options.releaseMode) {
-						return smartCacheManager.setURLCacheVersion($loader.grab._options.appAssetsURL + nameWithExtension);
-					} else {
-						return $loader.grab._options.appAssetsURL + nameWithExtension;
-					}
+					return smartCacheManager.setURLCacheVersion($loader.grab._options.appAssetsURL + nameWithExtension);
 				}
 			},
 			
@@ -517,11 +511,7 @@ var $loader = {
 				if(fresh) {
 					return smartCacheManager.setCacheKiller($loader.grab._options.appFilesURL + nameWithExtension);
 				} else {
-					if($loader.grab._options.releaseMode) {
-						return smartCacheManager.setURLCacheVersion($loader.grab._options.appFilesURL + nameWithExtension);
-					} else {
-						return $loader.grab._options.appFilesURL + nameWithExtension;
-					}
+					return smartCacheManager.setURLCacheVersion($loader.grab._options.appFilesURL + nameWithExtension);
 				}
 			}
 		},
@@ -630,11 +620,7 @@ var $loader = {
 			if(fresh) {
 				return smartCacheManager.setCacheKiller(url);
 			} else {
-				if($loader.grab._options.releaseMode) {
-					return smartCacheManager.setURLCacheVersion(url);
-				} else {
-					return url;
-				}
+				return smartCacheManager.setURLCacheVersion(url);
 			}
 		},
 		
@@ -674,11 +660,7 @@ var $loader = {
 			if(fresh) {
 				img.src = smartCacheManager.setCacheKiller(url);
 			} else {
-				if($loader.grab._options.releaseMode) {
-					img.src = smartCacheManager.setURLCacheVersion(url);
-				} else {
-					img.src = url;
-				}
+				img.src = smartCacheManager.setURLCacheVersion(url);
 			}
 			return img;
 		},
@@ -851,11 +833,7 @@ var $loader = {
 			if(query) {
 				script.src = url + '?' + query;
 			} else {
-				if($loader.grab._options.releaseMode) {
-					script.src = smartCacheManager.setURLCacheVersion(url);
-				} else {
-					script.src = url;
-				}
+				script.src = smartCacheManager.setURLCacheVersion(url);
 			}
 			
 			head.appendChild(script);
@@ -892,11 +870,7 @@ var $loader = {
 			if(query) {
 				link.href = url + '?' + query;
 			} else {
-				if($loader.grab._options.releaseMode) {
-					link.href = smartCacheManager.setURLCacheVersion(url);
-				} else {
-					link.href = url;
-				}
+				link.href = smartCacheManager.setURLCacheVersion(url);
 			}
 			
 			if(firstScript) {
@@ -1043,27 +1017,19 @@ var $loader = {
 					
 					var tempURL;
 					
-					if($loader.grab._options.releaseMode) {
-						if(fresh) {
-							tempURL = smartCacheManager.setCacheKillerParam(url, fresh);
-						} else {
-							tempURL = smartCacheManager.setURLCacheVersion(url);
-						}
+					if(fresh) {
+						tempURL = smartCacheManager.setCacheKillerParam(url, fresh);
 					} else {
-						tempURL = url;
+						tempURL = smartCacheManager.setURLCacheVersion(url);
 					}
 					
 					img.src = tempURL;
 				} else {
 					var tempURL;
-					if($loader.grab._options.releaseMode) {
-						if(fresh) {
-							tempURL = smartCacheManager.setCacheKillerParam(url, fresh);
-						} else {
-							tempURL = smartCacheManager.setURLCacheVersion(url);
-						}
+					if(fresh) {
+						tempURL = smartCacheManager.setCacheKillerParam(url, fresh);
 					} else {
-						tempURL = url;
+						tempURL = smartCacheManager.setURLCacheVersion(url);
 					}
 					
 					var ajaxSettings = {

@@ -886,10 +886,17 @@ var nCombo = function() {
 							if(err) {
 								res.writeHead(500);
 								res.end('Failed to start session');
-							} else {						
+							} else {
+								var cacheVersion;
+								if(self._options.release) {
+									cacheVersion = self._cacheVersion;
+								} else {
+									cacheVersion = (new Date()).getTime();
+								}
+							
 								if(url == self._frameworkURL + 'smartcachemanager.js') {
 									var template = handlebars.compile(data.toString());
-									data = template({cacheVersion: '*/ = ' + self._cacheVersion + ' /*'});
+									data = template({cacheVersion: '*/ = ' + cacheVersion + ' /*'});
 								} else if(url == self._frameworkURL + 'session.js') {
 									var appDef = self._getAppDef();
 									
@@ -1366,11 +1373,20 @@ var nCombo = function() {
 		
 		self._validateOptions(options, optionValidationMap);
 		
+		var cacheLifeIsSet = false;
+		
 		if(options) {
+			if(options.hasOwnProperty('cacheLife')) {
+				cacheLifeIsSet = true;
+			}
 			var i;
 			for(i in options) {
 				self._options[i] = options[i];
 			}
+		}
+		
+		if(!self._options.release && !cacheLifeIsSet) {
+			self._options.cacheLife = 86400000;
 		}
 		
 		if(self._options.baseURL) {
@@ -1969,7 +1985,9 @@ var nCombo = function() {
 									console.log('   ' + self.colorText('[Active]', 'green') + ' nCombo server started');
 									console.log('            Port: ' + self._options.port);
 									console.log('            Mode: ' + (self._options.release ? 'Release' : 'Debug'));
-									console.log('            Version: ' + self._cacheVersion);
+									if(self._options.release) {
+										console.log('            Version: ' + self._cacheVersion);
+									}
 									console.log('            Number of workers: ' + self._options.workers);
 									console.log();
 									firstTime = false;
@@ -2106,8 +2124,7 @@ var nCombo = function() {
 				} else if(data.action == 'update') {
 					self._resourceSizes[data.url] = data.size;
 					cache.clearMatches(new RegExp(cache.ENCODING_SEPARATOR + data.url + '$'));
-					cache.set(cache.ENCODING_PLAIN, data.url, data.content);
-					
+					cache.set(cache.ENCODING_PLAIN, data.url, data.content);					
 				} else if(data.action == 'emit') {
 					self.emit(data.event, data.data);
 				}

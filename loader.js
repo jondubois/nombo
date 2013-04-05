@@ -384,8 +384,6 @@ var $loader = {
 			for(i in resourceSizeMap) {
 				$loader.grab._resourceSizeTotal += resourceSizeMap[i];
 			}
-			
-			smartCacheManager.versionURLs($loader.grab._options.releaseMode);
 		},
 		
 		_triggerReady: function() {
@@ -430,6 +428,13 @@ var $loader = {
 		*/
 		fail: function(callback) {
 			$loader.grab._callbacks['fail'].push(callback);
+		},
+		
+		_addFileExtension: function(url, defaultExtension) {
+			if($loader.grab._extRegex.test(url)) {
+				return url;
+			}
+			return url + '.' + defaultExtension;
 		},
 		
 		app: {
@@ -491,28 +496,22 @@ var $loader = {
 				return $loader.grab.template(resourceName, fresh);
 			},
 			
-			templateURL: function(nameWithExtension, fresh) {
-				if(fresh) {
-					return smartCacheManager.setCacheKiller($loader._appDefinition.appTemplatesURL + nameWithExtension);
-				} else {
-					return smartCacheManager.setURLCacheVersion($loader._appDefinition.appTemplatesURL + nameWithExtension);
-				}
+			templateURL: function(name, fresh) {
+				name = $loader.grab._addFileExtension(name, 'html');
+				return $loader.grab.url($loader._appDefinition.appTemplatesURL + name, fresh);
+			},
+			
+			styleURL: function(name, fresh) {
+				name = $loader.grab._addFileExtension(name, 'css');
+				return $loader.grab.url($loader.grab._options.appStylesURL + name, fresh);
 			},
 			
 			assetURL: function(nameWithExtension, fresh) {
-				if(fresh) {
-					return smartCacheManager.setCacheKiller($loader.grab._options.appAssetsURL + nameWithExtension);
-				} else {
-					return smartCacheManager.setURLCacheVersion($loader.grab._options.appAssetsURL + nameWithExtension);
-				}
+				return $loader.grab.url($loader.grab._options.appAssetsURL + nameWithExtension, fresh);
 			},
 			
 			fileURL: function(nameWithExtension, fresh) {
-				if(fresh) {
-					return smartCacheManager.setCacheKiller($loader.grab._options.appFilesURL + nameWithExtension);
-				} else {
-					return smartCacheManager.setURLCacheVersion($loader.grab._options.appFilesURL + nameWithExtension);
-				}
+				return $loader.grab.url($loader.grab._options.appFilesURL + nameWithExtension, fresh);
 			}
 		},
 		
@@ -563,6 +562,15 @@ var $loader = {
 					var resourceName = $loader.grab._options.frameworkScriptsURL + name + '.js';
 				}
 				return $loader.grab.script(resourceName);
+			},
+			
+			styleURL: function(name, fresh) {
+				name = $loader.grab._addFileExtension(name, 'css');
+				return $loader.grab.url($loader.grab._options.frameworkStylesURL + name, fresh);
+			},
+			
+			assetURL: function(nameWithExtension, fresh) {
+				return $loader.grab.url($loader.grab._options.frameworkAssetsURL + nameWithExtension, fresh);
 			}
 		},
 		

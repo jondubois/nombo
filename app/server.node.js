@@ -19,7 +19,7 @@ var botResContent = '<!DOCTYPE html>\
 <title>nCombo App</title>\
 </head>\
 <body>\
-This cloud app is powered by <a href="http://ncombo.com/" target="_blank">nCombo</a>.\
+This realtime app is powered by <a href="http://ncombo.com/" target="_blank">nCombo</a>.\
 </body>\
 </html>';
 

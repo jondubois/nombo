@@ -676,6 +676,9 @@ var nCombo = function() {
 		}
 	}
 	
+	self.isMaster = cluster.isMaster;
+	self.isWorker = cluster.isWorker;
+	
 	self._faviconHandler = function(req, res, next) {
 		var iconPath = self._appDirPath + '/assets/favicon.gif';
 		

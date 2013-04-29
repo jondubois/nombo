@@ -523,11 +523,14 @@ var nCombo = function() {
 	self.EVENT_SOCKET_FAIL = 'socketfail';
 	self.EVENT_FAIL = 'fail';
 	
-	self._cacheVersion = 0;
-	self._smartCacheManager = null;
+	self.isMaster = cluster.isMaster;
+	self.isWorker = cluster.isWorker;
 	
 	self.id = -1;
 	self.isLeader = false;
+	
+	self._cacheVersion = 0;
+	self._smartCacheManager = null;
 	
 	self._options = {
 		port: 8000,
@@ -675,9 +678,6 @@ var nCombo = function() {
 			console.log(err);
 		}
 	}
-	
-	self.isMaster = cluster.isMaster;
-	self.isWorker = cluster.isWorker;
 	
 	self._faviconHandler = function(req, res, next) {
 		var iconPath = self._appDirPath + '/assets/favicon.gif';

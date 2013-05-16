@@ -953,7 +953,7 @@ var nCombo = function() {
 	}
 	
 	self._prepareHTTPHandler = function(req, res, next) {
-		res.connection.setNoDelay(true);
+		res.connection && res.connection.setNoDelay(true);
 		next();
 	}
 	
@@ -2143,7 +2143,7 @@ var nCombo = function() {
 		workerDomain.on('error', self.errorHandler);
 		self.start = workerDomain.bind(_start);
 	} else {
-		self.start = _start
+		self.start = _start;
 	}
 	
 	self.addMiddleware = function(type, callback) {

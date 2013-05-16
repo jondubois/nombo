@@ -256,7 +256,6 @@ var NCOMBO_DEBUG = {{debug}};
 					NCOMBO_SOCKET.removeListener('connect', connectCallback);
 					NCOMBO_SOCKET.removeListener('error', errorCallback);
 					sessionID = self._setIDCookies(NCOMBO_SOCKET.socket.sessionid);
-				
 					callback(null, sessionID);
 				}
 			

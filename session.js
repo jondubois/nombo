@@ -239,8 +239,11 @@ var NCOMBO_DEBUG = {{debug}};
 				options.query = 'data=' + io.JSON.stringify(data);
 			}
 			
-			NCOMBO_SOCKET = io.connect(url, options);
-		      
+			var matches = location.href.match(/^[^\/]*:\/\/[^\/:]+/);
+			var host = matches ? matches[0] + ':' + NCOMBO_PORT : '';
+			
+			NCOMBO_SOCKET = io.connect(host + url, options);
+		    
 			if(callback) {
 				var errorCallback = function(err) {
 					if(err != 'client not handshaken') {

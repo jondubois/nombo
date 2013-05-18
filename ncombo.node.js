@@ -577,7 +577,6 @@ var nCombo = function() {
 	self._frameworkDirPath = __dirname;
 	self._frameworkClientDirPath = self._frameworkDirPath + '/client';
 	self._frameworkClientURL = self._frameworkURL + 'client/';
-	self._frameworkSocketIOClientURL = self._frameworkURL + 'socket.io.min.js';
 	
 	self._frameworkModulesURL = self._frameworkURL + 'node_modules/';
 	
@@ -601,6 +600,8 @@ var nCombo = function() {
 	}
 	
 	self._setBaseURL(self._appName);
+	
+	self._frameworkSocketIOClientURL = self._appExternalURL + 'socket.io/socket.io.js';
 	
 	self._appScriptsURLRegex = new RegExp('^/scripts(\/|$)');
 	
@@ -1514,6 +1515,7 @@ var nCombo = function() {
 				
 				self._io.set('store', nStore);
 				self._io.set('resource', self._ioResourceInternalURL);
+				self._io.set('browser client minification', self._options.release);
 				self._io.set('log level', self._options.logLevel);
 				self._io.set('transports', self._options.transports);
 				self._io.set('origins', self._options.origins);

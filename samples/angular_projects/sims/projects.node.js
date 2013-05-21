@@ -49,7 +49,7 @@ module.exports.save = function(req, res) {
 		save();
 	} else {
 		genId(function(id) {
-			req.data._id = id;
+			req.data && req.data._id = id;
 			save();
 		});
 	}

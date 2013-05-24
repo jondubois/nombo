@@ -1836,6 +1836,9 @@ var nCombo = function() {
 			
 			var updateCSSBundle = function() {
 				var cssBundle = styleBundle.bundle(cssURLFilter);
+				if(self._options.release) {
+					cssBundle = styleBundle.minify(cssBundle);
+				}
 				if(workers) {
 					var i;
 					var size = Buffer.byteLength(cssBundle, 'utf8');

@@ -302,7 +302,7 @@ var $loader = {
 		}
 	
 		var xmlhttp = $loader._getHTTPReqObject();
-		if(settings.progress) {
+		if(settings.progress && xmlhttp.hasOwnProperty('onprogress')) {
 			xmlhttp.onprogress = settings.progress;
 		}
 		xmlhttp.open(type, settings.url, true);

@@ -66,9 +66,9 @@ var NCOMBO_DEBUG = {{debug}};
 	var spinnerOpts = {
 	  lines: 8,
 	  length: 5,
-	  width: 3,
+	  width: 4,
 	  radius: 7,
-	  corners: 0,
+	  corners: 2,
 	  rotate: 0,
 	  color: '#666',
 	  speed: 1,

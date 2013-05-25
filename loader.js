@@ -302,7 +302,7 @@ var $loader = {
 		}
 	
 		var xmlhttp = $loader._getHTTPReqObject();
-		if(settings.progress && xmlhttp.hasOwnProperty('onprogress')) {
+		if(settings.progress && xmlhttp.hasOwnProperty('onprogress') && !navigator.userAgent.indexOf("Opera")) {
 			xmlhttp.onprogress = settings.progress;
 		}
 		xmlhttp.open(type, settings.url, true);

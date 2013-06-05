@@ -3,13 +3,11 @@ var port = arguments[0] ? arguments[0] : 8000;
 var release = arguments[1] == 'release' ? true : false;
 
 var ncombo = require('ncombo');
-var master = require('./master.node');
-var worker = require('./worker.node');
 
 if(ncombo.isMaster) {
-	master.run(ncombo);
+	require('./master.node').run(ncombo);
 } else {
-	worker.run(ncombo);
+	require('./worker.node').run(ncombo);
 }
 
 // Session will be destroyed if all windows relating to it are closed for 5 seconds

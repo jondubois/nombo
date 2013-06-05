@@ -1,6 +1,6 @@
-var arguments = process.argv.slice(2);
-var port = arguments[0] ? arguments[0] : 8000;
-var release = arguments[1] == 'release' ? true : false;
+var argv = require('optimist').argv;
+var port = argv._[0] ? argv._[0] : 8000;
+var release = argv.hasOwnProperty('r');
 
 var ncombo = require('ncombo');
 

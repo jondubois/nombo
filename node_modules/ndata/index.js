@@ -24,6 +24,10 @@ var Server = function(port, secretKey) {
 			self.emit('ready');
 		}
 	});
+	
+	self._server.on('exit', function() {
+		self.emit('exit');
+	});
 }
 
 Server.prototype.__proto__ = EventEmitter.prototype;

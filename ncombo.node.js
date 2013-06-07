@@ -1082,7 +1082,7 @@ var nCombo = function() {
 		return url.replace(/\\/g, '/');
 	}
 	
-	self.useScript = function(url, type, index) {
+	self.useScript = function(url, index) {
 		var normalURL = self._normalizeURL(url);
 		var filePath = pathManager.urlToPath(normalURL);
 		var obj = {};
@@ -1094,9 +1094,6 @@ var nCombo = function() {
 				obj['url'] = url + '.js';
 				obj['path'] = filePath + '.js';
 			}
-			if(type) {
-				obj['type'] = type;
-			}
 			if(index == null) {
 				self._clientScripts.push(obj);
 			} else {
@@ -1106,7 +1103,7 @@ var nCombo = function() {
 		}
 	}
 	
-	self.useStyle = function(url, type, rel) {
+	self.useStyle = function(url) {
 		var normalURL = self._normalizeURL(url);
 		var filePath = pathManager.urlToPath(normalURL);
 		var obj = {};
@@ -1116,13 +1113,6 @@ var nCombo = function() {
 		} else {
 			obj['url'] = url + '.css';
 			obj['path'] = filePath + '.css';
-		}
-		
-		if(type) {
-			obj['type'] = type;
-		}
-		if(rel) {
-			obj['rel'] = rel;
 		}
 		self._clientStyles.push(obj);
 	}

@@ -583,6 +583,11 @@ var nCombo = function() {
 	self._appDirPath = path.dirname(require.main.filename);
 	self._appName = path.basename(self._appDirPath);
 	
+	self._appLoadScriptPath = self._appDirPath + '/scripts/load.js';
+	self._frameworkLoadScriptPath = self._frameworkClientDirPath + '/scripts/load.js';
+	
+	self._loadScriptURL = null;
+	
 	self._ssidRegex = null;
 	var slashSequenceRegex = /\/+/g;
 	
@@ -764,7 +769,7 @@ var nCombo = function() {
 		appDef.frameworkAssetsURL = self._frameworkClientURL + 'assets/';
 		appDef.pluginsURL = self._frameworkClientURL + 'plugins/';
 		appDef.frameworkScriptsURL = self._frameworkClientURL + 'scripts/';
-		appDef.loadScriptURL = appDef.frameworkScriptsURL + 'load.js';
+		appDef.loadScriptURL = self._loadScriptURL;
 		appDef.frameworkStylesURL = self._frameworkClientURL + 'styles/';
 		appDef.appScriptsURL = appDef.appURL + 'scripts/';
 		appDef.appLibsURL = appDef.appURL + 'libs/';
@@ -1141,7 +1146,7 @@ var nCombo = function() {
 	self.bundle.template = self.useTemplate;
 	
 	self.bundle.app.lib = function(name, index) {
-		self.useScript(self._appInternalURL + 'libs/' + name, null, index);
+		self.useScript(self._appInternalURL + 'libs/' + name, index);
 	}
 	
 	self.bundle.app.template = function(name) {
@@ -1160,15 +1165,15 @@ var nCombo = function() {
 	}
 	
 	self.bundle.framework.lib = function(name, index) {
-		self.useScript(self._frameworkClientURL + 'libs/' + name, null, index);
+		self.useScript(self._frameworkClientURL + 'libs/' + name, index);
 	}
 	
 	self.bundle.framework.script = function(name, index) {
-		self.useScript(self._frameworkClientURL + 'scripts/' + name, null, index);
+		self.useScript(self._frameworkClientURL + 'scripts/' + name, index);
 	}
 	
 	self.bundle.framework.plugin = function(name, index) {
-		self.useScript(self._frameworkClientURL + 'plugins/' + name, null, index);
+		self.useScript(self._frameworkClientURL + 'plugins/' + name, index);
 	}
 	
 	self.bundle.framework.style = function(name) {
@@ -1809,6 +1814,12 @@ var nCombo = function() {
 			var styleBundle = cssBundler({watchDirs: styleDirs, files: stylePaths, watch: !self._options.release});
 			self._smartCacheManager = new SmartCacheManager(self._cacheVersion);
 			
+			if(fs.existsSync(self._appLoadScriptPath)) {
+				self._loadScriptURL = pathManager.pathToURL(self._appLoadScriptPath);
+			} else {
+				self._loadScriptURL = pathManager.pathToURL(self._frameworkLoadScriptPath);
+			}
+			
 			var newURL;
 			var externalAppDef = self._getAppDef();
 			var pathToRoot = '../..';
@@ -2012,6 +2023,7 @@ var nCombo = function() {
 									dataPort: dataPort,
 									dataKey: pass,
 									cacheVersion: self._cacheVersion,
+									loadScript: self._loadScriptURL,
 									minifiedScripts: minifiedScripts,
 									bundles: bundles,
 									resourceSizes: resourceSizes,
@@ -2116,6 +2128,7 @@ var nCombo = function() {
 					}
 					
 					self._minifiedScripts = data.minifiedScripts;
+					self._loadScriptURL = data.loadScript;
 					self._cacheVersion = data.cacheVersion;
 					self._smartCacheManager = new SmartCacheManager(self._cacheVersion);
 					begin();

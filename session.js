@@ -261,7 +261,7 @@ var NCOMBO_DEBUG = {{debug}};
 					sessionID = self._setIDCookies(NCOMBO_SOCKET.socket.sessionid);
 					callback(null, sessionID);
 				}
-			
+				
 				if(timeout > 0) {
 					timeoutCallback = setTimeout(function() {
 						NCOMBO_SOCKET.removeListener('connect', connectCallback);

@@ -8,7 +8,7 @@ var http = require('http'),
 	querystring = require('querystring'),
 	ndata = require('ndata'),
 	io = require('socket.io'),
-	nDataStore = require('socket.io-ndata'),
+	IOCluster = require('iocluster').IOCluster,
 	nmix = require('nmix'),
 	conf = require('ncombo/configmanager'),
 	gateway = require('ncombo/gateway'),
@@ -39,394 +39,6 @@ var _extendRetryOperation = function(operation) {
 var cluster = require('cluster');
 var numCPUs = require('os').cpus().length;
 
-var AbstractDataClient = function(dataClient, keyTransformFunction) {
-	var self = this;
-	
-	self.set = function() {
-		arguments[0] = keyTransformFunction(arguments[0]);
-		dataClient.set.apply(dataClient, arguments);
-	}
-	
-	self.add = function() {
-		arguments[0] = keyTransformFunction(arguments[0]);
-		dataClient.add.apply(dataClient, arguments);
-	}
-	
-	self.get = function() {
-		arguments[0] = keyTransformFunction(arguments[0]);
-		dataClient.get.apply(dataClient, arguments);
-	}
-	
-	self.getRange = function() {
-		arguments[0] = keyTransformFunction(arguments[0]);
-		dataClient.getRange.apply(dataClient, arguments);
-	}
-	
-	self.getAll = function(callback) {
-		var clientRootKey = keyTransformFunction();
-		dataClient.get.call(dataClient, clientRootKey, callback);
-	}
-	
-	self.count = function() {
-		arguments[0] = keyTransformFunction(arguments[0]);
-		dataClient.count.apply(dataClient, arguments);
-	}
-	
-	self.remove = function() {
-		arguments[0] = keyTransformFunction(arguments[0]);
-		dataClient.remove.apply(dataClient, arguments);
-	}
-	
-	self.removeRange = function() {
-		arguments[0] = keyTransformFunction(arguments[0]);
-		dataClient.removeRange.apply(dataClient, arguments);
-	}
-	
-	self.removeAll = function(callback) {
-		var clientRootKey = keyTransformFunction();
-		dataClient.set.call(dataClient, clientRootKey, {}, callback);
-	}
-	
-	self.pop = function() {
-		arguments[0] = keyTransformFunction(arguments[0]);
-		dataClient.pop.apply(dataClient, arguments);
-	}
-	
-	self.hasKey = function() {
-		arguments[0] = keyTransformFunction(arguments[0]);
-		dataClient.hasKey.apply(dataClient, arguments);
-	}
-	
-	self.stringify = function(value) {
-		return dataClient.stringify(value);
-	}
-	
-	self.escape = function(value) {
-		return dataClient.escape(value);
-	}
-	
-	self.input = function(value) {
-		return dataClient.input(value);
-	}
-	
-	self.extractKeys = function(object) {
-		return dataClient.extractKeys(object);
-	}
-	
-	self.extractValues = function(object) {
-		return dataClient.extractValues(object);
-	}
-	
-	self.query = function(query, data) {
-		var i;
-		for(i in data) {
-			data[i] = self.input(data[i]);
-		}
-		var queryTemplate = handlebars.compile(query, {noEscape: true});
-		return queryTemplate(data);
-	}
-	
-	self.run = function(code, callback) {
-		dataClient.run(code, keyTransformFunction(), callback);
-	}
-}
-
-var SessionEmitter = function(sessionID, namespace, socketManager, dataClient, socket, retryTimeout) {
-	var self = this;
-	self._namespace = namespace;
-	
-	self.emit = function(event, data) {
-		var eventObject = {
-			ns: self._namespace,
-			event: event,
-			data: data
-		}
-		
-		self.emitRaw(eventObject);
-	}
-	
-	self.emitOut = function(event, data) {
-		var eventObject = {
-			ns: self._namespace,
-			event: event,
-			data: data
-		}
-		
-		if(socket) {
-			self.emitRaw(eventObject, socket.id);
-		} else  {
-			self.emitRaw(eventObject);
-		}
-	}
-	
-	self.emitRaw = function(eventData, skipSockID) {
-		dataClient.get('__opensessions.' + dataClient.escape(sessionID), function(err, socks) {
-			if(err) {
-				console.log('   nCombo Error - Failed to get active socket list');
-			} else {
-				var i;
-				for(i in socks) {
-					if(i != skipSockID) {
-						socketManager.socket(i).emit('event', eventData);
-					}
-				}
-			}
-		});
-	}
-}
-
-var Session = nmix(function(sessionID, socketManager, dataClient, socket, retryTimeout) {
-	var self = this;
-	self.id = sessionID;
-	
-	self._socket = socket;
-	self._listeners = {};
-	
-	self._getDataKey = function(key) {
-		if(key) {
-			return '__sessiondata.' + dataClient.escape(self.id) + '.' + key;
-		} else {
-			return '__sessiondata.' + dataClient.escape(self.id);
-		}
-	}
-	
-	self._getEventKey = function(event) {
-		if(event) {
-			return '__sessionevent.' + dataClient.escape(self.id) + '.' + event;
-		} else {
-			return '__sessionevent.' + dataClient.escape(self.id);
-		}
-	}
-	
-	self.initMixin(AbstractDataClient, dataClient, self._getDataKey);
-	
-	self.EVENT_DESTROY = 'destroy';
-	
-	self._emitterNamespace = new SessionEmitter(self.id, '__main', socketManager, dataClient, self._socket, retryTimeout);
-	self._namespaces = {'__main': self._emitterNamespace};
-	
-	self.getSocket = function() {
-		return self._socket;
-	}
-	
-	self.emit = function(event, data) {
-		self._emitterNamespace.emit(event, data);
-	}
-	
-	self.emitOut = function(event, data) {
-		self._emitterNamespace.emitOut(event, data);
-	}
-	
-	self._serverSideEmit = function(event, data, callback) {
-		dataClient.broadcast(self._getEventKey(event), data, callback);
-	}
-	
-	self.setAuth = function(data, callback) {
-		dataClient.set('__sessionauth.' + dataClient.escape(self.id), data, callback);
-	}
-
-	self.getAuth = function(callback) {
-		dataClient.get('__sessionauth.' + dataClient.escape(self.id), callback);
-	}
-
-	self.clearAuth = function(callback) {
-		dataClient.remove('__sessionauth.' + dataClient.escape(self.id), callback);
-	}
-	
-	self.watch = function(event, listener, ackCallback) {
-		dataClient.watch(self._getEventKey(event), listener, ackCallback);
-	}
-	
-	self.watchOnce = function(event, listener, ackCallback) {
-		dataClient.watchExclusive(self._getEventKey(event), listener, ackCallback);
-	}
-	
-	self.removeListener = function(event, listener, ackCallback) {
-		dataClient.unwatch(self._getEventKey(event), listener, ackCallback);
-	}
-	
-	self.ns = function(namespace) {
-		if(!self._namespaces[namespace]) {
-			self._namespaces[namespace] = new SessionEmitter(self.id, namespace, socketManager, dataClient, self._socket, retryTimeout);
-		}
-		return self._namespaces[namespace];
-	}
-	
-	self._addSocket = function(socket, callback) {
-		dataClient.set('__opensessions.' + dataClient.escape(self.id) + '.' + dataClient.escape(socket.id), 1, callback);
-	}
-	
-	self.getSockets = function(callback) {
-		dataClient.get('__opensessions.' + dataClient.escape(self.id), function(err, data) {
-			if(err) {
-				callback(err);
-			} else {
-				var socks = [];
-				var i;
-				for(i in data) {
-					socks.push(socketManager.socket(i));
-				}
-				callback(null, socks);
-			}
-		});
-	}
-	
-	self.countSockets = function(callback) {
-		dataClient.count('__opensessions.' + dataClient.escape(self.id), callback);
-	}
-	
-	self._removeSocket = function(socket, callback) {		
-		var operation = retry.operation(self._retryOptions);
-		operation.attempt(function() {
-			dataClient.remove('__opensessions.' + dataClient.escape(self.id) + '.' + dataClient.escape(socket.id), function(err) {
-				_extendRetryOperation(operation);
-				if(operation.retry(err)) {
-					return;
-				}
-				callback && callback();
-			});
-		});
-	}
-	
-	self._destroy = function(callback) {		
-		var destroySessionDataOp = retry.operation(self._retryOptions);
-		destroySessionDataOp.attempt(function() {
-			dataClient.remove(self._getDataKey(), function(err) {
-				_extendRetryOperation(destroySessionDataOp);
-				destroySessionDataOp.retry(err);
-			});
-		});
-		
-		var removeSessionOp = retry.operation(self._retryOptions);
-		removeSessionOp.attempt(function() {
-			dataClient.remove('__opensessions.' + dataClient.escape(self.id), function(err) {
-				_extendRetryOperation(removeSessionOp);
-				removeSessionOp.retry(err);
-			});
-		});
-		
-		var clearAuthOp = retry.operation(self._retryOptions);
-		clearAuthOp.attempt(function() {
-			self.clearAuth(function(err) {
-				_extendRetryOperation(clearAuthOp);
-				clearAuthOp.retry(err);
-			});
-		});
-		
-		var emitSessionDestroyOp = retry.operation(self._retryOptions);
-		emitSessionDestroyOp.attempt(function() {
-			self._serverSideEmit(self.EVENT_DESTROY, null, function(err) {
-				_extendRetryOperation(emitSessionDestroyOp);
-				if(emitSessionDestroyOp.retry(err)) {
-					return;
-				}
-				self.removeListener(self.EVENT_DESTROY, null, callback);
-			});
-		});
-	}
-});
-
-var GlobalEmitter = function(namespace, socketManager, dataClient) {
-	var self = this;
-	self._namespace = namespace;
-	
-	self._getSessionEventKey = function(sessionID, key) {
-		if(key) {
-			return '__sessionevent.' + dataClient.escape(sessionID) + '.' + key;
-		} else {
-			return '__sessionevent.' + dataClient.escape(sessionID);
-		}
-	}
-	
-	self.broadcast = function(event, data) {
-		if(!self._namespace || !event) {
-			throw "Exception: One or more required parameters were undefined";
-		}
-		
-		dataClient.get('__opensessions', function(err, sessions) {
-			if(err) {
-				console.log('   nCombo Error - Failed to get active session list');
-			} else {
-				var i;
-				for(i in sessions) {
-					dataClient.broadcast(self._getSessionEventKey(i, self._namespace + '.' + event), data);
-				}
-			}
-		});
-	}
-	
-	self.emit = function(sessionID, event, data) {
-		dataClient.get('__opensessions.' + dataClient.escape(sessionID), function(err, socks) {
-			if(err) {
-				console.log('   nCombo Error - Failed to get active socket list');
-			} else {
-				dataClient.broadcast(self._getSessionEventKey(sessionID, self._namespace + '.' + event), data);
-			}
-		});
-	}
-}
-
-var Global = nmix(function(socketManager, dataClient, frameworkDirPath, appDirPath) {
-	var self = this;
-	
-	self._getDataKey = function(key) {
-		if(key) {
-			return '__globaldata.' + key;
-		} else {
-			return '__globaldata';
-		}
-	}
-	
-	self.initMixin(AbstractDataClient, dataClient, self._getDataKey);
-	
-	var _frameworkDirPath = frameworkDirPath;
-	var _appDirPath = appDirPath;
-	
-	self.dataClient = dataClient;
-	
-	self._emitterNamespace = new GlobalEmitter('__main', socketManager, dataClient);
-	self._namespaces = {'__main': self._emitterNamespace};
-	
-	self.getFrameworkPath = function() {
-		return _frameworkDirPath;
-	}
-	
-	self.getAppPath = function() {
-		return _appDirPath;
-	}
-	
-	self.emit = function(sessionID, event, data) {
-		self._emitterNamespace.emit(sessionID, event, data);
-	}
-	
-	self.broadcast = function(event, data) {
-		self._emitterNamespace.broadcast(event, data);
-	}
-	
-	self.dispatch = function(event, data) {
-		dataClient.broadcast(event, data);
-	}
-	
-	self.watch = function(event, listener, ackCallback) {
-		dataClient.watch(event, listener, ackCallback);
-	}
-	
-	self.watchOnce = function(event, listener, ackCallback) {
-		dataClient.watchExclusive(event, listener, ackCallback);
-	}
-	
-	self.removeListener = function(event, listener, ackCallback) {
-		dataClient.unwatch(event, listener, ackCallback);
-	}
-	
-	self.ns = function(namespace) {
-		if(!self._namespaces[namespace]) {
-			self._namespaces[namespace] = new GlobalEmitter(namespace, socketManager, dataClient);
-		}
-		return self._namespaces[namespace];
-	}
-});
-
 var IORequest = function(req, socket, session, global, remoteAddress, secure) {
 	var self = this;
 	var i;
@@ -442,7 +54,7 @@ var IORequest = function(req, socket, session, global, remoteAddress, secure) {
 	self.socket = socket;
 }
 
-var IOResponse = function(req, socket, session, global, remoteAddress, secure) {
+var IOResponse = function(req, socket, global, remoteAddress, secure) {
 	var self = this;
 	var i;
 	for(i in req) {
@@ -735,7 +347,7 @@ var nCombo = function() {
 		if(cookieString) {
 			var result = cookieString.match(self._ssidRegex);
 			if(result) {
-				return result[2]
+				return result[2];
 			}
 		}
 		return null;
@@ -941,7 +553,7 @@ var nCombo = function() {
 					}
 				} else {
 					if(sid) {
-						req.session = new Session(sid, self._wsSocks, self._dataClient, self._retryTimeout);
+						req.session = self._ioCluster.session(sid);
 						next();
 					} else if(!self._options.publicResources && self._options.autoSession) {
 						res.writeHead(500);
@@ -1435,7 +1047,6 @@ var nCombo = function() {
 			self._headerAdder.init(self._options);
 			
 			self._dataClient = ndata.createClient(dataPort, dataKey);
-			var nStore = new nDataStore({client: self._dataClient, useExistingServer: true});
 			
 			self._dataClient.on('ready', function() {
 				self._io = io.listen(self._server, {'log level': 1});
@@ -1487,14 +1098,15 @@ var nCombo = function() {
 						return true;
 					}
 					
+					handshakeData.ssid = self._parseSID(handshakeData.headers.cookie);
+					
 					self._middleware[self.MIDDLEWARE_SOCKET_IO_AUTH].setValidator(authCallback);
 					self._middleware[self.MIDDLEWARE_SOCKET_IO_AUTH].setTail(function() {
 						callback(null, true);
 					});
 					
-					var ssid = self._parseSID(handshakeData.headers.cookie);
-					if(ssid) {
-						var session = new Session(ssid, self._wsSocks, self._dataClient, self._retryTimeout);
+					if(handshakeData.ssid) {
+						var session = self._ioCluster.session(handshakeData.ssid);
 						session.getAuth(function(err, data) {
 							if(err) {
 								callback('Failed to retrieve auth data', false);
@@ -1508,7 +1120,6 @@ var nCombo = function() {
 					}
 				}
 				
-				self._io.set('store', nStore);
 				self._io.set('resource', self._ioResourceInternalURL);
 				self._io.set('browser client minification', self._options.release);
 				self._io.set('log level', self._options.logLevel);
@@ -1537,16 +1148,19 @@ var nCombo = function() {
 					});
 				}
 				
+				self._ioCluster = new IOCluster({
+					nDataUseExistingServer: true,
+					nDataClient: self._dataClient
+				});
+				
 				self._wsSocks = self._io.of(self._wsEndpoint);
-				self.global = new Global(self._wsSocks, self._dataClient, pathManager.getFrameworkPath(), pathManager.getAppPath());
+				self.global = self._ioCluster.global();
 			
 				gateway.setReleaseMode(self._options.release);
 				ws.setReleaseMode(self._options.release);
 				ws.setTimeout(self._options.timeout);
 				
 				self._wsSocks.on('connection', function(socket) {
-					self.emit(self.EVENT_SOCKET_CONNECT, socket);
-				
 					var remoteAddress = socket.handshake.address;
 					var auth = socket.handshake.auth;
 					var sid;
@@ -1554,225 +1168,236 @@ var nCombo = function() {
 					if(socket.handshake.sskey) {
 						sid = remoteAddress.address + '-' + socket.handshake.sskey;
 					} else {
-						sid = self._parseSID(socket.handshake.headers.cookie) || socket.id;
+						sid = socket.handshake.ssid || socket.id;
 					}
 					
-					var addAddressQuery = 'function(DataMap) { \
-						if(DataMap.hasKey("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '")) { \
-							var curValue = DataMap.get("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '"); \
-							DataMap.set("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '", curValue + 1); \
-						} else { \
-							DataMap.set("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '", 1) \
-						} \
-					}';
+					socket.ssid = sid;
 					
-					self._dataClient.run(addAddressQuery);
-					
-					var failFlag = false;
-					
-					self._dataClient.set('__workers.' + self._dataClient.escape(cluster.worker.id) + '.sockets.' + self._dataClient.escape(socket.id), 1, function(err) {
-						if(err && !failFlag) {
-							self.emit(self.EVENT_SOCKET_FAIL, socket);
-							failFlag = true;
-							socket.disconnect();
-							console.log('   nCombo Error - Failed to initiate socket');
-						}
-					});
-					
-					self._dataClient.set('__workers.' + self._dataClient.escape(cluster.worker.id) + '.sessions.' + self._dataClient.escape(sid), 1, function(err) {
-						if(err && !failFlag) {
-							self.emit(self.EVENT_SOCKET_FAIL, socket);
-							failFlag = true;
-							socket.disconnect();
-							console.log('   nCombo Error - Failed to initiate socket');
-						}
-					});
-					
-					self._dataClient.set('__opensockets.' + self._dataClient.escape(socket.id), 1, function(err) {
-						if(err) {
-							if(!failFlag) {
+					self._ioCluster.bind(socket, function(err) {
+						self.emit(self.EVENT_SOCKET_CONNECT, socket);
+						
+						var addAddressQuery = 'function(DataMap) { \
+							if(DataMap.hasKey("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '")) { \
+								var curValue = DataMap.get("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '"); \
+								DataMap.set("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '", curValue + 1); \
+							} else { \
+								DataMap.set("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '", 1) \
+							} \
+						}';
+						
+						self._dataClient.run(addAddressQuery);
+						
+						var failFlag = false;
+						
+						self._dataClient.set('__workers.' + self._dataClient.escape(cluster.worker.id) + '.sockets.' + self._dataClient.escape(socket.id), 1, function(err) {
+							if(err && !failFlag) {
 								self.emit(self.EVENT_SOCKET_FAIL, socket);
 								failFlag = true;
 								socket.disconnect();
 								console.log('   nCombo Error - Failed to initiate socket');
 							}
-						}
-					});
-					
-					var session = new Session(sid, self._wsSocks, self._dataClient, socket, self._retryTimeout);
-					
-					if(auth !== undefined) {
-						session.setAuth(auth, function(err) {
+						});
+						
+						self._dataClient.set('__workers.' + self._dataClient.escape(cluster.worker.id) + '.sessions.' + self._dataClient.escape(sid), 1, function(err) {
 							if(err && !failFlag) {
 								self.emit(self.EVENT_SOCKET_FAIL, socket);
 								failFlag = true;
 								socket.disconnect();
-								console.log('   nCombo Error - Failed to save auth data');
+								console.log('   nCombo Error - Failed to initiate socket');
 							}
-					});
-					}
-					
-					session._addSocket(socket, function(err) {
-						if(err && !failFlag) {
-							self.emit(self.EVENT_SOCKET_FAIL, socket);
-							failFlag = true;
-							socket.disconnect();
-							console.log('   nCombo Error - Failed to initiate session');
+						});
+						
+						self._dataClient.set('__opensockets.' + self._dataClient.escape(socket.id), 1, function(err) {
+							if(err) {
+								if(!failFlag) {
+									self.emit(self.EVENT_SOCKET_FAIL, socket);
+									failFlag = true;
+									socket.disconnect();
+									console.log('   nCombo Error - Failed to initiate socket');
+								}
+							}
+						});
+						
+						var session = self._ioCluster.session(sid);
+						
+						if(auth !== undefined) {
+							session.setAuth(auth, function(err) {
+								if(err && !failFlag) {
+									self.emit(self.EVENT_SOCKET_FAIL, socket);
+									failFlag = true;
+									socket.disconnect();
+									console.log('   nCombo Error - Failed to save auth data');
+								}
+						});
 						}
-					});
-					
-					// handle local server interface call
-					socket.on('localCall', function(request) {
-						var req = new IORequest(request, socket, session, self.global, remoteAddress, secure);
-						var res = new IOResponse(request, socket, session, self.global, remoteAddress, secure);
-						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_EXEC]);
-						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
-					});
-					
-					// handle remote interface call
-					socket.on('remoteCall', function(request) {
-						var req = new IORequest(request, socket, session, self.global, remoteAddress, request.secure);
-						var res = new IOResponse(request, socket, session, self.global, remoteAddress, secure);
-						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_EXEC]);
-						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
-					});
-					
-					// watch local server events
-					socket.on('watchLocal', function(request) {
-						var req = new IORequest(request, socket, session, self.global, remoteAddress, secure);
-						var res = new IOResponse(request, socket, session, self.global, remoteAddress, secure);
-						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_WATCH]);
-						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
-					});
-					
-					// unwatch local server events
-					socket.on('unwatchLocal', function(request) {
-						var req = new IORequest(request, socket, session, self.global, remoteAddress, secure);
-						var res = new IOResponse(request, socket, session, self.global, remoteAddress, secure);
-						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_UNWATCH]);
-						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
-					});
-					
-					// watch remote server events
-					socket.on('watchRemote', function(request) {
-						var req = new IORequest(request, socket, session, self.global, remoteAddress, request.secure);
-						var res = new IOResponse(request, socket, session, self.global, remoteAddress, secure);
-						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_WATCH]);
-						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
-					});
-					
-					// unwatch remote server events
-					socket.on('unwatchRemote', function(request) {
-						var req = new IORequest(request, socket, session, self.global, remoteAddress, secure);
-						var res = new IOResponse(request, socket, session, self.global, remoteAddress, secure);
-						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_UNWATCH]);
-						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
-					});
-					
-					var removeOpenSocket = function(callback) {
-						var operation = retry.operation(self._retryOptions);
-						operation.attempt(function() {
-							self._dataClient.remove('__opensockets.' + self._dataClient.escape(socket.id), function(err) {
-								_extendRetryOperation(operation);
-								if(operation.retry(err)) {
-									return;
-								}
-								
-								callback && callback();
-							});
+						
+						/*
+						session._addSocket(socket, function(err) {
+							if(err && !failFlag) {
+								self.emit(self.EVENT_SOCKET_FAIL, socket);
+								failFlag = true;
+								socket.disconnect();
+								console.log('   nCombo Error - Failed to initiate session');
+							}
 						});
-					}
-					
-					var removeWorkerSocket = function() {
-						var operation = retry.operation(self._retryOptions);
-						operation.attempt(function() {
-							self._dataClient.remove('__workers.' + self._dataClient.escape(cluster.worker.id) + '.sockets.' + self._dataClient.escape(socket.id), function(err) {
-								_extendRetryOperation(operation);
-								operation.retry(err);
-							});
+						*/
+						
+						// handle local server interface call
+						socket.on('localCall', function(request) {
+							var req = new IORequest(request, socket, session, self.global, remoteAddress, secure);
+							var res = new IOResponse(request, socket);
+							self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_EXEC]);
+							self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
 						});
-					}
-					
-					var removeWorkerSession = function() {
-						var operation = retry.operation(self._retryOptions);
-						operation.attempt(function() {
-							self._dataClient.remove('__workers.' + self._dataClient.escape(cluster.worker.id) + '.sessions.' + self._dataClient.escape(sid), function(err) {
-								_extendRetryOperation(operation);
-								operation.retry(err);
-							});
+						
+						// handle remote interface call
+						socket.on('remoteCall', function(request) {
+							var req = new IORequest(request, socket, session, self.global, remoteAddress, request.secure);
+							var res = new IOResponse(request, socket);
+							self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_EXEC]);
+							self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
 						});
-					}
-					
-					var cleanupSession = function() {
-						var countSocketsOp = retry.operation(self._retryOptions);
-						countSocketsOp.attempt(function() {
-							session.countSockets(function(err, data) {
-								_extendRetryOperation(countSocketsOp);
-								if(countSocketsOp.retry(err)) {
-									return;
-								}
-								
-								if(data < 1) {
-									self._middleware[self.MIDDLEWARE_SESSION_DESTROY].setTail(function() {
-										var destroySessionOp = retry.operation(self._retryOptions);
-										destroySessionOp.attempt(function() {
-											session._destroy(function(err) {
-												_extendRetryOperation(destroySessionOp);
-												if(destroySessionOp.retry(err)) {
-													return;
-												}
-												
-												gateway.unwatchAll(session);
-												ws.destroy(session);
-												removeWorkerSession();
+						
+						// watch local server events
+						socket.on('watchLocal', function(request) {
+							var req = new IORequest(request, socket, session, self.global, remoteAddress, secure);
+							var res = new IOResponse(request, socket);
+							self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_WATCH]);
+							self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
+						});
+						
+						// unwatch local server events
+						socket.on('unwatchLocal', function(request) {
+							var req = new IORequest(request, socket, session, self.global, remoteAddress, secure);
+							var res = new IOResponse(request, socket);
+							self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_UNWATCH]);
+							self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
+						});
+						
+						// watch remote server events
+						socket.on('watchRemote', function(request) {
+							var req = new IORequest(request, socket, session, self.global, remoteAddress, request.secure);
+							var res = new IOResponse(request, socket);
+							self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_WATCH]);
+							self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
+						});
+						
+						// unwatch remote server events
+						socket.on('unwatchRemote', function(request) {
+							var req = new IORequest(request, socket, session, self.global, remoteAddress, secure);
+							var res = new IOResponse(request, socket);
+							self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_UNWATCH]);
+							self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
+						});
+						
+						var removeOpenSocket = function(callback) {
+							var operation = retry.operation(self._retryOptions);
+							operation.attempt(function() {
+								self._dataClient.remove('__opensockets.' + self._dataClient.escape(socket.id), function(err) {
+									_extendRetryOperation(operation);
+									if(operation.retry(err)) {
+										return;
+									}
+									
+									callback && callback();
+								});
+							});
+						}
+						
+						var removeWorkerSocket = function() {
+							var operation = retry.operation(self._retryOptions);
+							operation.attempt(function() {
+								self._dataClient.remove('__workers.' + self._dataClient.escape(cluster.worker.id) + '.sockets.' + self._dataClient.escape(socket.id), function(err) {
+									_extendRetryOperation(operation);
+									operation.retry(err);
+								});
+							});
+						}
+						
+						var removeWorkerSession = function() {
+							var operation = retry.operation(self._retryOptions);
+							operation.attempt(function() {
+								self._dataClient.remove('__workers.' + self._dataClient.escape(cluster.worker.id) + '.sessions.' + self._dataClient.escape(sid), function(err) {
+									_extendRetryOperation(operation);
+									operation.retry(err);
+								});
+							});
+						}
+						
+						var cleanupSession = function() {
+							var countSocketsOp = retry.operation(self._retryOptions);
+							countSocketsOp.attempt(function() {
+								session.countSockets(function(err, data) {
+									_extendRetryOperation(countSocketsOp);
+									if(countSocketsOp.retry(err)) {
+										return;
+									}
+									
+									if(data < 1) {
+										self._middleware[self.MIDDLEWARE_SESSION_DESTROY].setTail(function() {
+											var destroySessionOp = retry.operation(self._retryOptions);
+											destroySessionOp.attempt(function() {
+												session._destroy(function(err) {
+													_extendRetryOperation(destroySessionOp);
+													if(destroySessionOp.retry(err)) {
+														return;
+													}
+													
+													gateway.unwatchAll(session);
+													ws.destroy(session);
+													removeWorkerSession();
+												});
 											});
 										});
-									});
-									self._middleware[self.MIDDLEWARE_SESSION_DESTROY].run(session);
-								}
+										self._middleware[self.MIDDLEWARE_SESSION_DESTROY].run(session);
+									}
+								});
 							});
-						});
-					}
-					
-					socket.on('disconnect', function() {
-						self.emit(self.EVENT_SOCKET_DISCONNECT, socket);
+						}
 						
-						var jsQuery = 'function(DataMap) { \
-							if(DataMap.hasKey("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '")) { \
-								var newValue = DataMap.get("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '") - 1; \
-								if(newValue <= 0) { \
-									DataMap.remove("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '"); \
-									return 0; \
+						socket.on('disconnect', function() {
+							self.emit(self.EVENT_SOCKET_DISCONNECT, socket);
+							
+							self._ioCluster.unbind(socket);
+							/*
+							var jsQuery = 'function(DataMap) { \
+								if(DataMap.hasKey("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '")) { \
+									var newValue = DataMap.get("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '") - 1; \
+									if(newValue <= 0) { \
+										DataMap.remove("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '"); \
+										return 0; \
+									} else { \
+										DataMap.set("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '", newValue); \
+										return newValue; \
+									} \
 								} else { \
-									DataMap.set("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '", newValue); \
-									return newValue; \
+									return 0; \
 								} \
-							} else { \
-								return 0; \
-							} \
-						}';
-						
-						var timeout;
-						if(typeof self._options.sessionTimeout == 'number') {
-							timeout = self._options.sessionTimeout;
-						} else {
-							timeout = self._options.sessionTimeout[0] + Math.random() * self._options.sessionTimeout[1];
-						}						
-						
-						setTimeout(function() {
-							session._removeSocket(socket, cleanupSession);
-						}, timeout);
-						
-						var disconnectAddressOp = retry.operation(self._retryOptions);
-						disconnectAddressOp.attempt(function() {
-							self._dataClient.run(jsQuery, function(err) {
-								_extendRetryOperation(disconnectAddressOp);
-								disconnectAddressOp.retry(err);
+							}';
+							
+							var timeout;
+							if(typeof self._options.sessionTimeout == 'number') {
+								timeout = self._options.sessionTimeout;
+							} else {
+								timeout = self._options.sessionTimeout[0] + Math.random() * self._options.sessionTimeout[1];
+							}						
+							
+							setTimeout(function() {
+								session._removeSocket(socket, cleanupSession);
+							}, timeout);
+							
+							var disconnectAddressOp = retry.operation(self._retryOptions);
+							disconnectAddressOp.attempt(function() {
+								self._dataClient.run(jsQuery, function(err) {
+									_extendRetryOperation(disconnectAddressOp);
+									disconnectAddressOp.retry(err);
+								});
 							});
+							
+							removeOpenSocket();
+							removeWorkerSocket();
+							*/
 						});
-						
-						removeOpenSocket();
-						removeWorkerSocket();
 					});
 				});
 				

@@ -59,7 +59,7 @@ function sendMessage(e) {
 	*/
 	$n.local.exec('chat', 'addMessage', {user: nameBox.val(), message: sendBox.val()}, function(err) {
 		if(err) {
-			alert("Error - Couldn't post your message");
+			throw new Error("Error - Couldn't post your message");
 			sendBox.val("");
 		} else {
 			sendBox.val("");

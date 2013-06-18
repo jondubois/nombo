@@ -11,4 +11,4 @@ if(ncombo.isMaster) {
 }
 
 // Start nCombo app with some default options.
-ncombo.start({port: port, release: release, workers: 1});//, transports: ['xhr-polling']});
+ncombo.start({port: port, release: release, workers: 3/*, transports: ['flashsocket']*/});

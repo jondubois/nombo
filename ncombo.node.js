@@ -121,9 +121,7 @@ var nCombo = function() {
 	
 	self.MIDDLEWARE_LOCAL_EXEC = 'localCall';
 	self.MIDDLEWARE_REMOTE_EXEC = 'remoteCall';
-	self.MIDDLEWARE_LOCAL_WATCH = 'localWatch';
 	self.MIDDLEWARE_REMOTE_WATCH = 'remoteWatch';
-	self.MIDDLEWARE_LOCAL_UNWATCH = 'localUnwatch';
 	self.MIDDLEWARE_REMOTE_UNWATCH = 'remoteUnwatch';
 	
 	self.MIDDLEWARE_SESSION_DESTROY = 'sessionDestroy';
@@ -153,7 +151,7 @@ var nCombo = function() {
 		angularMainTemplate: 'index.html',
 		protocol: 'http',
 		protocolOptions: {},
-		transports: ['websocket', 'htmlfile', 'xhr-polling', 'jsonp-polling'],
+		transports: ['websocket'],
 		logLevel: 1,
 		workers: numCPUs,
 		timeout: 10000,
@@ -658,12 +656,6 @@ var nCombo = function() {
 	self._middleware[self.MIDDLEWARE_LOCAL_EXEC] = stepper.create();
 	self._middleware[self.MIDDLEWARE_LOCAL_EXEC].setTail(gateway.exec);
 	
-	self._middleware[self.MIDDLEWARE_LOCAL_WATCH] = stepper.create();
-	self._middleware[self.MIDDLEWARE_LOCAL_WATCH].setTail(gateway.watch);
-	
-	self._middleware[self.MIDDLEWARE_LOCAL_UNWATCH] = stepper.create();
-	self._middleware[self.MIDDLEWARE_LOCAL_UNWATCH].setTail(gateway.unwatch);
-	
 	self._middleware[self.MIDDLEWARE_REMOTE_EXEC] = stepper.create();
 	self._middleware[self.MIDDLEWARE_REMOTE_EXEC].setTail(ws.exec);
 	
@@ -1049,7 +1041,9 @@ var nCombo = function() {
 			self._dataClient = ndata.createClient(dataPort, dataKey);
 			
 			self._dataClient.on('ready', function() {
-				self._io = io.listen(self._server, {'log level': 1});
+				self._ioCluster = new IOCluster(self._dataClient);
+				
+				self._io = io.listen(self._server, {'log level': 1, 'io cluster': self._ioCluster});
 				
 				var oldRequestListeners = self._server.listeners('request').splice(0);
 				self._server.removeAllListeners('request');
@@ -1147,11 +1141,6 @@ var nCombo = function() {
 						handleHandshake(handshakeData, callback);
 					});
 				}
-				
-				self._ioCluster = new IOCluster({
-					nDataUseExistingServer: true,
-					nDataClient: self._dataClient
-				});
 				
 				self._wsSocks = self._io.of(self._wsEndpoint);
 				self.global = self._ioCluster.global();
@@ -1255,22 +1244,6 @@ var nCombo = function() {
 							var req = new IORequest(request, socket, session, self.global, remoteAddress, request.secure);
 							var res = new IOResponse(request, socket);
 							self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_EXEC]);
-							self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
-						});
-						
-						// watch local server events
-						socket.on('watchLocal', function(request) {
-							var req = new IORequest(request, socket, session, self.global, remoteAddress, secure);
-							var res = new IOResponse(request, socket);
-							self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_WATCH]);
-							self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
-						});
-						
-						// unwatch local server events
-						socket.on('unwatchLocal', function(request) {
-							var req = new IORequest(request, socket, session, self.global, remoteAddress, secure);
-							var res = new IOResponse(request, socket);
-							self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_UNWATCH]);
 							self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
 						});
 						

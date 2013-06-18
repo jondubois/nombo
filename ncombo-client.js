@@ -211,120 +211,26 @@ $n.NS = function(namespace, wsSocket) {
 	self.socketIO = wsSocket;
 	self._serverWatchMap = {};
 	
-	self.watch = function(event, handler, ackCallback) {
-		if(!event || !handler) {
-			throw "Exception: One or more required parameters were undefined";
-		}
-		
-		var ackCalled = false;
-		var timeout = setTimeout(function() {
-			if(!ackCalled && ackCallback) {
-				ackCallback('Failed to watch local event');
-				ackCalled = true;
-			}
-		}, $n._timeout);
-		
-		var cb = function(err) {
-			clearTimeout(timeout);
-			if(!ackCalled && ackCallback) {
-				ackCallback(err);
-				ackCalled = true;
-			}
-		}
-		
-		var id = $n._genID();
+	self.watch = function(event, handler) {
 		if(!self._serverWatchMap.hasOwnProperty(event)) {
 			self._serverWatchMap[event] = [];
 		}
 		self._serverWatchMap[event].push(handler);
-		
-		var ackHandler = function(err) {
-			if(err) {
-				delete self._serverWatchMap[event];
-			}
-			cb(err);
-		}
-		
-		var request = {
-			id: id,
-			ns: self._namespace,
-			event: event
-		};
-		
-		if(self._serverWatchMap[event].length < 2) {
-			$n.trackRequest(id, ackHandler);
-			$n.socketIO.emit('watchLocal', request);
-		} else {
-			cb();
-		}
 	}
 	
-	self.watchOnce = function(event, handler, ackCallback) {
-		if(self.isWatching(event)) {
-			self._serverWatchMap[event] = [handler];
-			ackCallback && ackCallback();
-		} else {
-			self.watch(event, handler, ackCallback);
-		}
-	}
-	
-	self.unwatch = function(event, handler, ackCallback) {
-		var ackCalled = false;
-		var timeout = setTimeout(function() {
-			if(!ackCalled && ackCallback) {
-				ackCallback('Failed to unwatch local event');
-				ackCalled = true;
-			}
-		}, $n._timeout);
-		
-		var cb = function(err) {
-			clearTimeout(timeout);
-			if(!ackCalled && ackCallback) {
-				ackCallback(err);
-				ackCalled = true;
-			}
-		}
-		
-		var i;
-		var id = $n._genID();
-		var unwatchRequest = {
-			id: id,
-			ns: self._namespace,
-			event: event
-		};
-		
+	self.unwatch = function(event, handler) {		
 		if(!event) {
 			self._serverWatchMap = {};
-			$n.trackRequest(id, cb);
-			self.socketIO.emit('unwatchLocal', unwatchRequest);
 		} else if(!handler) {
-			if(self._serverWatchMap[event]) {
-				delete self._serverWatchMap[event];
-				$n.trackRequest(id, cb);
-				self.socketIO.emit('unwatchLocal', unwatchRequest);
-			}
-		} else {
-			if(self._serverWatchMap[event]) {
-				self._serverWatchMap[event] = $.grep(self._serverWatchMap[event], function(element, index) {
-					return element != handler;
-				});
-				if(self._serverWatchMap[event].length < 1) {
-					$n.trackRequest(id, cb);
-					self.socketIO.emit('unwatchLocal', unwatchRequest);
-				} else {
-					cb();
-				}
-			} else {
-				cb();
-			}
+			delete self._serverWatchMap[event];
+		} else if(self._serverWatchMap[event]) {
+			self._serverWatchMap[event] = $.grep(self._serverWatchMap[event], function(element, index) {
+				return element != handler;
+			});
 		}
 	}
 	
 	self._getWatcher = function(event, handler) {
-		if(!event) {
-			throw "Exception: One or more required parameters were undefined";
-		}
-		
 		if(self._serverWatchMap[event]) {
 			var watchers = self._serverWatchMap[event];
 			if(handler) {
@@ -365,10 +271,6 @@ $n.RemoteNS = function(host, port, secure, wsEndpoint, namespace, wsSocket) {
 	self._serverWatchMap = {};
 	
 	self.watch = function(event, handler, ackCallback) {
-		if(!event || !handler) {
-			throw "Exception: One or more required parameters were undefined";
-		}
-		
 		var ackCalled = false;
 		var timeout = setTimeout(function() {
 			if(!ackCalled && ackCallback) {

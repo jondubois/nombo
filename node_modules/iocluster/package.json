@@ -1,0 +1,31 @@
+{
+  "name": "iocluster",
+  "version": "0.9.0",
+  "description": "Realtime clustering engine",
+  "homepage": "http://socket.io",
+  "keywords": [
+    "iocluster",
+    "cluster",
+    "realtime",
+    "socket",
+    "engine"
+  ],
+  "author": {
+    "name": "Jonathan Gros-Dubois"
+  },
+  "contributors": [
+    {
+      "name": "Jonathan Gros-Dubois"
+    }
+  ],
+  "dependencies": {
+	"async": "0.1.22",
+    "handlebars": "1.0.12",
+	"ndata": ">= 0.9.21",
+    "socket.io": ">=0.9.14"
+  },
+  "main": "index",
+  "engines": {
+    "node": ">= 0.8.0"
+  }
+}

@@ -6,9 +6,9 @@ var http = require('http'),
 	fs = require('fs'),
 	url = require('url'),
 	querystring = require('querystring'),
-	ndata = require('ndata'),
 	io = require('socket.io'),
-	IOCluster = require('iocluster').IOCluster,
+	IOClusterServer = require('iocluster').IOClusterServer,
+	IOClusterClient = require('iocluster').IOClusterClient,
 	nmix = require('nmix'),
 	conf = require('ncombo/configmanager'),
 	gateway = require('ncombo/gateway'),
@@ -224,7 +224,9 @@ var nCombo = function() {
 	
 	self._retryTimeout = 10000;
 	
-	self._dataServer = null;
+	self._ioClusterServer = null;
+	self._ioClusterClient = null;
+	
 	self.global = null;
 	
 	self._config = conf.parseConfig(__dirname + '/config.node.json');
@@ -551,7 +553,7 @@ var nCombo = function() {
 					}
 				} else {
 					if(sid) {
-						req.session = self._ioCluster.session(sid);
+						req.session = self._ioClusterClient.session(sid);
 						next();
 					} else if(!self._options.publicResources && self._options.autoSession) {
 						res.writeHead(500);
@@ -844,53 +846,6 @@ var nCombo = function() {
 		return '<link rel="' + rel + '" type="' + type + '" href="' + url + '" />';
 	}
 	
-	self._cleanupWorker = function(pid) {
-		var getWorkerDataOp = retry.operation(self._retryOptions);
-		getWorkerDataOp.attempt(function() {
-			self._dataClient.get('__workers.' + self._dataClient.escape(pid), function(err, data) {
-				_extendRetryOperation(getWorkerDataOp);
-				if(getWorkerDataOp.retry(err)) {
-					return;
-				}
-				
-				if(data) {
-					var i;
-					for(i in data.sockets) {
-						(function(sockID) {
-							var removeOpenSocketOp = retry.operation(self._retryOptions);
-							removeOpenSocketOp.attempt(function() {
-								self._dataClient.remove('__opensockets.' + self._dataClient.escape(sockID), function(err) {
-									_extendRetryOperation(removeOpenSocketOp);
-									removeOpenSocketOp.retry(err);
-								});
-							});
-						})(i);
-					}
-					
-					for(i in data.sessions) {
-						(function(sid) {
-							var removeOpenSessionOp = retry.operation(self._retryOptions);
-							removeOpenSessionOp.attempt(function() {
-								self._dataClient.remove('__opensessions.' + self._dataClient.escape(sid), function(err) {
-									_extendRetryOperation(removeOpenSessionOp);
-									removeOpenSessionOp.retry(err);
-								});
-							});
-						})(i);
-					}
-				}
-				
-				var removeWorkerSocketsOp = retry.operation(self._retryOptions);
-				removeWorkerSocketsOp.attempt(function() {
-					self._dataClient.remove('__workers.' + self._dataClient.escape(pid), function(err) {
-						_extendRetryOperation(removeWorkerSocketsOp);
-						removeWorkerSocketsOp.retry(err);
-					});
-				});
-			});
-		});
-	}
-	
 	self._validateOptions = function(options, validationMap) {
 		var i, err;
 		for(i in options) {
@@ -1038,12 +993,10 @@ var nCombo = function() {
 			self._preprocessor.init(self._options);
 			self._headerAdder.init(self._options);
 			
-			self._dataClient = ndata.createClient(dataPort, dataKey);
+			self._ioClusterClient = new IOClusterClient(dataPort, dataKey, self.isMaster);
 			
-			self._dataClient.on('ready', function() {
-				self._ioCluster = new IOCluster(self._dataClient);
-				
-				self._io = io.listen(self._server, {'log level': 1, 'io cluster': self._ioCluster});
+			self._ioClusterClient.on('ready', function() {				
+				self._io = io.listen(self._server, {'log level': 1, 'io cluster': self._ioClusterClient});
 				
 				var oldRequestListeners = self._server.listeners('request').splice(0);
 				self._server.removeAllListeners('request');
@@ -1100,7 +1053,7 @@ var nCombo = function() {
 					});
 					
 					if(handshakeData.ssid) {
-						var session = self._ioCluster.session(handshakeData.ssid);
+						var session = self._ioClusterClient.session(handshakeData.ssid);
 						session.getAuth(function(err, data) {
 							if(err) {
 								callback('Failed to retrieve auth data', false);
@@ -1124,15 +1077,15 @@ var nCombo = function() {
 				self._io.set('heartbeat timeout', Math.round(self._options.heartbeatTimeout / 1000));
 				self._io.set('match origin protocol', self._options.matchOriginProtocol);
 				
-				if(self._options.maxConnectionsPerAddress > 0) {
-					var remoteAddr;
+				if(self._options.maxConnectionsPerAddress > 0) {				
 					self._io.set('authorization', function(handshakeData, callback) {
-						remoteAddr = handshakeData.address.address;
-						self._dataClient.get('__connectedaddresses', function(err, addressCountMap) {
-							if(!addressCountMap || !addressCountMap.hasOwnProperty(remoteAddr) || addressCountMap[remoteAddr] < self._options.maxConnectionsPerAddress) {
+						var remoteAddr = handshakeData.address.address;
+						
+						self._ioClusterClient.getAddressSockets(remoteAddr, function(err, sockets) {
+							if(sockets.length < self._options.maxConnectionsPerAddress) {
 								handleHandshake(handshakeData, callback);
 							} else {
-								callback("reached connection limit for the address '" + remoteAddr + "'", false);
+								callback("Reached connection limit for the address '" + remoteAddr + "'", false);
 							}
 						});
 					});
@@ -1143,7 +1096,7 @@ var nCombo = function() {
 				}
 				
 				self._wsSocks = self._io.of(self._wsEndpoint);
-				self.global = self._ioCluster.global();
+				self.global = self._ioClusterClient.global();
 			
 				gateway.setReleaseMode(self._options.release);
 				ws.setReleaseMode(self._options.release);
@@ -1155,49 +1108,8 @@ var nCombo = function() {
 					
 					self.emit(self.EVENT_SOCKET_CONNECT, socket);
 					
-					var addAddressQuery = 'function(DataMap) { \
-						if(DataMap.hasKey("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '")) { \
-							var curValue = DataMap.get("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '"); \
-							DataMap.set("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '", curValue + 1); \
-						} else { \
-							DataMap.set("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '", 1) \
-						} \
-					}';
-					
-					self._dataClient.run(addAddressQuery);
-					
-					var failFlag = false;
-					
-					self._dataClient.set('__workers.' + self._dataClient.escape(cluster.worker.id) + '.sockets.' + self._dataClient.escape(socket.id), 1, function(err) {
-						if(err && !failFlag) {
-							self.emit(self.EVENT_SOCKET_FAIL, socket);
-							failFlag = true;
-							socket.disconnect();
-							console.log('   nCombo Error - Failed to initiate socket');
-						}
-					});
-					
-					self._dataClient.set('__workers.' + self._dataClient.escape(cluster.worker.id) + '.sessions.' + self._dataClient.escape(socket.ssid), 1, function(err) {
-						if(err && !failFlag) {
-							self.emit(self.EVENT_SOCKET_FAIL, socket);
-							failFlag = true;
-							socket.disconnect();
-							console.log('   nCombo Error - Failed to initiate socket');
-						}
-					});
-					
-					self._dataClient.set('__opensockets.' + self._dataClient.escape(socket.id), 1, function(err) {
-						if(err) {
-							if(!failFlag) {
-								self.emit(self.EVENT_SOCKET_FAIL, socket);
-								failFlag = true;
-								socket.disconnect();
-								console.log('   nCombo Error - Failed to initiate socket');
-							}
-						}
-					});
-					
-					var session = self._ioCluster.session(socket.ssid);
+					var failFlag = false;					
+					var session = self._ioClusterClient.session(socket.ssid);
 					
 					if(auth !== undefined) {
 						session.setAuth(auth, function(err) {
@@ -1242,113 +1154,9 @@ var nCombo = function() {
 						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
 					});
 					
-					var removeOpenSocket = function(callback) {
-						var operation = retry.operation(self._retryOptions);
-						operation.attempt(function() {
-							self._dataClient.remove('__opensockets.' + self._dataClient.escape(socket.id), function(err) {
-								_extendRetryOperation(operation);
-								if(operation.retry(err)) {
-									return;
-								}
-								
-								callback && callback();
-							});
-						});
-					}
-					
-					var removeWorkerSocket = function() {
-						var operation = retry.operation(self._retryOptions);
-						operation.attempt(function() {
-							self._dataClient.remove('__workers.' + self._dataClient.escape(cluster.worker.id) + '.sockets.' + self._dataClient.escape(socket.id), function(err) {
-								_extendRetryOperation(operation);
-								operation.retry(err);
-							});
-						});
-					}
-					
-					var removeWorkerSession = function() {
-						var operation = retry.operation(self._retryOptions);
-						operation.attempt(function() {
-							self._dataClient.remove('__workers.' + self._dataClient.escape(cluster.worker.id) + '.sessions.' + self._dataClient.escape(socket.ssid), function(err) {
-								_extendRetryOperation(operation);
-								operation.retry(err);
-							});
-						});
-					}
-					
-					var cleanupSession = function() {
-						var countSocketsOp = retry.operation(self._retryOptions);
-						countSocketsOp.attempt(function() {
-							session.countSockets(function(err, data) {
-								_extendRetryOperation(countSocketsOp);
-								if(countSocketsOp.retry(err)) {
-									return;
-								}
-								
-								if(data < 1) {
-									self._middleware[self.MIDDLEWARE_SESSION_DESTROY].setTail(function() {
-										var destroySessionOp = retry.operation(self._retryOptions);
-										destroySessionOp.attempt(function() {
-											session._destroy(function(err) {
-												_extendRetryOperation(destroySessionOp);
-												if(destroySessionOp.retry(err)) {
-													return;
-												}
-												
-												gateway.unwatchAll(session);
-												ws.destroy(session);
-												removeWorkerSession();
-											});
-										});
-									});
-									self._middleware[self.MIDDLEWARE_SESSION_DESTROY].run(session);
-								}
-							});
-						});
-					}
-					
 					socket.on('disconnect', function() {
 						self.emit(self.EVENT_SOCKET_DISCONNECT, socket);
-						
-						self._ioCluster.unbind(socket);
-						/*
-						var jsQuery = 'function(DataMap) { \
-							if(DataMap.hasKey("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '")) { \
-								var newValue = DataMap.get("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '") - 1; \
-								if(newValue <= 0) { \
-									DataMap.remove("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '"); \
-									return 0; \
-								} else { \
-									DataMap.set("__connectedaddresses.' + self._dataClient.escape(remoteAddress.address) + '", newValue); \
-									return newValue; \
-								} \
-							} else { \
-								return 0; \
-							} \
-						}';
-						
-						var timeout;
-						if(typeof self._options.sessionTimeout == 'number') {
-							timeout = self._options.sessionTimeout;
-						} else {
-							timeout = self._options.sessionTimeout[0] + Math.random() * self._options.sessionTimeout[1];
-						}						
-						
-						setTimeout(function() {
-							session._removeSocket(socket, cleanupSession);
-						}, timeout);
-						
-						var disconnectAddressOp = retry.operation(self._retryOptions);
-						disconnectAddressOp.attempt(function() {
-							self._dataClient.run(jsQuery, function(err) {
-								_extendRetryOperation(disconnectAddressOp);
-								disconnectAddressOp.retry(err);
-							});
-						});
-						
-						removeOpenSocket();
-						removeWorkerSocket();
-						*/
+						self._ioClusterClient.unbind(socket);
 					});
 				}
 				
@@ -1358,8 +1166,9 @@ var nCombo = function() {
 					} else {
 						socket.ssid = socket.handshake.ssid || socket.id;
 					}
+					socket.address = socket.handshake.address;
 					
-					self._ioCluster.bind(socket, handleConnection);
+					self._ioClusterClient.bind(socket, handleConnection);
 				});
 				
 				shasum.update(dataKey);
@@ -1565,11 +1374,9 @@ var nCombo = function() {
 						dataPort = datPort;
 						var pass = crypto.randomBytes(32).toString('hex');
 						
-						self._dataServer = ndata.createServer(dataPort, pass);
-						self._dataServer.on('ready', function() {
+						self._ioClusterServer = new IOClusterServer(dataPort, pass);
+						self._ioClusterServer.on('ready', function() {
 							var i;
-							
-							self._dataClient = ndata.createClient(dataPort, pass);
 							
 							var workerReadyHandler = function(data, worker) {
 								workers.push(worker);
@@ -1666,7 +1473,6 @@ var nCombo = function() {
 								leaderId = -1;
 								
 								console.log(message);
-								self._cleanupWorker(worker.id);
 								
 								if(self._options.release) {
 									console.log('   Respawning worker');

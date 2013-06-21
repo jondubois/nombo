@@ -124,13 +124,12 @@ var nCombo = function() {
 	self.MIDDLEWARE_REMOTE_WATCH = 'remoteWatch';
 	self.MIDDLEWARE_REMOTE_UNWATCH = 'remoteUnwatch';
 	
-	self.MIDDLEWARE_SESSION_DESTROY = 'sessionDestroy';
-	
 	self.EVENT_WORKER_START = 'workerstart';
 	self.EVENT_LEADER_START = 'leaderstart';
 	self.EVENT_SOCKET_CONNECT = 'socketconnect';
 	self.EVENT_SOCKET_DISCONNECT = 'socketdisconnect';
 	self.EVENT_SOCKET_FAIL = 'socketfail';
+	self.EVENT_SESSION_DESTROY = 'sessiondestroy';
 	self.EVENT_FAIL = 'fail';
 	
 	self.isMaster = cluster.isMaster;
@@ -667,10 +666,6 @@ var nCombo = function() {
 	self._middleware[self.MIDDLEWARE_REMOTE_UNWATCH] = stepper.create();
 	self._middleware[self.MIDDLEWARE_REMOTE_UNWATCH].setTail(ws.unwatch);
 	
-	self._middleware[self.MIDDLEWARE_SESSION_DESTROY] = stepper.create();
-	
-	self._clientIncludes = self._config.clientIncludes;
-	
 	mime.define({
 		'text/css': ['less'],
 		'text/html': ['handlebars']
@@ -792,15 +787,9 @@ var nCombo = function() {
 	
 	self.useStyle(self._frameworkClientURL + 'styles/ncombo.css');
 	self.useScript(self._frameworkClientURL + 'libs/jquery.js');
-	self.useScript(self._frameworkClientURL + 'libs/handlebars.js');
+	self.useScript(self._frameworkModulesURL + 'handlebars/dist/handlebars.js');
 	self.useScript(self._frameworkClientURL + 'libs/json2.js');
 	self.useScript(self._frameworkURL + 'ncombo-client.js');
-	
-	var i, nurl;
-	for(i in self._clientIncludes) {
-		nurl = path.normalize(self._frameworkURL + self._clientIncludes[i]);
-		self.useScript(nurl);
-	}
 	
 	self._setFileResponseHeaders = function(res, filePath, mimeType, forceRefresh) {	
 		if(!mimeType) {
@@ -995,7 +984,11 @@ var nCombo = function() {
 			
 			self._ioClusterClient = new IOClusterClient(dataPort, dataKey, self.isMaster);
 			
-			self._ioClusterClient.on('ready', function() {				
+			self._ioClusterClient.on('sessiondestroy', function (sessionId) {
+				self.emit(self.EVENT_SESSION_DESTROY, sessionId);
+			});
+			
+			self._ioClusterClient.on('ready', function() {		
 				self._io = io.listen(self._server, {'log level': 1, 'io cluster': self._ioClusterClient});
 				
 				var oldRequestListeners = self._server.listeners('request').splice(0);
@@ -1103,61 +1096,65 @@ var nCombo = function() {
 				ws.setTimeout(self._options.timeout);
 				
 				var handleConnection = function(err, socket) {
-					var remoteAddress = socket.handshake.address;
-					var auth = socket.handshake.auth;
-					
-					self.emit(self.EVENT_SOCKET_CONNECT, socket);
-					
-					var failFlag = false;					
-					var session = self._ioClusterClient.session(socket.ssid);
-					
-					if(auth !== undefined) {
-						session.setAuth(auth, function(err) {
-							if(err && !failFlag) {
-								self.emit(self.EVENT_SOCKET_FAIL, socket);
-								failFlag = true;
-								socket.disconnect();
-								console.log('   nCombo Error - Failed to save auth data');
-							}
-					});
+					if(err) {
+						self.emit(self.EVENT_SOCKET_FAIL, socket, err);
+						socket.disconnect();
+						console.log('   nCombo Error - Failed to bind socket to cluster');
+					} else {
+						var remoteAddress = socket.handshake.address;
+						var auth = socket.handshake.auth;
+						
+						self.emit(self.EVENT_SOCKET_CONNECT, socket);
+										
+						var session = self._ioClusterClient.session(socket.ssid);
+						
+						if(auth !== undefined) {
+							session.setAuth(auth, function(err) {
+								if(err) {
+									self.emit(self.EVENT_SOCKET_FAIL, socket, err);
+									socket.disconnect();
+									console.log('   nCombo Error - Failed to save auth data');
+								}
+							});
+						}
+						
+						// handle local server interface call
+						socket.on('localCall', function(request) {
+							var req = new IORequest(request, socket, session, self.global, remoteAddress, secure);
+							var res = new IOResponse(request, socket);
+							self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_EXEC]);
+							self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
+						});
+						
+						// handle remote interface call
+						socket.on('remoteCall', function(request) {
+							var req = new IORequest(request, socket, session, self.global, remoteAddress, request.secure);
+							var res = new IOResponse(request, socket);
+							self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_EXEC]);
+							self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
+						});
+						
+						// watch remote server events
+						socket.on('watchRemote', function(request) {
+							var req = new IORequest(request, socket, session, self.global, remoteAddress, request.secure);
+							var res = new IOResponse(request, socket);
+							self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_WATCH]);
+							self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
+						});
+						
+						// unwatch remote server events
+						socket.on('unwatchRemote', function(request) {
+							var req = new IORequest(request, socket, session, self.global, remoteAddress, secure);
+							var res = new IOResponse(request, socket);
+							self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_UNWATCH]);
+							self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
+						});
+						
+						socket.on('disconnect', function() {
+							self.emit(self.EVENT_SOCKET_DISCONNECT, socket);
+							self._ioClusterClient.unbind(socket);
+						});
 					}
-					
-					// handle local server interface call
-					socket.on('localCall', function(request) {
-						var req = new IORequest(request, socket, session, self.global, remoteAddress, secure);
-						var res = new IOResponse(request, socket);
-						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_EXEC]);
-						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
-					});
-					
-					// handle remote interface call
-					socket.on('remoteCall', function(request) {
-						var req = new IORequest(request, socket, session, self.global, remoteAddress, request.secure);
-						var res = new IOResponse(request, socket);
-						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_EXEC]);
-						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
-					});
-					
-					// watch remote server events
-					socket.on('watchRemote', function(request) {
-						var req = new IORequest(request, socket, session, self.global, remoteAddress, request.secure);
-						var res = new IOResponse(request, socket);
-						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_WATCH]);
-						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
-					});
-					
-					// unwatch remote server events
-					socket.on('unwatchRemote', function(request) {
-						var req = new IORequest(request, socket, session, self.global, remoteAddress, secure);
-						var res = new IOResponse(request, socket);
-						self._middleware[self.MIDDLEWARE_SOCKET_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_UNWATCH]);
-						self._middleware[self.MIDDLEWARE_SOCKET_IO].run(req, res);
-					});
-					
-					socket.on('disconnect', function() {
-						self.emit(self.EVENT_SOCKET_DISCONNECT, socket);
-						self._ioClusterClient.unbind(socket);
-					});
 				}
 				
 				self._wsSocks.on('connection', function(socket) {					

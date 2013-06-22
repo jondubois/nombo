@@ -7,6 +7,7 @@ module.exports.getChatLog = function(req, res) {
 }
 
 module.exports.addMessage = function(req, res) {
+	ddddd();
 	req.global.get('messages', function(err, messages) {
 		if(err) {
 			// Send an error to the client.

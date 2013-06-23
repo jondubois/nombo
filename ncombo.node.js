@@ -7,8 +7,7 @@ var http = require('http'),
 	url = require('url'),
 	querystring = require('querystring'),
 	io = require('socket.io'),
-	IOClusterServer = require('iocluster').IOClusterServer,
-	IOClusterClient = require('iocluster').IOClusterClient,
+	iocl = require('iocluster');
 	nmix = require('nmix'),
 	conf = require('ncombo/configmanager'),
 	gateway = require('ncombo/gateway'),
@@ -28,13 +27,6 @@ var http = require('http'),
 	watchr = require('watchr'),
 	domain = require('domain'),
 	retry = require('retry');
-
-var _maxTimeout = 120000;
-var _extendRetryOperation = function(operation) {
-	if(!operation._timeouts.length) {
-		operation._timeouts[0] = _maxTimeout;
-	}
-}
 
 var cluster = require('cluster');
 var numCPUs = require('os').cpus().length;
@@ -168,14 +160,15 @@ var nCombo = function() {
 		heartbeatInterval: 25000,
 		heartbeatTimeout: 60000,
 		allowUploads: false,
-		baseURL: null
+		baseURL: null,
+		clusterEngine: iocl,
 	};
 	
 	self._retryOptions = {
 		retries: 10,
 		factor: 2,
 		minTimeout: 1000,
-		maxTimeout: _maxTimeout,
+		maxTimeout: 120000,
 		randomize: false
 	};
 	
@@ -915,6 +908,9 @@ var nCombo = function() {
 			},
 			baseURL: function() {
 				return (typeof arguments[0] == 'string') ? null : 'expecting a string';
+			},
+			clusterEngine: function() {
+				return (arguments[0].IOClusterClient && arguments[0].IOClusterServer) ? null : 'expecting a valid io cluster engine';
 			}
 		}
 		
@@ -945,7 +941,7 @@ var nCombo = function() {
 		self._options.appDirPath = self._appDirPath;
 		var appDef = self._getAppDef(true);
 		self._options.minifyURLs = [appDef.appScriptsURL, appDef.appLibsURL, appDef.frameworkClientURL + 'scripts/load.js', self._frameworkURL + 'ncombo-client.js', 
-				self._frameworkURL + 'loader.js'];
+				self._frameworkURL + 'loader.js', self._frameworkURL + 'smartcachemanager.js'];
 		
 		self.allowFullAuthResource(self._spinJSURL);
 		self.allowFullAuthResource(self._frameworkSocketIOClientURL);
@@ -982,7 +978,7 @@ var nCombo = function() {
 			self._preprocessor.init(self._options);
 			self._headerAdder.init(self._options);
 			
-			self._ioClusterClient = new IOClusterClient(dataPort, dataKey, self.isMaster);
+			self._ioClusterClient = new self._options.clusterEngine.IOClusterClient(dataPort, dataKey, self.isMaster);
 			
 			self._ioClusterClient.on('sessiondestroy', function (sessionId) {
 				self.emit(self.EVENT_SESSION_DESTROY, sessionId);
@@ -1062,6 +1058,7 @@ var nCombo = function() {
 				
 				self._io.set('resource', self._ioResourceInternalURL);
 				self._io.set('browser client minification', self._options.release);
+				self._io.set('browser client gzip', self._options.release);
 				self._io.set('log level', self._options.logLevel);
 				self._io.set('transports', self._options.transports);
 				self._io.set('origins', self._options.origins);
@@ -1152,7 +1149,14 @@ var nCombo = function() {
 						
 						socket.on('disconnect', function() {
 							self.emit(self.EVENT_SOCKET_DISCONNECT, socket);
-							self._ioClusterClient.unbind(socket);
+							
+							var unbindOp = retry.operation();
+							
+							unbindOp.attempt(function(currentAttempt) {
+								self._ioClusterClient.unbind(socket, function(err) {
+									unbindOp.retry(err);
+								});
+							});
 						});
 					}
 				}
@@ -1371,7 +1375,7 @@ var nCombo = function() {
 						dataPort = datPort;
 						var pass = crypto.randomBytes(32).toString('hex');
 						
-						self._ioClusterServer = new IOClusterServer(dataPort, pass);
+						self._ioClusterServer = new self._options.clusterEngine.IOClusterServer(dataPort, pass);
 						self._ioClusterServer.on('ready', function() {
 							var i;
 							

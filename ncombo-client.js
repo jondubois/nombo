@@ -21,6 +21,7 @@ var $n = {
 	_cacheVersion: null,
 	_callbacks: {},
 	_releaseMode: false,
+	_plugins: {},
 	
 	initIO: function() {
 		$n.socketIO = NCOMBO_SOCKET;
@@ -581,6 +582,34 @@ $n.local = new (function($n) {
 	}
 })($n);
 
+/*
+	registerPlugin(name, plugin)
+	Register a client-side plugin.
+	
+	@param {String} name The name of the plugin.
+	@param {Object} plugin A plugin Object or Function to associate with the specified plugin name
+*/
+$n.registerPlugin = function(name, plugin) {
+	if($n._plugins[name] == null) {
+		$n._plugins[name] = plugin;
+	} else {
+		throw new Error('A plugin with the name "' + name + '" already exists.');
+	}
+}
+
+/*
+	plugin(name)
+	Access a plugin with the specified name.
+	
+	@param {String} name The name of the plugin.
+*/
+$n.plugin = function(name) {
+	if($n._plugins[name] == null) {
+		throw new Error('The requested "' + name + '" plugin could not be found.');
+	}
+	return $n._plugins[name];
+}
+
 if(!Array.prototype.indexOf) {
 	Array.prototype.indexOf = function(item, start) {
 		if(!start) {
@@ -595,6 +624,20 @@ if(!Array.prototype.indexOf) {
 		}
 		return -1;
 	}
+}
+
+if (!Object.create) {
+	Object.create = (function () {
+		function F() {};
+
+		return function (o) {
+			if(arguments.length != 1) {
+				throw new Error('Object.create implementation only accepts one parameter.');
+			}
+			F.prototype = o;
+			return new F();
+		}
+	})();
 }
 
 $n.init();

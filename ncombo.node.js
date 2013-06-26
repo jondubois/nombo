@@ -978,7 +978,7 @@ var nCombo = function() {
 			self._preprocessor.init(self._options);
 			self._headerAdder.init(self._options);
 			
-			self._ioClusterClient = new self._options.clusterEngine.IOClusterClient(dataPort, dataKey, self.isMaster);
+			self._ioClusterClient = new self._options.clusterEngine.IOClusterClient({port: dataPort, secretKey: dataKey});
 			
 			self._ioClusterClient.on('sessiondestroy', function (sessionId) {
 				self.emit(self.EVENT_SESSION_DESTROY, sessionId);
@@ -1167,7 +1167,7 @@ var nCombo = function() {
 					} else {
 						socket.ssid = socket.handshake.ssid || socket.id;
 					}
-					socket.address = socket.handshake.address;
+					socket.address = socket.handshake.address.address;
 					
 					self._ioClusterClient.bind(socket, handleConnection);
 				});
@@ -1375,7 +1375,7 @@ var nCombo = function() {
 						dataPort = datPort;
 						var pass = crypto.randomBytes(32).toString('hex');
 						
-						self._ioClusterServer = new self._options.clusterEngine.IOClusterServer(dataPort, pass);
+						self._ioClusterServer = new self._options.clusterEngine.IOClusterServer({port: dataPort, secretKey: pass});
 						self._ioClusterServer.on('ready', function() {
 							var i;
 							

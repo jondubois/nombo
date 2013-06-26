@@ -145,9 +145,9 @@ var nCombo = function() {
 		transports: ['websocket'],
 		logLevel: 1,
 		workers: numCPUs,
-		timeout: 10000,
-		sessionTimeout: [60000, 60000],
-		cacheLife: 2592000000,
+		connectTimeout: 10,
+		sessionTimeout: [60, 60],
+		cacheLife: 2592000,
 		cacheType: 'private',
 		cacheVersion: null,
 		origins: '*:*',
@@ -156,9 +156,9 @@ var nCombo = function() {
 		minifyMangle: false,
 		matchOriginProtocol: true,
 		maxConnectionsPerAddress: 0,
-		pollingDuration: 30000,
-		heartbeatInterval: 25000,
-		heartbeatTimeout: 60000,
+		pollingDuration: 30,
+		heartbeatInterval: 25,
+		heartbeatTimeout: 60,
 		allowUploads: false,
 		baseURL: null,
 		clusterEngine: iocl,
@@ -383,7 +383,7 @@ var nCombo = function() {
 		appDef.appFilesURL = appDef.appURL + 'files/';
 		appDef.wsEndpoint = self._wsEndpoint;
 		appDef.releaseMode = self._options.release;
-		appDef.timeout = self._options.timeout;
+		appDef.timeout = self._options.connectTimeout;
 		appDef.resourceSizeMap = self._resourceSizes;
 		appDef.angular = self._options.angular;
 		appDef.angularMainTemplate = self._options.angularMainTemplate;
@@ -462,7 +462,7 @@ var nCombo = function() {
 		
 		if(req.url == self._timeCacheInternalURL) {
 			var now = (new Date()).getTime();
-			var expiry = new Date(now + self._options.cacheLife);
+			var expiry = new Date(now + self._options.cacheLife * 1000);
 			res.setHeader('Content-Type', 'text/javascript');
 			res.setHeader('Set-Cookie', '__' + self._appExternalURL + 'nccached=0; Path=/');
 			res.setHeader('Cache-Control', 'private');
@@ -533,7 +533,7 @@ var nCombo = function() {
 											frameworkURL: self._frameworkURL,
 											frameworkClientURL: self._frameworkClientURL,
 											autoSession: self._options.autoSession ? 1 : 0,
-											timeout: self._options.timeout,
+											timeout: self._options.connectTimeout * 1000,
 											appDef: JSON.stringify(appDef),
 											resources: JSON.stringify(self._bundledResources),
 											debug: self._options.release ? 'false' : 'true'
@@ -791,7 +791,7 @@ var nCombo = function() {
 		
 		if(self._options.release && !forceRefresh) {
 			var now = new Date();
-			var expiry = new Date(now.getTime() + self._options.cacheLife);
+			var expiry = new Date(now.getTime() + self._options.cacheLife * 1000);
 			
 			res.setHeader('Cache-Control', self._options.cacheType);
 			res.setHeader('Pragma', self._options.cacheType);
@@ -873,7 +873,7 @@ var nCombo = function() {
 			workers: function() {
 				return isInt(arguments[0]) ? null : 'expecting an integer';
 			},
-			timeout: function() {
+			connectTimeout: function() {
 				return isInt(arguments[0]) ? null : 'expecting an integer';
 			},
 			sessionTimeout: function() {
@@ -929,7 +929,7 @@ var nCombo = function() {
 		}
 		
 		if(!self._options.release && !cacheLifeIsSet) {
-			self._options.cacheLife = 86400000;
+			self._options.cacheLife = 86400;
 		}
 		
 		if(self._options.baseURL) {
@@ -978,7 +978,7 @@ var nCombo = function() {
 			self._preprocessor.init(self._options);
 			self._headerAdder.init(self._options);
 			
-			self._ioClusterClient = new self._options.clusterEngine.IOClusterClient({port: dataPort, secretKey: dataKey});
+			self._ioClusterClient = new self._options.clusterEngine.IOClusterClient({port: dataPort, secretKey: dataKey, dataExpiry: self._options.sessionTimeout});
 			
 			self._ioClusterClient.on('sessiondestroy', function (sessionId) {
 				self.emit(self.EVENT_SESSION_DESTROY, sessionId);
@@ -1062,9 +1062,9 @@ var nCombo = function() {
 				self._io.set('log level', self._options.logLevel);
 				self._io.set('transports', self._options.transports);
 				self._io.set('origins', self._options.origins);
-				self._io.set('polling duration', Math.round(self._options.pollingDuration / 1000));
-				self._io.set('heartbeat interval', Math.round(self._options.heartbeatInterval / 1000));
-				self._io.set('heartbeat timeout', Math.round(self._options.heartbeatTimeout / 1000));
+				self._io.set('polling duration', Math.round(self._options.pollingDuration));
+				self._io.set('heartbeat interval', Math.round(self._options.heartbeatInterval));
+				self._io.set('heartbeat timeout', Math.round(self._options.heartbeatTimeout));
 				self._io.set('match origin protocol', self._options.matchOriginProtocol);
 				
 				if(self._options.maxConnectionsPerAddress > 0) {				
@@ -1090,7 +1090,7 @@ var nCombo = function() {
 			
 				gateway.setReleaseMode(self._options.release);
 				ws.setReleaseMode(self._options.release);
-				ws.setTimeout(self._options.timeout);
+				ws.setTimeout(self._options.connectTimeout * 1000);
 				
 				var handleConnection = function(err, socket) {
 					if(err) {

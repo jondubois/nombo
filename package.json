@@ -49,6 +49,7 @@
 		"formidable": "1.0.11",
 		"handlebars": "1.0.12",
 		"less": "1.3.0",
+		"linkedlist": "1.0.1",
 		"mime": "1.2.5",
 		"ncom": ">= 0.9.0",
 		"ndata": ">= 0.9.21",
@@ -67,7 +68,6 @@
 		"zeparser": "0.0.5"
 	},
 	"bundleDependencies": [
-		"nc",
 		"css-bundler",
 		"fileuploader",
 		"iocluster",

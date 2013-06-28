@@ -146,7 +146,7 @@ var nCombo = function() {
 		logLevel: 1,
 		workers: numCPUs,
 		connectTimeout: 10,
-		sessionTimeout: [60, 60],
+		sessionTimeout: 60,
 		cacheLife: 2592000,
 		cacheType: 'private',
 		cacheVersion: null,
@@ -383,7 +383,7 @@ var nCombo = function() {
 		appDef.appFilesURL = appDef.appURL + 'files/';
 		appDef.wsEndpoint = self._wsEndpoint;
 		appDef.releaseMode = self._options.release;
-		appDef.timeout = self._options.connectTimeout;
+		appDef.timeout = self._options.connectTimeout * 1000;
 		appDef.resourceSizeMap = self._resourceSizes;
 		appDef.angular = self._options.angular;
 		appDef.angularMainTemplate = self._options.angularMainTemplate;
@@ -1168,7 +1168,7 @@ var nCombo = function() {
 						socket.ssid = socket.handshake.ssid || socket.id;
 					}
 					socket.address = socket.handshake.address.address;
-					
+					console.log(socket.id);
 					self._ioClusterClient.bind(socket, handleConnection);
 				});
 				

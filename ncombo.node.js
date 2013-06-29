@@ -146,7 +146,7 @@ var nCombo = function() {
 		logLevel: 1,
 		workers: numCPUs,
 		connectTimeout: 10,
-		sessionTimeout: 60,
+		sessionTimeout: 1200,
 		cacheLife: 2592000,
 		cacheType: 'private',
 		cacheVersion: null,
@@ -1168,7 +1168,6 @@ var nCombo = function() {
 						socket.ssid = socket.handshake.ssid || socket.id;
 					}
 					socket.address = socket.handshake.address.address;
-					console.log(socket.id);
 					self._ioClusterClient.bind(socket, handleConnection);
 				});
 				

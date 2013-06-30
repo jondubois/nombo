@@ -146,6 +146,7 @@ var nCombo = function() {
 		logLevel: 1,
 		workers: numCPUs,
 		connectTimeout: 10,
+		handshakeTimeout: 10,
 		sessionTimeout: 1200,
 		cacheLife: 2592000,
 		cacheType: 'private',
@@ -155,7 +156,7 @@ var nCombo = function() {
 		publicResources: true,
 		minifyMangle: false,
 		matchOriginProtocol: true,
-		maxConnectionsPerAddress: 0,
+		addressSocketLimit: null,
 		pollingDuration: 30,
 		heartbeatInterval: 25,
 		heartbeatTimeout: 60,
@@ -173,6 +174,8 @@ var nCombo = function() {
 	};
 	
 	self._connectedAddresses = {};
+	self._minAddressSocketLimit = 30;
+	self._dataExpiryAccuracy = 5000;
 	
 	self._frameworkURL = '/~framework/';
 	
@@ -876,11 +879,17 @@ var nCombo = function() {
 			connectTimeout: function() {
 				return isInt(arguments[0]) ? null : 'expecting an integer';
 			},
-			sessionTimeout: function() {
-				if(isInt(arguments[0]) || (arguments[0] instanceof Array && arguments[0].length == 2 && isInt(arguments[0][0]) && isInt(arguments[0][1]))) {
+			handshakeTimeout: function() {
+				if(isInt(arguments[0])) {
 					return null;
 				}
-				return 'expecting an integer or an array of integers in the form [timeoutMilliseconds, addMaxRandomness]';
+				return 'expecting an integer';
+			},
+			sessionTimeout: function() {
+				if(isInt(arguments[0])) {
+					return null;
+				}
+				return 'expecting an integer';
 			},
 			cacheLife: function() {
 				return isInt(arguments[0]) ? null : 'expecting an integer';
@@ -894,7 +903,7 @@ var nCombo = function() {
 			origins: function() {
 				return (typeof arguments[0] == 'string') ? null : 'expecting a string';
 			},
-			maxConnectionsPerAddress: function() {
+			addressSocketLimit: function() {
 				return isInt(arguments[0]) ? null : 'expecting an integer';
 			},
 			pollingDuration: function() {
@@ -930,6 +939,14 @@ var nCombo = function() {
 		
 		if(!self._options.release && !cacheLifeIsSet) {
 			self._options.cacheLife = 86400;
+		}
+		
+		if(self._options.addressSocketLimit == null) {
+			var limit = self._options.sessionTimeout / 10;
+			if(limit < self._minAddressSocketLimit) {
+				limit = self._minAddressSocketLimit;
+			}
+			self._options.addressSocketLimit = limit;
 		}
 		
 		if(self._options.baseURL) {
@@ -978,7 +995,13 @@ var nCombo = function() {
 			self._preprocessor.init(self._options);
 			self._headerAdder.init(self._options);
 			
-			self._ioClusterClient = new self._options.clusterEngine.IOClusterClient({port: dataPort, secretKey: dataKey, dataExpiry: self._options.sessionTimeout});
+			self._ioClusterClient = new self._options.clusterEngine.IOClusterClient({
+				port: dataPort,
+				secretKey: dataKey,
+				handshakeExpiry: self._options.handshakeTimeout,
+				dataExpiry: self._options.sessionTimeout,
+				addressSocketLimit: self._options.addressSocketLimit
+			});
 			
 			self._ioClusterClient.on('sessiondestroy', function (sessionId) {
 				self.emit(self.EVENT_SESSION_DESTROY, sessionId);
@@ -1045,7 +1068,7 @@ var nCombo = function() {
 						var session = self._ioClusterClient.session(handshakeData.ssid);
 						session.getAuth(function(err, data) {
 							if(err) {
-								callback('Failed to retrieve auth data', false);
+								callback('Failed to retrieve auth data: ' + err, false);
 							} else {
 								handshakeData.setAuth(data);
 								self._middleware[self.MIDDLEWARE_SOCKET_IO_AUTH].run(handshakeData);
@@ -1067,23 +1090,9 @@ var nCombo = function() {
 				self._io.set('heartbeat timeout', Math.round(self._options.heartbeatTimeout));
 				self._io.set('match origin protocol', self._options.matchOriginProtocol);
 				
-				if(self._options.maxConnectionsPerAddress > 0) {				
-					self._io.set('authorization', function(handshakeData, callback) {
-						var remoteAddr = handshakeData.address.address;
-						
-						self._ioClusterClient.getAddressSockets(remoteAddr, function(err, sockets) {
-							if(sockets.length < self._options.maxConnectionsPerAddress) {
-								handleHandshake(handshakeData, callback);
-							} else {
-								callback("Reached connection limit for the address '" + remoteAddr + "'", false);
-							}
-						});
-					});
-				} else {
-					self._io.set('authorization', function(handshakeData, callback) {
-						handleHandshake(handshakeData, callback);
-					});
-				}
+				self._io.set('authorization', function(handshakeData, callback) {
+					handleHandshake(handshakeData, callback);
+				});
 				
 				self._wsSocks = self._io.of(self._wsEndpoint);
 				self.global = self._ioClusterClient.global();
@@ -1374,7 +1383,7 @@ var nCombo = function() {
 						dataPort = datPort;
 						var pass = crypto.randomBytes(32).toString('hex');
 						
-						self._ioClusterServer = new self._options.clusterEngine.IOClusterServer({port: dataPort, secretKey: pass});
+						self._ioClusterServer = new self._options.clusterEngine.IOClusterServer({port: dataPort, secretKey: pass, expiryAccuracy: self._dataExpiryAccuracy});
 						self._ioClusterServer.on('ready', function() {
 							var i;
 							

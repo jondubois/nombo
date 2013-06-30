@@ -1,0 +1,31 @@
+{
+	"name": "expirymanager",
+	"description": "An object for efficiently managing key expiries",
+	"version": "0.9.0",
+	"author": {
+		"name": "JF Gros-Dubois",
+		"email": "flashthink@gmail.com"
+	},
+	"contributors": [
+		{
+			"name": "JF Gros-Dubois",
+			"email": "flashthink@gmail.com"
+		}
+	],
+	"devDependencies": {},
+	"keywords": [
+		"expiry",
+		"expire",
+		"expirymanager",
+		"timeout",
+		"volatile",
+		"key"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/topcloud/expirymanager.git"
+	},
+	"engines": {
+		"node": ">= 0.8.0"
+	}
+}

@@ -4,11 +4,7 @@ var release = argv.hasOwnProperty('r');
 
 var ncombo = require('ncombo');
 
-if(ncombo.isMaster) {
-	require('./master.node').run(ncombo);
-} else {
-	require('./worker.node').run(ncombo);
-}
+require('./master.node').run(ncombo);
 
 // Start nCombo app with some default options.
 ncombo.start({port: port, release: release});

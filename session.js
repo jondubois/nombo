@@ -226,29 +226,28 @@ var NCOMBO_DEBUG = {{debug}};
 				data = arguments[0];
 				callback = arguments[1];
 			}
-		      
-			var url = '{{endpoint}}';
-			var options = {'force new connection': true, 'sync disconnect on unload': true, 'resource': NCOMBO_APP_DEF.ioResource};
+		    
+			var options = {disconnectOnUnload: true};
 			
-			if(NCOMBO_SOCKET && (NCOMBO_SOCKET.socket.connected || NCOMBO_SOCKET.socket.connecting)) {
+			if(NCOMBO_SOCKET && (NCOMBO_SOCKET.readyState == 'open' || NCOMBO_SOCKET.readyState == 'opening')) {
 				NCOMBO_SOCKET.removeAllListeners();
-				NCOMBO_SOCKET.disconnect();
+				NCOMBO_SOCKET.close();
 			}
 			
 			if(data) {
-				options.query = 'data=' + io.JSON.stringify(data);
+				options.query = 'data=' + socketCluster.JSON.stringify(data);
 			}
 			
 			var matches = location.href.match(/^[^\/]*:\/\/[^\/:]+/);
 			var host = matches ? matches[0] + ':' + NCOMBO_PORT : '';
 			
-			NCOMBO_SOCKET = io.connect(host + url, options);
+			NCOMBO_SOCKET = socketCluster.connect(host, options);
 		    
 			if(callback) {
 				var errorCallback = function(err) {
 					if(err != 'client not handshaken') {
 						clearTimeout(timeoutCallback);
-						NCOMBO_SOCKET.removeListener('connect', connectCallback);
+						NCOMBO_SOCKET.removeListener('open', connectCallback);
 						NCOMBO_SOCKET.removeListener('error', errorCallback);
 						callback(err);
 					}
@@ -256,22 +255,22 @@ var NCOMBO_DEBUG = {{debug}};
 				
 				var connectCallback = function() {
 					clearTimeout(timeoutCallback);
-					NCOMBO_SOCKET.removeListener('connect', connectCallback);
+					NCOMBO_SOCKET.removeListener('open', connectCallback);
 					NCOMBO_SOCKET.removeListener('error', errorCallback);
-					sessionID = self._setIDCookies(NCOMBO_SOCKET.socket.sessionid);
+					sessionID = self._setIDCookies(NCOMBO_SOCKET.ssid);
 					callback(null, sessionID);
 				}
 				
 				if(timeout > 0) {
 					timeoutCallback = setTimeout(function() {
-						NCOMBO_SOCKET.removeListener('connect', connectCallback);
+						NCOMBO_SOCKET.removeListener('open', connectCallback);
 						NCOMBO_SOCKET.removeListener('error', errorCallback);
 						callback('Error - Session initiation attempt timed out')
 					}, timeout);
 				}
 				
 				NCOMBO_SOCKET.on('error', errorCallback);
-				NCOMBO_SOCKET.on('connect', connectCallback);
+				NCOMBO_SOCKET.on('open', connectCallback);
 			}
 		}
 		
@@ -285,14 +284,14 @@ var NCOMBO_DEBUG = {{debug}};
 			
 				if(timeout > 0) {
 					timeoutCallback = setTimeout(function() {
-						NCOMBO_SOCKET.removeListener('disconnect', disconnectCallback);
+						NCOMBO_SOCKET.removeListener('close', disconnectCallback);
 						callback('Error - Disconnection attempt timed out')
 					}, timeout);
 				}
-			
-				NCOMBO_SOCKET.on('disconnect', disconnectCallback);
+				
+				NCOMBO_SOCKET.on('close', disconnectCallback);
 			}
-			NCOMBO_SOCKET.disconnect();
+			NCOMBO_SOCKET.close();
 		}
 	})();
 	

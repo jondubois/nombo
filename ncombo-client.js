@@ -3,8 +3,7 @@
 */
 var $n = {
 	MAX_ID: Math.pow(2, 53) - 2,
-	socketIO: null,
-	_wsEndpoint: null,
+	socket: null,
 	_timeout: 10000,
 	_appURL: null,
 	_curID: 1,
@@ -24,10 +23,11 @@ var $n = {
 	_plugins: {},
 	
 	initIO: function() {
-		$n.socketIO = NCOMBO_SOCKET;
-		if($n.socketIO) {
-			$n.socketIO.on('return', $n._callReturn);
-			$n.socketIO.on('event', $n._eventReceived);
+		$n.socket = NCOMBO_SOCKET;
+		if($n.socket) {
+			var nSocket = $n.socket.ns('__nc');
+			nSocket.on('return', $n._callReturn);
+			nSocket.on('event', $n._eventReceived);
 		}
 	},
     
@@ -43,7 +43,6 @@ var $n = {
 		$n._appStylesURL = appDefinition.appStylesURL;
 		$n._appAssetsURL = appDefinition.appAssetsURL;
 		$n._appFilesURL = appDefinition.appFilesURL;
-		$n._wsEndpoint = appDefinition.wsEndpoint;
 		$n._releaseMode = appDefinition.releaseMode;
 		$n._timeout = appDefinition.timeout;
 		
@@ -193,14 +192,14 @@ var $n = {
 	
 	_eventReceived: function(event) {
 		if(event.remote) {
-			$n.remote(event.host, event.port, event.secure, event.wsEndpoint).ns(event.ns)._triggerWatchers(event.event, event.data);
+			$n.remote(event.host, event.port, event.secure).ns(event.ns)._triggerWatchers(event.event, event.data);
 		} else {
 			$n.local.ns(event.ns)._triggerWatchers(event.event, event.data);
 		}
 	},
 	
-	_asRemoteClientURL: function(host, port, secure, wsEndpoint) {
-		return (secure ? 'https://' : 'http://') + host + ":" + port + wsEndpoint;
+	_asRemoteClientURL: function(host, port, secure) {
+		return (secure ? 'https://' : 'http://') + host + ":" + port;
 	},
 	
 	_remoteClientMap: {}
@@ -209,7 +208,7 @@ var $n = {
 $n.NS = function(namespace, wsSocket) {
 	var self = this;
 	self._namespace = namespace;
-	self.socketIO = wsSocket;
+	self.socket = wsSocket;
 	self._serverWatchMap = {};
 	
 	self.watch = function(event, handler) {
@@ -265,10 +264,10 @@ $n.NS = function(namespace, wsSocket) {
 	}
 }
 
-$n.RemoteNS = function(host, port, secure, wsEndpoint, namespace, wsSocket) {
+$n.RemoteNS = function(host, port, secure, namespace, wsSocket) {
 	var self = this;
 	self._namespace = namespace;
-	self.socketIO = wsSocket;
+	self.socket = wsSocket;
 	self._serverWatchMap = {};
 	
 	self.watch = function(event, handler, ackCallback) {
@@ -309,14 +308,13 @@ $n.RemoteNS = function(host, port, secure, wsEndpoint, namespace, wsSocket) {
 			host: host,
 			port: port,
 			secure: secure,
-			wsEndpoint: wsEndpoint,
 			ns: self._namespace,
 			event: event
 		};
 		
 		if(self._serverWatchMap[event].length < 2) {
 			$n.trackRequest(id, ackHandler);
-			self.socketIO.emit('watchRemote', request);
+			self.socket.emit('watchRemote', request);
 		} else {
 			cb();
 		}
@@ -356,7 +354,6 @@ $n.RemoteNS = function(host, port, secure, wsEndpoint, namespace, wsSocket) {
 			host: host,
 			port: port,
 			secure: secure,
-			wsEndpoint: wsEndpoint,
 			ns: self._namespace,
 			event: event
 		};
@@ -364,12 +361,12 @@ $n.RemoteNS = function(host, port, secure, wsEndpoint, namespace, wsSocket) {
 		if(!event) {
 			self._serverWatchMap = {};
 			$n.trackRequest(id, cb);
-			self.socketIO.emit('unwatchRemote', unwatchRequest);
+			self.socket.emit('unwatchRemote', unwatchRequest);
 		} else if(!handler) {
 			if(self._serverWatchMap[event]) {
 				delete self._serverWatchMap[event];
 				$n.trackRequest(id, cb);
-				self.socketIO.emit('unwatchRemote', unwatchRequest);
+				self.socket.emit('unwatchRemote', unwatchRequest);
 			}
 		} else {
 			if(self._serverWatchMap[event]) {
@@ -378,7 +375,7 @@ $n.RemoteNS = function(host, port, secure, wsEndpoint, namespace, wsSocket) {
 				});
 				if(self._serverWatchMap[event].length < 1) {
 					$n.trackRequest(id, cb);
-					self.socketIO.emit('unwatchRemote', unwatchRequest);
+					self.socket.emit('unwatchRemote', unwatchRequest);
 				} else {
 					cb();
 				}
@@ -426,23 +423,19 @@ $n.RemoteNS = function(host, port, secure, wsEndpoint, namespace, wsSocket) {
 	}
 }
 
-$n.remote = function(host, port, secure, wsEndpoint) {
-	if(!wsEndpoint) {
-		wsEndpoint = $n._wsEndpoint;
-	}
-	
+$n.remote = function(host, port, secure) {
 	secure = secure || false;
 	
-	var url = $n._asRemoteClientURL(host, port, secure, wsEndpoint);
+	var url = $n._asRemoteClientURL(host, port, secure);
 	
 	if(!$n._remoteClientMap.hasOwnProperty(url)) {
-		$n._remoteClientMap[url] = new (function(host, port, secure, wsEndpoint) {
+		$n._remoteClientMap[url] = new (function(host, port, secure) {
 			var self = this;
 			self._namespaces = {};
 			
 			self.ns = function(namespace) {
 				if(!self._namespaces[namespace]) {
-					self._namespaces[namespace] = new $n.RemoteNS(host, port, secure, wsEndpoint, namespace, $n.socketIO);
+					self._namespaces[namespace] = new $n.RemoteNS(host, port, secure, namespace, $n.socket);
 				}
 				return self._namespaces[namespace];
 			}
@@ -462,7 +455,6 @@ $n.remote = function(host, port, secure, wsEndpoint) {
 					host: host,
 					port: port,
 					secure: secure,
-					wsEndpoint: wsEndpoint,
 					sim: serverInterface,
 					method: method
 				};
@@ -490,7 +482,7 @@ $n.remote = function(host, port, secure, wsEndpoint) {
 				
 				$n._callTracker[id] = {callback: callback, timeout: timeout};
 				
-				$n.socketIO.emit('remoteCall', request);
+				$n.socket.emit('remoteCall', request);
 			}
 			
 			self.watch = function() {
@@ -504,12 +496,12 @@ $n.remote = function(host, port, secure, wsEndpoint) {
 			self.unwatch = function() {
 				self._mainNamespace.unwatch.apply(null, arguments);
 			}
-		})(host, port, secure, wsEndpoint);
+		})(host, port, secure);
 	}
 	
 	return $n._remoteClientMap[url];
 }
-	
+
 $n.local = new (function($n) {
 	var self = this;
 	self._namespaces = {};
@@ -517,7 +509,7 @@ $n.local = new (function($n) {
 	
 	self.ns = function(namespace) {
 		if(!self._namespaces[namespace]) {
-			self._namespaces[namespace] = new $n.NS(namespace, $n.socketIO);
+			self._namespaces[namespace] = new $n.NS(namespace, $n.socket);
 		}
 		return self._namespaces[namespace];
 	}
@@ -562,7 +554,7 @@ $n.local = new (function($n) {
 		
 		$n._callTracker[id] = {callback: callback, timeout: timeout};
 		
-		$n.socketIO.emit('localCall', request);
+		$n.socket.emit('localCall', request);
 	}
 	
 	self.watch = function() {

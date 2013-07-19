@@ -13,8 +13,8 @@ var portScanner = require('portscanner');
 var crypto = require('crypto');
 var EventEmitter = require('events').EventEmitter;
 var domain = require('domain');
-var fork = require('child_process').fork;
-var Master = function() {
+var fork = require('child_process').fork;
+var Master = function () {
 	var self = this;
 	this.EVENT_FAIL = 'fail';
 	this.errorDomain = domain.create();
@@ -23,9 +23,8 @@ var Master = function() {
 	});
 	this.errorDomain.add(this);
 	this.start = this.errorDomain.bind(this._start);
-	this.start = this._start;
-};
-Master.prototype = Object.create(EventEmitter.prototype);
+};
+Master.prototype = Object.create(EventEmitter.prototype);
 Master.prototype.errorHandler = function(err) {
 	this.emit(this.EVENT_FAIL, err);
 	if(err.stack) {
@@ -33,7 +32,7 @@ Master.prototype.errorHandler = function(err) {
 	} else {
 		console.log(err);
 	}
-};
+};
 Master.prototype._start = function (options) {
 	var self = this;
 	
@@ -200,7 +199,7 @@ Master.prototype._start = function (options) {
 		}
 		
 		return newURL;
-	}
+	};
 	
 	var updateCSSBundle = function() {
 		var cssBundle = styleBundle.bundle(cssURLFilter);
@@ -218,7 +217,7 @@ Master.prototype._start = function (options) {
 			self._workers[i].send({action: 'updateCache', data: data});
 		}
 		bundles[appDef.appStyleBundleURL] = cssBundle;
-	}
+	};
 	
 	var templatePaths = [];
 	
@@ -242,7 +241,7 @@ Master.prototype._start = function (options) {
 			self._workers[i].send({action: 'updateCache', data: data});
 		}
 		bundles[appDef.appTemplateBundleURL] = htmlBundle;
-	}
+	};
 	
 	var libPaths = [];
 	var jsLibCodes = {};
@@ -276,7 +275,7 @@ Master.prototype._start = function (options) {
 			};
 			self._workers[i].send({action: 'updateCache', data: data});
 		}
-	}
+	};
 	
 	var updateLibBundle = function (event, filePath) {
 		if (event == 'delete') {
@@ -285,7 +284,7 @@ Master.prototype._start = function (options) {
 			jsLibCodes[filePath] = fs.readFileSync(filePath, 'utf8');
 		}
 		makeLibBundle();
-	}
+	};
 	
 	var bundleOptions = {debug: !this._options.release, watch: !this._options.release, exports: 'require'};
 	var scriptBundle = browserify(bundleOptions);
@@ -308,16 +307,16 @@ Master.prototype._start = function (options) {
 			self._workers[i].send({action: 'updateCache', data: data});
 		}
 		callback && callback();
-	}
+	};
 	
 	var initBundles = function (callback) {
 		updateCSSBundle();
 		updateTemplateBundle();
 		makeLibBundle();
 		updateScriptBundle(callback);
-	}
+	};
 	
-	var autoRebundle = function() {		
+	var autoRebundle = function() {
 		// The master process does not handle requests so it's OK to do sync operations at runtime
 		styleBundle.on('bundle', function() {
 			updateCSSBundle();
@@ -335,7 +334,7 @@ Master.prototype._start = function (options) {
 		scriptBundle.on('bundle', function() {
 			updateScriptBundle();
 		});
-	}
+	};
 	
 	var minifiedScripts = scriptManager.minifyScripts(this._options.minifyURLs);
 	
@@ -382,7 +381,7 @@ Master.prototype._start = function (options) {
 							console.log();
 							firstTime = false;
 						}
-					}
+					};
 					
 					var launchWorker = function (port, lead) {
 						var i;
@@ -427,7 +426,7 @@ Master.prototype._start = function (options) {
 						});												worker.on('exit', function (code, signal) {							var message = '   Worker ' + worker.id + ' died - Exit code: ' + code;														if (signal) {								message += ', signal: ' + signal;							}														var newWorkers = [];							var i;							for (i in self._workers) {								if (self._workers[i].id != worker.id) {									newWorkers.push(self._workers[i]);								}							}														self._workers = newWorkers;														var lead = worker.id == leaderId;							leaderId = -1;														console.log(message);														if (self._options.release) {								console.log('   Respawning worker');								launchWorker(lead);							} else {								if (self._workers.length <= 0) {									console.log('   All workers are dead - nCombo is shutting down');									process.exit();								}							}						});
 						
 						return worker;
-					}
+					};
 					
 					var launchWorkers = function() {
 						initBundles(function() {
@@ -440,21 +439,21 @@ Master.prototype._start = function (options) {
 								!self._options.release && autoRebundle();
 							}
 						});
-					}
+					};
 					
 					launchWorkers();
 				});
 			});
 		}
 	});
-};
+};
 Master.prototype._cloneObject = function (object) {
 	var clone = {};
 	for (var i in object) {
 		clone[i] = object[i];
 	}
 	return clone;
-};
+};
 Master.prototype.colorText = function (message, color) {
 	if (this._colorCodes[color]) {
 		return '\033[0;' + this._colorCodes[color] + 'm' + message + '\033[0m';
@@ -462,9 +461,9 @@ Master.prototype.colorText = function (message, color) {
 		return '\033[' + color + 'm' + message + '\033[0m';
 	}
 	return message;
-};
+};
 Master.prototype._getAppDef = function(useInternalURLs) {
-	var appDef = {};
+	var appDef = {};	
 	if(useInternalURLs) {
 		appDef.appURL = this._paths.appInternalURL;
 		appDef.ioResource = this._paths.ioResourceExternalURL;
@@ -500,15 +499,15 @@ Master.prototype._getAppDef = function(useInternalURLs) {
 	appDef.angularMainModule = this._options.angularMainModule;
 	
 	return appDef;
-};
+};
 Master.prototype._normalizeURL = function (url) {
 	url = path.normalize(url);
 	return url.replace(/\\/g, '/');
 };
-Master.prototype.useScript = function (url, index) {
+Master.prototype.useScript = function (url, index) {
 	var normalURL = this._normalizeURL(url);
 	var filePath = pathManager.urlToPath(normalURL);
-	var obj = {};
+	var obj = {};	
 	if(!this._clientScriptMap[normalURL]) {
 		if (this._extRegex.test(url)) {
 			obj['url'] = normalURL;
@@ -525,7 +524,7 @@ Master.prototype.useScript = function (url, index) {
 		this._clientScriptMap[normalURL] = true;
 	}
 };
-Master.prototype.useStyle = function (url) {
+Master.prototype.useStyle = function (url) {
 	var normalURL = this._normalizeURL(url);
 	var filePath = pathManager.urlToPath(normalURL);
 	var obj = {};
@@ -538,7 +537,7 @@ Master.prototype.useStyle = function (url) {
 	}
 	this._clientStyles.push(obj);
 };
-Master.prototype.useTemplate = function (url) {
+Master.prototype.useTemplate = function (url) {
 	var normalURL = this._normalizeURL(url);
 	var filePath = pathManager.urlToPath(normalURL);
 	var obj = {};
@@ -552,49 +551,49 @@ Master.prototype.useTemplate = function (url) {
 	
 	this._clientTemplates.push(obj);
 };
-Master.prototype.bundle = {};	
+Master.prototype.bundle = {};	
 Master.prototype.bundle.app = {};
 Master.prototype.bundle.framework = {};
 Master.prototype.bundle.script = Master.prototype.useScript;
 Master.prototype.bundle.style = Master.prototype.useStyle;
 Master.prototype.bundle.template = Master.prototype.useTemplate;
-Master.prototype.bundle.asset = function (path) {
+Master.prototype.bundle.asset = function (path) {
 	var stats = fs.statSync(path);
 	var url = pathManager.expand(this._paths.appInternalURL + 'assets/' + name);
 	this._resourceSizes[url] = stats.size;
 	this._bundledResources.push(url);
 };
-Master.prototype.bundle.app.lib = function (name, index) {
+Master.prototype.bundle.app.lib = function (name, index) {
 	this.useScript(this._paths.appInternalURL + 'libs/' + name, index);
 };
-Master.prototype.bundle.app.template = function (name) {
+Master.prototype.bundle.app.template = function (name) {
 	this.useTemplate(this._paths.appInternalURL + 'templates/' + name);
 };
-Master.prototype.bundle.app.style = function (name) {
+Master.prototype.bundle.app.style = function (name) {
 	this.useStyle(this._paths.appInternalURL + 'styles/' + name);
 };
-Master.prototype.bundle.app.asset = function (name) {
+Master.prototype.bundle.app.asset = function (name) {
 	var stats = fs.statSync(this._paths.appDirPath + '/assets/' + name);
 	var url = pathManager.expand(this._paths.appInternalURL + 'assets/' + name);
 	this._resourceSizes[url] = stats.size;
 	this._bundledResources.push(url);
 };
-Master.prototype.bundle.framework.lib = function (name, index) {
+Master.prototype.bundle.framework.lib = function (name, index) {
 	this.useScript(this._paths.frameworkClientURL + 'libs/' + name, index);
 };
-Master.prototype.bundle.framework.script = function (name, index) {
+Master.prototype.bundle.framework.script = function (name, index) {
 	this.useScript(this._paths.frameworkClientURL + 'scripts/' + name, index);
 };
-Master.prototype.bundle.framework.plugin = function (name, index) {
+Master.prototype.bundle.framework.plugin = function (name, index) {
 	this.useScript(this._paths.frameworkClientURL + 'plugins/' + name, index);
 };
-Master.prototype.bundle.framework.style = function (name) {
+Master.prototype.bundle.framework.style = function (name) {
 	this.useStyle(this._paths.frameworkClientURL + 'styles/' + name);
 };
-Master.prototype.bundle.framework.asset = function (name) {
+Master.prototype.bundle.framework.asset = function (name) {
 	var stats = fs.statSync(this._paths.frameworkClientDirPath + '/assets/' + name);
 	var url = pathManager.expand(this._paths.frameworkClientURL + 'assets/' + name);
 	this._resourceSizes[url] = stats.size;
 	this._bundledResources.push(url);
 };
-module.exports = new Master();
+module.exports = new Master();

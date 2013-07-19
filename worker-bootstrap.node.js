@@ -1,8 +1,9 @@
 var Worker = require('./ncombo-worker.node');
+var worker;
 
 process.on('message', function (m) {
 	if (m.action == 'init') {
-		var worker = new Worker(m.data);
+		worker = new Worker(m.data);
 		var workerController = require(m.data.paths.appWorkerControllerPath);
 		workerController.run(worker);
 		worker.start();

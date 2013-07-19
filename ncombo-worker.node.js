@@ -18,8 +18,9 @@ var SmartCacheManager = require("./smartcachemanager").SmartCacheManager;
 var socketCluster = require('socketcluster');
 var retry = require('retry');
 var domain = require('domain');
+var conf = require('ncombo/configmanager');
 
-var Worker = function(options) {
+var Worker = function (options) {
 	var self = this;
 	
 	this.errorDomain = domain.create();
@@ -27,7 +28,11 @@ var Worker = function(options) {
 		self.errorHandler.apply(self, arguments);
 	});
 	this.errorDomain.add(this);
-	this.errorDomain.bind(this._init)(options);
+	
+	this.start = this.errorDomain.bind(this._start);
+	this.init = this.errorDomain.run(function() {
+		self._init(options);
+	});
 };
 
 Worker.prototype = Object.create(EventEmitter.prototype);
@@ -62,14 +67,16 @@ Worker.prototype._init = function (options) {
 	this.isLeader = this._options.lead;
 	this._bundles = this._options.bundles;
 	this._bundledResources = this._options.bundledResources;
+	this._resourceSizes = {};
+	this._minifiedScripts = this._options.minifiedScripts;
+	this._paths = this._options.paths;
+	
+	pathManager.init(this._paths.frameworkURL, this._paths.frameworkDirPath, this._paths.appDirPath, this._paths.appExternalURL);
 
 	var i;
 	for (i in this._options.resourceSizes) {
 		this._resourceSizes[pathManager.expand(i)] = this._options.resourceSizes[i];
 	}
-
-	this._minifiedScripts = this._options.minifiedScripts;
-	this._paths = this._options.paths;
 	
 	this._rootTemplateBody = fs.readFileSync(this._paths.frameworkClientDirPath + '/index.html', 'utf8');
 	this._rootTemplate = handlebars.compile(this._rootTemplateBody);
@@ -99,6 +106,16 @@ Worker.prototype._init = function (options) {
 		maxTimeout: 120000,
 		randomize: false
 	};
+	
+	this._prerouter = require('ncombo/router/prerouter.node.js');
+	this._headerAdder = require('ncombo/router/headeradder.node.js');
+	this._cacheResponder = require('ncombo/router/cacheresponder.node.js');
+	this._router = require('ncombo/router/router.node.js');
+	this._preprocessor = require('ncombo/router/preprocessor.node.js');
+	this._compressor = require('ncombo/router/compressor.node.js');
+	this._responder = require('ncombo/router/responder.node.js');
+	
+	this._fileUploader = require('ncombo/fileuploader');
 	
 	this._clusterEngine = require(this._options.clusterEngine);
 	
@@ -208,22 +225,12 @@ Worker.prototype._init = function (options) {
 	}
 	self._customSIMExtension =  self._config.customSIMExtension;
 	
-	this._prerouter = require('ncombo/router/prerouter.node.js');
-	this._headerAdder = require('ncombo/router/headeradder.node.js');
-	this._cacheResponder = require('ncombo/router/cacheresponder.node.js');
-	this._router = require('ncombo/router/router.node.js');
-	this._preprocessor = require('ncombo/router/preprocessor.node.js');
-	this._compressor = require('ncombo/router/compressor.node.js');
-	this._responder = require('ncombo/router/responder.node.js');
-	
-	this._fileUploader = require('ncombo/fileuploader');
-	
 	this._prerouter.init(this._options);
 	self._router.init(self._privateExtensionRegex);
 	self._preprocessor.init(self._options);
 	self._headerAdder.init(self._options);
 	
-	self._ioClusterClient = new self._options.clusterEngine.IOClusterClient({
+	self._ioClusterClient = new self._clusterEngine.IOClusterClient({
 		port: this._options.dataPort,
 		secretKey: this._options.dataKey,
 		handshakeExpiry: this._options.handshakeTimeout,
@@ -312,7 +319,7 @@ Worker.prototype._handleConnection = function (socket) {
 	});
 };
 
-Worker.prototype.start = function () {
+Worker.prototype._start = function () {
 	var self = this;
 	
 	if(self._options.protocol == 'http') {
@@ -363,7 +370,7 @@ Worker.prototype.start = function () {
 	this._socketServer.on('connection', self._handleConnection.bind(self));
 	
 	var salt = crypto.randomBytes(32).toString('hex');
-	shasum.update(dataKey + salt);
+	shasum.update(this._options.dataKey + salt);
 	var hashedKey = shasum.digest('hex');
 	ws.init(hashedKey);
 	gateway.init(self._paths.appDirPath + '/sims/', self._customSIMExtension);

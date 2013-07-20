@@ -1,6 +1,7 @@
 var http = require('http');
 var https = require('https');
 var pathManager = require('ncombo/pathmanager');
+var scriptManager = require('ncombo/scriptmanager');
 var fs = require('fs');
 var url = require('url');
 var querystring = require('querystring');
@@ -12,6 +13,7 @@ var crypto = require('crypto');
 var ws = require('ncombo/webservice');
 var gateway = require('ncombo/gateway');
 var mime = require('mime');
+var path = require('path');
 var pathManager = require('ncombo/pathmanager');
 var EventEmitter = require('events').EventEmitter;
 var SmartCacheManager = require("./smartcachemanager").SmartCacheManager;
@@ -48,8 +50,8 @@ Worker.prototype._init = function (options) {
 	this.MIDDLEWARE_GET = 'get';
 	this.MIDDLEWARE_POST = 'post';
 	
-	this.MIDDLEWARE_LOCAL_EXEC = 'localExec';
-	this.MIDDLEWARE_REMOTE_EXEC = 'remoteExec';
+	this.MIDDLEWARE_LOCAL_CALL = 'localCall';
+	this.MIDDLEWARE_REMOTE_CALL = 'remoteCall';
 	this.MIDDLEWARE_REMOTE_WATCH = 'remoteWatch';
 	this.MIDDLEWARE_REMOTE_UNWATCH = 'remoteUnwatch';
 	
@@ -67,12 +69,37 @@ Worker.prototype._init = function (options) {
 	this.isLeader = this._options.lead;
 	this._bundles = this._options.bundles;
 	this._bundledResources = this._options.bundledResources;
+	
 	this._resourceSizes = {};
 	this._minifiedScripts = this._options.minifiedScripts;
+	
+	this._prerouter = require('ncombo/router/prerouter.node.js');
+	this._headerAdder = require('ncombo/router/headeradder.node.js');
+	this._cacheResponder = require('ncombo/router/cacheresponder.node.js');
+	this._router = require('ncombo/router/router.node.js');
+	this._preprocessor = require('ncombo/router/preprocessor.node.js');
+	this._compressor = require('ncombo/router/compressor.node.js');
+	this._responder = require('ncombo/router/responder.node.js');
+	
+	if(self._options.release) {
+		for(j in self._minifiedScripts) {
+			cache.set(cache.ENCODING_PLAIN, j, self._minifiedScripts[j]);
+			self._cacheResponder.setUnrefreshable(j);
+		}
+	}
+	
+	for(j in self._bundles) {
+		cache.set(cache.ENCODING_PLAIN, j, self._bundles[j]);
+		self._cacheResponder.setUnrefreshable(j);
+	}
+	
 	this._paths = this._options.paths;
 	
 	pathManager.init(this._paths.frameworkURL, this._paths.frameworkDirPath, this._paths.appDirPath, this._paths.appExternalURL);
-
+	pathManager.setBaseURL(this._paths.appExternalURL);
+	scriptManager.init(self._paths.frameworkURL, self._paths.appExternalURL, this._options.minifyMangle);
+	scriptManager.setBaseURL(this._paths.appExternalURL);
+	
 	var i;
 	for (i in this._options.resourceSizes) {
 		this._resourceSizes[pathManager.expand(i)] = this._options.resourceSizes[i];
@@ -106,14 +133,6 @@ Worker.prototype._init = function (options) {
 		maxTimeout: 120000,
 		randomize: false
 	};
-	
-	this._prerouter = require('ncombo/router/prerouter.node.js');
-	this._headerAdder = require('ncombo/router/headeradder.node.js');
-	this._cacheResponder = require('ncombo/router/cacheresponder.node.js');
-	this._router = require('ncombo/router/router.node.js');
-	this._preprocessor = require('ncombo/router/preprocessor.node.js');
-	this._compressor = require('ncombo/router/compressor.node.js');
-	this._responder = require('ncombo/router/responder.node.js');
 	
 	this._fileUploader = require('ncombo/fileuploader');
 	
@@ -200,11 +219,11 @@ Worker.prototype._init = function (options) {
 	
 	self._middleware[self.MIDDLEWARE_HTTP].setTail(self._routStepper);
 	
-	self._middleware[self.MIDDLEWARE_LOCAL_EXEC] = stepper.create({context: self});
-	self._middleware[self.MIDDLEWARE_LOCAL_EXEC].setTail(gateway.exec);
+	self._middleware[self.MIDDLEWARE_LOCAL_CALL] = stepper.create({context: self});
+	self._middleware[self.MIDDLEWARE_LOCAL_CALL].setTail(gateway.exec);
 	
-	self._middleware[self.MIDDLEWARE_REMOTE_EXEC] = stepper.create({context: self});
-	self._middleware[self.MIDDLEWARE_REMOTE_EXEC].setTail(ws.exec);
+	self._middleware[self.MIDDLEWARE_REMOTE_CALL] = stepper.create({context: self});
+	self._middleware[self.MIDDLEWARE_REMOTE_CALL].setTail(ws.exec);
 	
 	self._middleware[self.MIDDLEWARE_REMOTE_WATCH] = stepper.create({context: self});
 	self._middleware[self.MIDDLEWARE_REMOTE_WATCH].setTail(ws.watch);
@@ -265,10 +284,9 @@ Worker.prototype._handleConnection = function (socket) {
 	
 	socket.global = socket.global.ns(nComboNamespace);
 	socket.session = socket.session.ns(nComboNamespace);
-	socket.socket = socket.socket.ns(nComboNamespace);
 	
-	var remoteAddress = socket.handshake.address;
-	var auth = socket.handshake.auth;
+	var remoteAddress = socket.address;
+	var auth = socket.auth;
 	
 	self.emit(self.EVENT_SOCKET_CONNECT, socket);
 	
@@ -283,18 +301,18 @@ Worker.prototype._handleConnection = function (socket) {
 	}
 	
 	// handle local server interface call
-	socket.on('localExec', function(request) {
+	socket.on('localCall', function(request) {
 		var req = new IORequest(request, socket, socket.session, self.global, remoteAddress, secure);
 		var res = new IOResponse(request, socket);
-		self._middleware[self.MIDDLEWARE_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_EXEC]);
+		self._middleware[self.MIDDLEWARE_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_CALL]);
 		self._middleware[self.MIDDLEWARE_IO].run(req, res);
 	});
 	
 	// handle remote interface call
-	socket.on('remoteExec', function(request) {
+	socket.on('remoteCall', function(request) {
 		var req = new IORequest(request, socket, socket.session, self.global, remoteAddress, request.secure);
 		var res = new IOResponse(request, socket);
-		self._middleware[self.MIDDLEWARE_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_EXEC]);
+		self._middleware[self.MIDDLEWARE_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_CALL]);
 		self._middleware[self.MIDDLEWARE_IO].run(req, res);
 	});
 	
@@ -339,8 +357,8 @@ Worker.prototype._start = function () {
 	this._socketServer = socketCluster.attach(this._server, {
 		ioClusterClient: this._ioClusterClient,
 		transports: this._options.transports,
-		pingTimeout: Math.round(this._options.heartbeatTimeout),
-		pingInterval: Math.round(this._options.heartbeatInterval),
+		pingTimeout: this._options.heartbeatTimeout,
+		pingInterval: this._options.heartbeatInterval,
 		upgradeTimeout: this._options.handshakeTimeout
 	});
 	
@@ -360,7 +378,7 @@ Worker.prototype._start = function () {
 		self._server.on('upgrade', oldUpgradeListeners[i]);
 	}
 	
-	self._server.listen(self._options.port);
+	self._server.listen(self._options.workerPort);
 	self.global = self._ioClusterClient.global();
 
 	gateway.setReleaseMode(self._options.release);
@@ -519,7 +537,7 @@ Worker.prototype._sessionHandler = function(req, res, next) {
 								var template = handlebars.compile(data.toString());
 								data = template({cacheVersion: '*/ = ' + cacheVersion + ' /*'});
 							} else if(url == self._paths.frameworkURL + 'session.js') {
-								var appDef = self._getAppDef();
+								var appDef = self._options.appDef;
 								
 								if(self._resourceSizes[appDef.appStyleBundleURL] <= 0) {
 									delete appDef.appStyleBundleURL;
@@ -575,13 +593,14 @@ Worker.prototype._prepareHTTPHandler = function(req, res, next) {
 };
 
 Worker.prototype._faviconHandler = function(req, res, next) {
+	var self = this;
 	var iconPath = this._paths.appDirPath + '/assets/favicon.gif';
 	
 	if(req.url == '/favicon.ico') {
 		fs.readFile(iconPath, function(err, data) {
 			if(err) {
 				if(err.code == 'ENOENT') {
-					iconPath = this._paths.frameworkClientDirPath + '/assets/favicon.gif';
+					iconPath = self._paths.frameworkClientDirPath + '/assets/favicon.gif';
 					fs.readFile(iconPath, function(err, data) {
 						if(err) {
 							if(err.code == 'ENOENT') {
@@ -592,7 +611,7 @@ Worker.prototype._faviconHandler = function(req, res, next) {
 								res.end();
 							}
 						} else {
-							this._setFileResponseHeaders(res, iconPath);
+							self._applyFileResponseHeaders(res, iconPath);
 							res.writeHead(200);
 							res.end(data);
 						}
@@ -602,7 +621,7 @@ Worker.prototype._faviconHandler = function(req, res, next) {
 					res.end();
 				}
 			} else {
-				this._setFileResponseHeaders(res, iconPath);
+				self._applyFileResponseHeaders(res, iconPath);
 				res.writeHead(200);
 				res.end(data);
 			}
@@ -648,6 +667,11 @@ Worker.prototype._applyFileResponseHeaders = function(res, filePath, mimeType, f
 	}
 	
 	res.setHeader('Content-Type', mimeType);
+};
+
+Worker.prototype._normalizeURL = function (url) {
+	url = path.normalize(url);
+	return url.replace(/\\/g, '/');
 };
 
 Worker.prototype._createScriptCodeTag = function(code, type) {

@@ -46,7 +46,7 @@ Master.prototype._start = function (options) {
 		angularMainTemplate: 'index.html',
 		protocol: 'http',
 		protocolOptions: {},
-		transports: ['websocket'],
+		//transports: ['polling', 'websocket'],		transports: ['polling'],
 		logLevel: 1,
 		connectTimeout: 10,
 		handshakeTimeout: 10,
@@ -75,7 +75,7 @@ Master.prototype._start = function (options) {
 	self._extRegex = /[.][^\/\\]*$/;
 	self._slashSequenceRegex = /\/+/g;
 	self._startSlashRegex = /^\//;
-	
+		self._bundledResources = [];	self._resourceSizes = {};	
 	self._paths = {};
 	
 	self._paths.frameworkURL = '/~framework/';
@@ -102,9 +102,6 @@ Master.prototype._start = function (options) {
 	self._paths.timeCacheExternalURL = self._paths.appExternalURL + '~timecache';
 	self._paths.timeCacheInternalURL = self._paths.appInternalURL + '~timecache';
 	
-	self._paths.ioResourceExternalURL = self._paths.appExternalURL + 'socket.io';
-	self._paths.ioResourceInternalURL = self._paths.appInternalURL + 'socket.io';
-	
 	pathManager.init(self._paths.frameworkURL, self._paths.frameworkDirPath, self._paths.appDirPath, self._paths.appExternalURL);
 	
 	if(this._options.angular) {
@@ -114,9 +111,8 @@ Master.prototype._start = function (options) {
 	scriptManager.init(self._paths.frameworkURL, self._paths.appExternalURL, this._options.minifyMangle);
 	
 	pathManager.setBaseURL(this._paths.appExternalURL);
-	scriptManager.setBaseURL(this._paths.appExternalURL);
-	
-	self._paths.frameworkSocketIOClientURL = self._paths.appExternalURL + 'socket.io/socket.io.js';
+	scriptManager.setBaseURL(this._paths.appExternalURL);	
+	self._paths.frameworkSocketIOClientURL = self._paths.frameworkModulesURL + 'socketcluster-client/socketcluster.js';
 	
 	self._minAddressSocketLimit = 30;
 	self._dataExpiryAccuracy = 5000;
@@ -398,10 +394,9 @@ Master.prototype._start = function (options) {
 						
 						var worker = fork(__dirname + '/worker-bootstrap.node');
 						
-						var workerOpts = self._cloneObject(self._options);
+						var workerOpts = self._cloneObject(self._options);						workerOpts.appDef = self._getAppDef();
 						workerOpts.paths = self._paths;
-						workerOpts.workerId = worker.id;
-						workerOpts.port = port;
+						workerOpts.workerId = worker.id;						workerOpts.workerPort = port;
 						workerOpts.dataPort = dataPort;
 						workerOpts.dataKey = pass;
 						workerOpts.minifiedScripts = minifiedScripts;
@@ -466,10 +461,8 @@ Master.prototype._getAppDef = function(useInternalURLs) {
 	var appDef = {};	
 	if(useInternalURLs) {
 		appDef.appURL = this._paths.appInternalURL;
-		appDef.ioResource = this._paths.ioResourceExternalURL;
 	} else {
 		appDef.appURL = this._paths.appExternalURL;
-		appDef.ioResource = this._paths.ioResourceExternalURL.replace(this._startSlashRegex, '');
 	}
 	
 	appDef.frameworkURL = this._paths.frameworkURL;

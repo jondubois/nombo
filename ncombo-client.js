@@ -7,7 +7,6 @@ var $n = {
 	_timeout: 10000,
 	_appURL: null,
 	_curID: 1,
-	_callTracker: {},
 	_frameworkURL: null,
 	_jsLibsURL: null,
 	_frameworkStylesURL: null,
@@ -24,11 +23,7 @@ var $n = {
 	
 	initIO: function() {
 		$n.socket = NCOMBO_SOCKET;
-		if($n.socket) {
-			var nSocket = $n.socket.ns('__nc');
-			nSocket.on('return', $n._callReturn);
-			nSocket.on('event', $n._eventReceived);
-		}
+		$n.local = new $n.LocalInterface($n.socket);
 	},
     
 	init: function() {
@@ -51,7 +46,6 @@ var $n = {
 		$n._cacheVersion = NCOMBO_CACHE_VERSION;
 		
 		$n.initIO();
-		$n.local.init();
 		
 		$n.ready(function() {
 			if(appDefinition.angular && appDefinition.angularMainTemplate) {
@@ -170,34 +164,6 @@ var $n = {
 	
 	serverInterfaceDescription: {},
 	
-	_callReturn: function(data) {
-		var id = data.id;
-		if($n._callTracker[id]) {
-			if($n._callTracker[id].timeout) {
-				clearTimeout($n._callTracker[id].timeout);
-			}
-			if(!data.noValue && $n._callTracker[id].callback) {
-				var finish = data.close ? true : false;
-				$n._callTracker[id].callback(data.error, data.value, finish);
-			}
-			if(data.close) {
-				delete $n._callTracker[id];
-			}
-		}
-	},
-	
-	trackRequest: function(id, callback) {
-		$n._callTracker[id] = {callback: callback};
-	},
-	
-	_eventReceived: function(event) {
-		if(event.remote) {
-			$n.remote(event.host, event.port, event.secure).ns(event.ns)._triggerWatchers(event.event, event.data);
-		} else {
-			$n.local.ns(event.ns)._triggerWatchers(event.event, event.data);
-		}
-	},
-	
 	_asRemoteClientURL: function(host, port, secure) {
 		return (secure ? 'https://' : 'http://') + host + ":" + port;
 	},
@@ -205,62 +171,60 @@ var $n = {
 	_remoteClientMap: {}
 };
 
-$n.NS = function(namespace, wsSocket) {
+$n.LocalInterface = function(wsSocket, namespace) {
 	var self = this;
-	self._namespace = namespace;
-	self.socket = wsSocket;
+	self.namespace = namespace || '__';
+	self.socket = wsSocket.ns(self.namespace);
 	self._serverWatchMap = {};
 	
-	self.watch = function(event, handler) {
-		if(!self._serverWatchMap.hasOwnProperty(event)) {
-			self._serverWatchMap[event] = [];
-		}
-		self._serverWatchMap[event].push(handler);
+	self.ns = function (namespace) {
+		return new $n.LocalInterface(self.socket, namespace);
 	}
 	
-	self.unwatch = function(event, handler) {		
-		if(!event) {
-			self._serverWatchMap = {};
-		} else if(!handler) {
-			delete self._serverWatchMap[event];
-		} else if(self._serverWatchMap[event]) {
-			self._serverWatchMap[event] = $.grep(self._serverWatchMap[event], function(element, index) {
-				return element != handler;
-			});
-		}
-	}
-	
-	self._getWatcher = function(event, handler) {
-		if(self._serverWatchMap[event]) {
-			var watchers = self._serverWatchMap[event];
-			if(handler) {
-				var len = watchers.length;
-				var i;
-				for(i=0; i<len; i++) {
-					if(watchers[i] == handler) {
-						return watchers[i];
-					}
-				}
+	self.exec = function () {
+		var serverInterface = arguments[0];
+		var method = arguments[1];
+		var callback = null;
+		
+		var request = {
+			sim: serverInterface,
+			method: method
+		};
+		
+		if(arguments[3]) {
+			request.data = arguments[2];
+			callback = arguments[3];
+		} else if(arguments[2] !== undefined) {
+			if(arguments[2] instanceof Function) {
+				callback = arguments[2];
 			} else {
-				return watchers;
+				request.data = arguments[2];
 			}
 		}
-		return null;
-	}
-	
-	self.isWatching = function(event, handler) {
-		return self._getWatcher(event, handler) ? true : false;
-	}
-	
-	self._triggerWatchers = function(event, data) {
-		if(self._serverWatchMap && self._serverWatchMap[event]) {
-			var watchers = self._serverWatchMap[event];
-			var len = watchers.length;
-			var i;
-			for(i=0; i<len; i++) {
-				watchers[i].call(null, data);
-			}
+		
+		if (callback) {
+			self.socket.emit('localCall', request, function (res) {
+				callback(res.error, res.data);
+			});
+		} else {
+			self.socket.emit('localCall', request);
 		}
+	}
+	
+	self.watch = function (event, handler) {
+		self.socket.on(event, handler);
+	}
+	
+	self.unwatch = function (event, handler) {
+		if (event && handler) {
+			self.socket.removeListener(event, handler);
+		} else {
+			self.socket.removeAllListeners(event);
+		}
+	}
+	
+	self.watchers = function (event) {
+		self.socket.listeners(event);
 	}
 }
 
@@ -501,78 +465,6 @@ $n.remote = function(host, port, secure) {
 	
 	return $n._remoteClientMap[url];
 }
-
-$n.local = new (function($n) {
-	var self = this;
-	self._namespaces = {};
-	self._mainNamespace = null;
-	
-	self.ns = function(namespace) {
-		if(!self._namespaces[namespace]) {
-			self._namespaces[namespace] = new $n.NS(namespace, $n.socket);
-		}
-		return self._namespaces[namespace];
-	}
-	
-	self.init = function() {
-		self._mainNamespace = self.ns('__main');
-	}
-	
-	self.exec = function() {
-		var serverInterface = arguments[0];
-		var method = arguments[1];
-		var id = $n._genID();
-		var callback = null;
-		var timeout = null;
-		
-		var request = {
-			id: id,
-			sim: serverInterface,
-			method: method
-		};
-		
-		if(arguments[3]) {
-			request.data = arguments[2];
-			callback = arguments[3];
-		} else if(arguments[2] !== undefined) {
-			if(arguments[2] instanceof Function) {
-				callback = arguments[2];
-			} else {
-				request.data = arguments[2];
-			}
-		}
-		if(callback) {
-			timeout = setTimeout(function() {
-				if($n._callTracker[id]) {
-					delete $n._callTracker[id];
-				}
-				if(callback) {
-					callback('Local exec call timed out', null, true);
-				}
-			}, $n._timeout);
-		}
-		
-		$n._callTracker[id] = {callback: callback, timeout: timeout};
-		
-		$n.socket.emit('localCall', request);
-	}
-	
-	self.watch = function() {
-		self._mainNamespace.watch.apply(null, arguments);
-	}
-	
-	self.watchOnce = function() {
-		self._mainNamespace.watchOnce.apply(null, arguments);
-	}
-	
-	self.unwatch = function() {
-		self._mainNamespace.unwatch.apply(null, arguments);
-	}
-	
-	self.isWatching = function() {
-		return self._mainNamespace.isWatching.apply(null, arguments);
-	}
-})($n);
 
 /*
 	registerPlugin(name, plugin)

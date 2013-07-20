@@ -51,9 +51,6 @@ Worker.prototype._init = function (options) {
 	this.MIDDLEWARE_POST = 'post';
 	
 	this.MIDDLEWARE_LOCAL_CALL = 'localCall';
-	this.MIDDLEWARE_REMOTE_CALL = 'remoteCall';
-	this.MIDDLEWARE_REMOTE_WATCH = 'remoteWatch';
-	this.MIDDLEWARE_REMOTE_UNWATCH = 'remoteUnwatch';
 	
 	this.EVENT_WORKER_START = 'workerstart';
 	this.EVENT_LEADER_START = 'leaderstart';
@@ -64,6 +61,8 @@ Worker.prototype._init = function (options) {
 	this.EVENT_FAIL = 'fail';
 	
 	this._options = options;
+	
+	this._options.secure = this._options.protocol == 'https';
 	
 	this.id = this._options.workerId;
 	this.isLeader = this._options.lead;
@@ -145,7 +144,7 @@ Worker.prototype._init = function (options) {
 	self._middleware[self.MIDDLEWARE_HTTP] = stepper.create({context: self});
 	self._middleware[self.MIDDLEWARE_HTTP].addFunction(self._prepareHTTPHandler);
 	
-	self._middleware[self.MIDDLEWARE_SOCKET_IO] = stepper.create({context: self});
+	self._middleware[self.MIDDLEWARE_IO] = stepper.create({context: self});
 	
 	self._responseNotSentValidator = function(req, res) {
 		return req && res && !res.finished;
@@ -222,15 +221,6 @@ Worker.prototype._init = function (options) {
 	self._middleware[self.MIDDLEWARE_LOCAL_CALL] = stepper.create({context: self});
 	self._middleware[self.MIDDLEWARE_LOCAL_CALL].setTail(gateway.exec);
 	
-	self._middleware[self.MIDDLEWARE_REMOTE_CALL] = stepper.create({context: self});
-	self._middleware[self.MIDDLEWARE_REMOTE_CALL].setTail(ws.exec);
-	
-	self._middleware[self.MIDDLEWARE_REMOTE_WATCH] = stepper.create({context: self});
-	self._middleware[self.MIDDLEWARE_REMOTE_WATCH].setTail(ws.watch);
-	
-	self._middleware[self.MIDDLEWARE_REMOTE_UNWATCH] = stepper.create({context: self});
-	self._middleware[self.MIDDLEWARE_REMOTE_UNWATCH].setTail(ws.unwatch);
-	
 	mime.define({
 		'text/css': ['less'],
 		'text/html': ['handlebars']
@@ -301,34 +291,10 @@ Worker.prototype._handleConnection = function (socket) {
 	}
 	
 	// handle local server interface call
-	socket.on('localCall', function(request) {
-		var req = new IORequest(request, socket, socket.session, self.global, remoteAddress, secure);
-		var res = new IOResponse(request, socket);
+	socket.on('localCall', function(request, responder) {
+		var req = new IORequest(request, socket, socket.session, self.global, remoteAddress, self._options.secure);
+		var res = new IOResponse(request, socket, responder);
 		self._middleware[self.MIDDLEWARE_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_CALL]);
-		self._middleware[self.MIDDLEWARE_IO].run(req, res);
-	});
-	
-	// handle remote interface call
-	socket.on('remoteCall', function(request) {
-		var req = new IORequest(request, socket, socket.session, self.global, remoteAddress, request.secure);
-		var res = new IOResponse(request, socket);
-		self._middleware[self.MIDDLEWARE_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_CALL]);
-		self._middleware[self.MIDDLEWARE_IO].run(req, res);
-	});
-	
-	// watch remote server events
-	socket.on('watchRemote', function(request) {
-		var req = new IORequest(request, socket, socket.session, self.global, remoteAddress, request.secure);
-		var res = new IOResponse(request, socket);
-		self._middleware[self.MIDDLEWARE_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_WATCH]);
-		self._middleware[self.MIDDLEWARE_IO].run(req, res);
-	});
-	
-	// unwatch remote server events
-	socket.on('unwatchRemote', function(request) {
-		var req = new IORequest(request, socket, socket.session, self.global, remoteAddress, secure);
-		var res = new IOResponse(request, socket);
-		self._middleware[self.MIDDLEWARE_IO].setTail(self._middleware[self.MIDDLEWARE_REMOTE_UNWATCH]);
 		self._middleware[self.MIDDLEWARE_IO].run(req, res);
 	});
 	
@@ -705,62 +671,49 @@ function IORequest(req, socket, session, global, remoteAddress, secure) {
 	this.session = session;
 	this.global = global;
 	this.remote = this.remote || false;
-	this.xdomain = socket.handshake.xdomain;
 	this.remoteAddress = remoteAddress;
 	this.secure = secure;
 	this.socket = socket;
 };
 
-function IOResponse(req, socket, global, remoteAddress, secure) {
+function IOResponse(req, socket, responder) {
 	var self = this;
 	var i;
 	for(i in req) {
 		self[i] = req[i];
 	}
+	id;
 	self.socket = socket.ns('__nc');
 	self.open = true;
 	
-	self._emitReturn = function(data) {
+	var emitReturn = function(data) {
 		if(self.open) {
-			self.socket.emit('return', data);
+			responder(data);
+			self.open = false;
 		} else {
 			throw new Error("Exception: IO response has already been closed");
 		}
-		if(data.close) {
-			self.open = false;
-		}
-	}
-	
-	self.write = function(data) {
-		self._emitReturn({id: self.id, value: data});
 	}
 	
 	self.end = function(data) {
-		self._emitReturn({id: self.id, value: data, close: 1});
+		emitReturn({data: data);
 	}
 	
-	self.warn = function(data) {
+	self.error = function(error, data) {
 		var err;
-		if(data instanceof Error) {
-			err = {name: data.name, message: data.message, stack: data.stack};			
+		if(error instanceof Error) {
+			err = {name: error.name, message: error.message, stack: error.stack};			
 		} else {
-			err = data;
+			err = error;
 		}
-		self._emitReturn({id: self.id, error: err});
-	}
-	
-	self.error = function(data) {
-		var err;
-		if(data instanceof Error) {
-			err = {name: data.name, message: data.message, stack: data.stack};			
-		} else {
-			err = data;
+		
+		var errorObject = {
+			error: err
+		};
+		if (data) {
+			errorObject.data = data;
 		}
-		self._emitReturn({id: self.id, error: err, close: 1});
-	}
-	
-	self.kill = function() {
-		self._emitReturn({id: self.id, close: 1, noValue: 1});
+		emitReturn(errorObject);
 	}
 };
 

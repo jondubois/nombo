@@ -291,9 +291,9 @@ Worker.prototype._handleConnection = function (socket) {
 	}
 	
 	// handle local server interface call
-	socket.on('localCall', function(request, responder) {
+	socket.on('localCall', function(request, response) {
 		var req = new IORequest(request, socket, socket.session, self.global, remoteAddress, self._options.secure);
-		var res = new IOResponse(request, socket, responder);
+		var res = new IOResponse(request, response);
 		self._middleware[self.MIDDLEWARE_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_CALL]);
 		self._middleware[self.MIDDLEWARE_IO].run(req, res);
 	});
@@ -676,44 +676,19 @@ function IORequest(req, socket, session, global, remoteAddress, secure) {
 	this.socket = socket;
 };
 
-function IOResponse(req, socket, responder) {
+function IOResponse(req, res) {
 	var self = this;
 	var i;
 	for(i in req) {
 		self[i] = req[i];
 	}
-	id;
-	self.socket = socket.ns('__nc');
-	self.open = true;
-	
-	var emitReturn = function(data) {
-		if(self.open) {
-			responder(data);
-			self.open = false;
-		} else {
-			throw new Error("Exception: IO response has already been closed");
-		}
-	}
 	
 	self.end = function(data) {
-		emitReturn({data: data);
+		res.end(data);
 	}
 	
 	self.error = function(error, data) {
-		var err;
-		if(error instanceof Error) {
-			err = {name: error.name, message: error.message, stack: error.stack};			
-		} else {
-			err = error;
-		}
-		
-		var errorObject = {
-			error: err
-		};
-		if (data) {
-			errorObject.data = data;
-		}
-		emitReturn(errorObject);
+		res.error(error, data);
 	}
 };
 

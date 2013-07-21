@@ -202,13 +202,7 @@ $n.LocalInterface = function(wsSocket, namespace) {
 			}
 		}
 		
-		if (callback) {
-			self.socket.emit('localCall', request, function (res) {
-				callback(res.error, res.data);
-			});
-		} else {
-			self.socket.emit('localCall', request);
-		}
+		self.socket.emit('localCall', request, callback);
 	}
 	
 	self.watch = function (event, handler) {

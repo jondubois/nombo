@@ -173,7 +173,7 @@ var $n = {
 
 $n.LocalInterface = function(wsSocket, namespace) {
 	var self = this;
-	self.namespace = namespace || '__';
+	self.namespace = namespace || '__nc';
 	self.socket = wsSocket.ns(self.namespace);
 	self._serverWatchMap = {};
 	

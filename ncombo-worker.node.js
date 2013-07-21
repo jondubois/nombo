@@ -290,9 +290,11 @@ Worker.prototype._handleConnection = function (socket) {
 		});
 	}
 	
+	var nSocket = socket.ns('__nc');
+	
 	// handle local server interface call
-	socket.on('localCall', function(request, response) {
-		var req = new IORequest(request, socket, socket.session, self.global, remoteAddress, self._options.secure);
+	nSocket.on('localCall', function(request, response) {
+		var req = new IORequest(request, nSocket, nSocket.session, nSocket.global, remoteAddress, self._options.secure);
 		var res = new IOResponse(request, response);
 		self._middleware[self.MIDDLEWARE_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_CALL]);
 		self._middleware[self.MIDDLEWARE_IO].run(req, res);
@@ -519,7 +521,7 @@ Worker.prototype._sessionHandler = function(req, res, next) {
 								}
 								
 								var template = handlebars.compile(data.toString());
-									data = template({
+								data = template({
 									port: self._options.port,
 									frameworkURL: self._paths.frameworkURL,
 									frameworkClientURL: self._paths.frameworkClientURL,

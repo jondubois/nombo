@@ -348,7 +348,7 @@ Master.prototype._start = function (options) {
 			});
 			
 			portScanner.findAPortNotInUse(self._options.port + 1, self._options.port + 1000, 'localhost', function (error, datPort) {
-				console.log('   ' + self.colorText('[Busy]', 'yellow') + ' Launching nData server');
+				console.log('   ' + self.colorText('[Busy]', 'yellow') + ' Launching cluster engine');
 				
 				if (error) {
 					console.log('   nCombo Error - Failed to acquire new port; try relaunching');

@@ -84,7 +84,6 @@ $n.ready(function() {
 		keep your code under control
 	*/
 	$(document.body).html(chatString);
-	
 	// Call the chat server interfaces' getChatLog method - The chatHandler object will handle the result (through its success property)
 	$n.local.exec('chat', 'getChatLog', showChat);
 	

@@ -204,7 +204,7 @@ var NCOMBO_DEBUG = {{debug}};
 			return ssid;
 		}
 		
-		self.getTimeout = function(millis) {
+		self.getTimeout = function() {
 			return timeout;
 		}
 		

@@ -358,7 +358,12 @@ Master.prototype._start = function (options) {
 				dataPort = datPort;
 				var pass = crypto.randomBytes(32).toString('hex');
 				
-				self._ioClusterServer = new self._clusterEngine.IOClusterServer({port: dataPort, secretKey: pass, expiryAccuracy: self._dataExpiryAccuracy});
+				self._ioClusterServer = new self._clusterEngine.IOClusterServer({
+					port: dataPort,
+					secretKey: pass,
+					expiryAccuracy: self._dataExpiryAccuracy
+				});
+				
 				self._ioClusterServer.on('ready', function() {
 					var i;
 					var workerReadyHandler = function (data, worker) {

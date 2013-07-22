@@ -115,7 +115,7 @@ Worker.prototype._init = function (options) {
 	this._defaultStyleType = 'text/css';
 	this._defaultStyleRel = 'stylesheet';
 	
-	this._ssidRegex = new RegExp('(__' + this._paths.appExternalURL + 'ncssid=)([^;]*)');
+	this._ssidRegex = new RegExp('(__' + this._paths.appExternalURL + 'nc_ssid=)([^;]*)');
 	
 	this.allowFullAuthResource(this._paths.spinJSURL);
 	this.allowFullAuthResource(this._paths.frameworkSocketIOClientURL);

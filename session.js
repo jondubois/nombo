@@ -193,7 +193,7 @@ var NCOMBO_DEBUG = {{debug}};
 		var self = this;
 		var timeout = NCOMBO_TIMEOUT;
 		var sessionID = null;
-		var sessionCookieName = '__' + NCOMBO_APP_DEF.appURL + 'nc_ssid';
+		var sessionCookieName = '__' + NCOMBO_APP_DEF.appURL + 'ssid';
 	
 		self._setIDCookies = function(soid) {
 			var ssid = getCookie(sessionCookieName);

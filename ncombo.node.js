@@ -46,7 +46,7 @@ Master.prototype._start = function (options) {
 		angularMainTemplate: 'index.html',
 		protocol: 'http',
 		protocolOptions: {},
-		//transports: ['polling', 'websocket'],		transports: ['polling'],
+		transports: ['polling', 'websocket'],
 		logLevel: 1,
 		connectTimeout: 10,
 		handshakeTimeout: 10,
@@ -342,12 +342,13 @@ Master.prototype._start = function (options) {
 			console.log('   nCombo Error - Port ' + self._options.port + ' is already taken');
 			process.exit();
 		} else {
+			
 			self._balancer = new LoadBalancer({
 				sourcePort: self._options.port,
 				destPorts: self._options.workerPorts
 			});
 			
-			portScanner.findAPortNotInUse(self._options.port + 1, self._options.port + 1000, 'localhost', function (error, datPort) {
+			portScanner.findAPortNotInUse(self._options.port + 1, self._options.port + 998, 'localhost', function (error, datPort) {
 				console.log('   ' + self.colorText('[Busy]', 'yellow') + ' Launching cluster engine');
 				
 				if (error) {

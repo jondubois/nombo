@@ -341,11 +341,14 @@ Master.prototype._start = function (options) {
 		if (err || status == 'open') {
 			console.log('   nCombo Error - Port ' + self._options.port + ' is already taken');
 			process.exit();
-		} else {
-			
-			self._balancer = new LoadBalancer({
-				sourcePort: self._options.port,
-				destPorts: self._options.workerPorts
+		} else {			
+			self._balancer = fork(__dirname + '/ncombo-balancer.node.js');
+			self._balancer.send({
+				action: 'init',
+				data: {
+					sourcePort: self._options.port,
+					destPorts: self._options.workerPorts
+				}
 			});
 			
 			portScanner.findAPortNotInUse(self._options.port + 1, self._options.port + 998, 'localhost', function (error, datPort) {

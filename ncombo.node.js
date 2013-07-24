@@ -382,6 +382,7 @@ Master.prototype._start = function (options) {
 							self._balancer.send({
 								action: 'init',
 								data: {
+									dataKey: pass,
 									sourcePort: self._options.port,
 									destPorts: self._options.workerPorts
 								}

@@ -184,6 +184,8 @@ Worker.prototype._init = function (options) {
 	
 	self._statusRequestHandler = function (req, res, next) {
 		if (req.url == '/~statusrequest') {
+			var cipher = crypto.createCipher("aes192", self._options.dataKey);
+			
 			res.setHeader('Content-Type', 'application/json');
 			res.setHeader('Cache-Control', 'no-cache');
 			res.setHeader('Pragma', 'no-cache');
@@ -196,7 +198,11 @@ Worker.prototype._init = function (options) {
 				status.clientCount = 0;
 			}
 			
-			res.end(JSON.stringify(status));
+			var content = JSON.stringify(status);
+			content = cipher.update(content, 'utf8', 'base64');
+			content += cipher.final('base64');
+			
+			res.end(content);
 		} else {
 			next();
 		}

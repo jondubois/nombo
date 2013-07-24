@@ -257,7 +257,7 @@ var NCOMBO_DEBUG = {{debug}};
 					clearTimeout(timeoutCallback);
 					NCOMBO_SOCKET.removeListener('open', connectCallback);
 					NCOMBO_SOCKET.removeListener('error', errorCallback);
-					sessionID = self._setIDCookies(NCOMBO_SOCKET.ssid);
+					sessionID = self._setIDCookies(NCOMBO_SOCKET.id);
 					callback(null, sessionID);
 				}
 				

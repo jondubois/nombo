@@ -343,13 +343,6 @@ Master.prototype._start = function (options) {
 			process.exit();
 		} else {			
 			self._balancer = fork(__dirname + '/ncombo-balancer.node.js');
-			self._balancer.send({
-				action: 'init',
-				data: {
-					sourcePort: self._options.port,
-					destPorts: self._options.workerPorts
-				}
-			});
 			
 			portScanner.findAPortNotInUse(self._options.port + 1, self._options.port + 998, 'localhost', function (error, datPort) {
 				console.log('   ' + self.colorText('[Busy]', 'yellow') + ' Launching cluster engine');
@@ -385,6 +378,14 @@ Master.prototype._start = function (options) {
 							console.log('            Number of workers: ' + self._options.workerPorts.length);
 							console.log();
 							firstTime = false;
+							
+							self._balancer.send({
+								action: 'init',
+								data: {
+									sourcePort: self._options.port,
+									destPorts: self._options.workerPorts
+								}
+							});
 						}
 					};
 					

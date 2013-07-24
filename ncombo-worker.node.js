@@ -66,6 +66,7 @@ Worker.prototype._init = function (options) {
 	
 	this.id = this._options.workerId;
 	this.isLeader = this._options.lead;
+	
 	this._bundles = this._options.bundles;
 	this._bundledResources = this._options.bundledResources;
 	
@@ -181,7 +182,27 @@ Worker.prototype._init = function (options) {
 		self._tailGetStepper.run(req, res);
 	}
 	
-	self.cacheEscapeHandler = function(req, res, next) {
+	self._statusRequestHandler = function (req, res, next) {
+		if (req.url == '/~statusrequest') {
+			res.setHeader('Content-Type', 'application/json');
+			res.setHeader('Cache-Control', 'no-cache');
+			res.setHeader('Pragma', 'no-cache');
+			res.writeHead(200);
+			
+			var status = {};
+			if (self._socketServer) {
+				status.clientCount = self._socketServer.clientsCount;
+			} else {
+				status.clientCount = 0;
+			}
+			
+			res.end(JSON.stringify(status));
+		} else {
+			next();
+		}
+	};
+	
+	self._cacheEscapeHandler = function(req, res, next) {
 		if(req.params.ck && self._appScriptsURLRegex.test(req.url)) {
 			delete req.params.ck;
 		}
@@ -199,7 +220,8 @@ Worker.prototype._init = function (options) {
 	self._tailGetStepper.setValidator(self._responseNotSentValidator);
 	
 	self._middleware[self.MIDDLEWARE_GET] = stepper.create({context: self});
-	self._middleware[self.MIDDLEWARE_GET].addFunction(self.cacheEscapeHandler);
+	self._middleware[self.MIDDLEWARE_GET].addFunction(self._statusRequestHandler);
+	self._middleware[self.MIDDLEWARE_GET].addFunction(self._cacheEscapeHandler);
 	self._middleware[self.MIDDLEWARE_GET].setTail(self._tailGetStepper);
 	self._middleware[self.MIDDLEWARE_GET].setValidator(self._responseNotSentValidator);
 	

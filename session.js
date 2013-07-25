@@ -19,6 +19,7 @@ var NCOMBO_IE_VERSION = IE_VERSION;
 var NCOMBO_APP_DEF = {{{appDef}}};
 var NCOMBO_RESOURCES = {{{resources}}};
 var NCOMBO_DEBUG = {{debug}};
+var NCOMBO_ERROR = 'Unkown Error';
 
 (function() {
 	var beginLoading = function() {
@@ -247,7 +248,7 @@ var NCOMBO_DEBUG = {{debug}};
 				var errorCallback = function(err) {
 					if(err != 'client not handshaken') {
 						clearTimeout(timeoutCallback);
-						NCOMBO_SOCKET.removeListener('open', connectCallback);
+						NCOMBO_SOCKET.removeListener('connect', connectCallback);
 						NCOMBO_SOCKET.removeListener('error', errorCallback);
 						callback(err);
 					}
@@ -255,7 +256,7 @@ var NCOMBO_DEBUG = {{debug}};
 				
 				var connectCallback = function() {
 					clearTimeout(timeoutCallback);
-					NCOMBO_SOCKET.removeListener('open', connectCallback);
+					NCOMBO_SOCKET.removeListener('connect', connectCallback);
 					NCOMBO_SOCKET.removeListener('error', errorCallback);
 					sessionID = self._setIDCookies(NCOMBO_SOCKET.id);
 					callback(null, sessionID);
@@ -263,14 +264,14 @@ var NCOMBO_DEBUG = {{debug}};
 				
 				if(timeout > 0) {
 					timeoutCallback = setTimeout(function() {
-						NCOMBO_SOCKET.removeListener('open', connectCallback);
+						NCOMBO_SOCKET.removeListener('connect', connectCallback);
 						NCOMBO_SOCKET.removeListener('error', errorCallback);
-						callback('Error - Session initiation attempt timed out')
+						callback('Session initiation attempt timed out')
 					}, timeout);
 				}
 				
 				NCOMBO_SOCKET.on('error', errorCallback);
-				NCOMBO_SOCKET.on('open', connectCallback);
+				NCOMBO_SOCKET.on('connect', connectCallback);
 			}
 		}
 		
@@ -285,7 +286,7 @@ var NCOMBO_DEBUG = {{debug}};
 				if(timeout > 0) {
 					timeoutCallback = setTimeout(function() {
 						NCOMBO_SOCKET.removeListener('close', disconnectCallback);
-						callback('Error - Disconnection attempt timed out')
+						callback('Disconnection attempt timed out')
 					}, timeout);
 				}
 				
@@ -323,6 +324,8 @@ var NCOMBO_DEBUG = {{debug}};
 				if(head) {
 					head = head[0];
 				}
+				
+				NCOMBO_ERROR = err;
 				
 				var limitScript = document.createElement('script');
 				limitScript.type = 'text/javascript';

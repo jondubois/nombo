@@ -270,7 +270,7 @@ Worker.prototype._init = function (options) {
 	self._ioClusterClient = new self._clusterEngine.IOClusterClient({
 		port: this._options.dataPort,
 		secretKey: this._options.dataKey,
-		handshakeExpiry: this._options.handshakeTimeout,
+		connectTimeout: this._options.connectTimeout,
 		dataExpiry: this._options.sessionTimeout,
 		addressSocketLimit: this._options.addressSocketLimit
 	});
@@ -297,7 +297,6 @@ Worker.prototype.ready = function () {
 
 Worker.prototype._handleConnection = function (socket) {
 	var self = this;
-	
 	var nComboNamespace = '__nc';
 	
 	socket.global = socket.global.ns(nComboNamespace);
@@ -355,7 +354,11 @@ Worker.prototype._start = function () {
 		transports: this._options.transports,
 		pingTimeout: this._options.heartbeatTimeout,
 		pingInterval: this._options.heartbeatInterval,
-		upgradeTimeout: this._options.handshakeTimeout
+		upgradeTimeout: this._options.connectTimeout
+	});
+	
+	this._socketServer.on('error', function (error) {
+		console.log(error.stack);
 	});
 	
 	var oldRequestListeners = self._server.listeners('request').splice(0);
@@ -389,7 +392,7 @@ Worker.prototype._start = function () {
 	ws.init(hashedKey);
 	gateway.init(self._paths.appDirPath + '/sims/', self._customSIMExtension);
 	
-	this.ready();
+	this._socketServer.on('ready', this.ready.bind(this));
 };
 
 Worker.prototype.errorHandler = function(err) {

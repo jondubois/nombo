@@ -39,6 +39,7 @@ Master.prototype._start = function (options) {
 	this._options = {
 		port: 8000,
 		workerPorts: [9000],
+		dataPort: 8001,
 		release: false,
 		title: 'nCombo App',
 		angular: false,
@@ -49,7 +50,6 @@ Master.prototype._start = function (options) {
 		transports: ['polling', 'websocket'],
 		logLevel: 1,
 		connectTimeout: 10,
-		handshakeTimeout: 10,
 		sessionTimeout: 1200,
 		cacheLife: 2592000,
 		cacheType: 'private',
@@ -343,112 +343,104 @@ Master.prototype._start = function (options) {
 			process.exit();
 		} else {			
 			self._balancer = fork(__dirname + '/ncombo-balancer.node.js');
+			console.log('   ' + self.colorText('[Busy]', 'yellow') + ' Launching cluster engine');
 			
-			portScanner.findAPortNotInUse(self._options.port + 1, self._options.port + 998, 'localhost', function (error, datPort) {
-				console.log('   ' + self.colorText('[Busy]', 'yellow') + ' Launching cluster engine');
-				
-				if (error) {
-					console.log('   nCombo Error - Failed to acquire new port; try relaunching');
-					process.exit();
-				}
-				
-				dataPort = datPort;
-				var pass = crypto.randomBytes(32).toString('hex');
-				
-				self._ioClusterServer = new self._clusterEngine.IOClusterServer({
-					port: dataPort,
-					secretKey: pass,
-					expiryAccuracy: self._dataExpiryAccuracy
-				});
-				
-				self._ioClusterServer.on('ready', function() {
-					var i;
-					var workerReadyHandler = function (data, worker) {
-						self._workers.push(worker);
-						if (worker.id == leaderId) {
-							worker.send({action: 'emit', event: self.EVENT_LEADER_START});
+			dataPort = self._options.dataPort;
+			var pass = crypto.randomBytes(32).toString('hex');
+			
+			self._ioClusterServer = new self._clusterEngine.IOClusterServer({
+				port: dataPort,
+				secretKey: pass,
+				expiryAccuracy: self._dataExpiryAccuracy
+			});
+			
+			self._ioClusterServer.on('ready', function() {
+				var i;
+				var workerReadyHandler = function (data, worker) {
+					self._workers.push(worker);
+					if (worker.id == leaderId) {
+						worker.send({action: 'emit', event: self.EVENT_LEADER_START});
+					}
+					if (self._workers.length >= self._options.workerPorts.length && firstTime) {									
+						console.log('   ' + self.colorText('[Active]', 'green') + ' nCombo server started');
+						console.log('            Port: ' + self._options.port);
+						console.log('            Mode: ' + (self._options.release ? 'Release' : 'Debug'));
+						if (self._options.release) {
+							console.log('            Version: ' + self._options.cacheVersion);
 						}
-						if (self._workers.length >= self._options.workerPorts.length && firstTime) {									
-							console.log('   ' + self.colorText('[Active]', 'green') + ' nCombo server started');
-							console.log('            Port: ' + self._options.port);
-							console.log('            Mode: ' + (self._options.release ? 'Release' : 'Debug'));
-							if (self._options.release) {
-								console.log('            Version: ' + self._options.cacheVersion);
-							}
-							console.log('            Number of workers: ' + self._options.workerPorts.length);
-							console.log();
-							firstTime = false;
-							
-							self._balancer.send({
-								action: 'init',
-								data: {
-									dataKey: pass,
-									sourcePort: self._options.port,
-									destPorts: self._options.workerPorts
-								}
-							});
-						}
-					};
-					
-					var launchWorker = function (port, lead) {
-						var i;
-						var resourceSizes = {};
-						for (i in bundles) {
-							resourceSizes[i] = Buffer.byteLength(bundles[i], 'utf8');
-						}
+						console.log('            Number of workers: ' + self._options.workerPorts.length);
+						console.log();
+						firstTime = false;
 						
-						var styleAssetSizeMap = styleBundle.getAssetSizeMap();
-						for (i in styleAssetSizeMap) {
-							// Prepend with the relative path to root from style bundle url (styles will be inserted inside <style></style> tags in root document)
-							resourceSizes[externalAppDef.virtualURL + '../..' + i] = styleAssetSizeMap[i];
-						}
-						
-						var worker = fork(__dirname + '/worker-bootstrap.node');
-						
-						var workerOpts = self._cloneObject(self._options);						workerOpts.appDef = self._getAppDef();
-						workerOpts.paths = self._paths;
-						workerOpts.workerId = worker.id;						workerOpts.workerPort = port;
-						workerOpts.dataPort = dataPort;
-						workerOpts.dataKey = pass;
-						workerOpts.minifiedScripts = minifiedScripts;
-						workerOpts.bundles = bundles;
-						workerOpts.bundledResources = self._bundledResources;
-						workerOpts.resourceSizes = resourceSizes;
-						workerOpts.lead = lead ? 1 : 0;
-						
-						worker.send({
+						self._balancer.send({
 							action: 'init',
-							data: workerOpts
-						});
-						
-						worker.on('message', function workerHandler(data) {
-							worker.removeListener('message', workerHandler);
-							if (data.action == 'ready') {
-								if (lead) {
-									leaderId = worker.id;
-								}
-								workerReadyHandler(data, worker);
-							}
-						});												worker.on('exit', function (code, signal) {							var message = '   Worker ' + worker.id + ' died - Exit code: ' + code;														if (signal) {								message += ', signal: ' + signal;							}														var newWorkers = [];							var i;							for (i in self._workers) {								if (self._workers[i].id != worker.id) {									newWorkers.push(self._workers[i]);								}							}														self._workers = newWorkers;														var lead = worker.id == leaderId;							leaderId = -1;														console.log(message);														if (self._options.release) {								console.log('   Respawning worker');								launchWorker(lead);							} else {								if (self._workers.length <= 0) {									console.log('   All workers are dead - nCombo is shutting down');									process.exit();								}							}						});
-						
-						return worker;
-					};
-					
-					var launchWorkers = function() {
-						initBundles(function() {
-							var len = self._options.workerPorts.length;
-							if (len > 0) {
-								launchWorker(self._options.workerPorts[0], true);
-								for (var i=1; i<len; i++) {
-									launchWorker(self._options.workerPorts[i]);
-								}
-								!self._options.release && autoRebundle();
+							data: {
+								dataKey: pass,
+								sourcePort: self._options.port,
+								destPorts: self._options.workerPorts
 							}
 						});
-					};
+					}
+				};
+				
+				var launchWorker = function (port, lead) {
+					var i;
+					var resourceSizes = {};
+					for (i in bundles) {
+						resourceSizes[i] = Buffer.byteLength(bundles[i], 'utf8');
+					}
 					
-					launchWorkers();
-				});
+					var styleAssetSizeMap = styleBundle.getAssetSizeMap();
+					for (i in styleAssetSizeMap) {
+						// Prepend with the relative path to root from style bundle url (styles will be inserted inside <style></style> tags in root document)
+						resourceSizes[externalAppDef.virtualURL + '../..' + i] = styleAssetSizeMap[i];
+					}
+					
+					var worker = fork(__dirname + '/worker-bootstrap.node');
+					
+					var workerOpts = self._cloneObject(self._options);					workerOpts.appDef = self._getAppDef();
+					workerOpts.paths = self._paths;
+					workerOpts.workerId = worker.id;					workerOpts.workerPort = port;
+					workerOpts.dataPort = dataPort;
+					workerOpts.dataKey = pass;
+					workerOpts.minifiedScripts = minifiedScripts;
+					workerOpts.bundles = bundles;
+					workerOpts.bundledResources = self._bundledResources;
+					workerOpts.resourceSizes = resourceSizes;
+					workerOpts.lead = lead ? 1 : 0;
+					
+					worker.send({
+						action: 'init',
+						data: workerOpts
+					});
+					
+					worker.on('message', function workerHandler(data) {
+						worker.removeListener('message', workerHandler);
+						if (data.action == 'ready') {
+							if (lead) {
+								leaderId = worker.id;
+							}
+							workerReadyHandler(data, worker);
+						}
+					});										worker.on('exit', function (code, signal) {						var message = '   Worker ' + worker.id + ' died - Exit code: ' + code;												if (signal) {							message += ', signal: ' + signal;						}												var newWorkers = [];						var i;						for (i in self._workers) {							if (self._workers[i].id != worker.id) {								newWorkers.push(self._workers[i]);							}						}												self._workers = newWorkers;												var lead = worker.id == leaderId;						leaderId = -1;												console.log(message);												if (self._options.release) {							console.log('   Respawning worker');							launchWorker(lead);						} else {							if (self._workers.length <= 0) {								console.log('   All workers are dead - nCombo is shutting down');								process.exit();							}						}					});
+					
+					return worker;
+				};
+				
+				var launchWorkers = function() {
+					initBundles(function() {
+						var len = self._options.workerPorts.length;
+						if (len > 0) {
+							launchWorker(self._options.workerPorts[0], true);
+							for (var i=1; i<len; i++) {
+								launchWorker(self._options.workerPorts[i]);
+							}
+							!self._options.release && autoRebundle();
+						}
+					});
+				};
+				
+				launchWorkers();
 			});
 		}
 	});

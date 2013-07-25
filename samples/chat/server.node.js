@@ -10,9 +10,9 @@ require('./master.node').run(ncombo);
 ncombo.start({
 	port: port,
 	release: release,
-	workerPorts: [9000, 9001, 9002],
-	sessionTimeout: 20,
-	addressSocketLimit: 5,
+	workerPorts: [9000],
+	sessionTimeout: 10,
+	addressSocketLimit: 2,
 	logLevel: 4,
-	connectTimeout: 100
+	connectTimeout: 10
 });

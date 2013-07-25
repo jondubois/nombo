@@ -41,8 +41,7 @@ var $n = {
 		$n._releaseMode = appDefinition.releaseMode;
 		$n._timeout = appDefinition.timeout;
 		
-		// global variables from session.js
-		$n._autoSession = NCOMBO_AUTO_SESSION;
+		// global variable from session.js
 		$n._cacheVersion = NCOMBO_CACHE_VERSION;
 		
 		$n.initIO();
@@ -59,24 +58,7 @@ var $n = {
 		});
 	},
 	
-	session: {
-		start: function() {
-			var data = null;
-			var callback = null;
-			if(arguments[0] instanceof Function) {
-				callback = arguments[0];
-			} else {
-				data = arguments[0];
-				callback = arguments[1];
-			}
-			NCOMBO_SESSION_MANAGER.startSession(data, function(err, ssid) {
-				$n.initIO();
-				if(callback) {
-					callback(err, ssid);
-				}
-			});
-		},
-		
+	session: {		
 		end: function(callback) {
 			NCOMBO_SESSION_MANAGER.endSession(callback);
 		}

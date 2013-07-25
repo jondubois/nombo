@@ -556,7 +556,6 @@ Worker.prototype._sessionHandler = function(req, res, next) {
 									port: self._options.port,
 									frameworkURL: self._paths.frameworkURL,
 									frameworkClientURL: self._paths.frameworkClientURL,
-									autoSession: self._options.autoSession ? 1 : 0,
 									timeout: self._options.connectTimeout * 1000,
 									appDef: JSON.stringify(appDef),
 									resources: JSON.stringify(self._bundledResources),
@@ -571,7 +570,7 @@ Worker.prototype._sessionHandler = function(req, res, next) {
 				if(sid) {
 					req.session = this._ioClusterClient.session(sid);
 					next();
-				} else if(!this._options.publicResources && this._options.autoSession) {
+				} else if(!this._options.publicResources) {
 					res.writeHead(500);
 					res.end('File cannot be accessed outside of a session');
 				} else {

@@ -55,7 +55,6 @@ Master.prototype._start = function (options) {
 		cacheType: 'private',
 		cacheVersion: null,
 		origins: '*:*',
-		autoSession: true,
 		publicResources: true,
 		minifyMangle: false,
 		matchOriginProtocol: true,

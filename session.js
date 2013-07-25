@@ -10,7 +10,6 @@ var NCOMBO_PORT = {{port}};
 var NCOMBO_TIMEOUT = {{timeout}};
 var NCOMBO_FRAMEWORK_URL = '{{frameworkURL}}';
 var NCOMBO_FRAMEWORK_CLIENT_URL = '{{frameworkClientURL}}';
-var NCOMBO_AUTO_SESSION = {{autoSession}};
 var NCOMBO_IS_FRESH = null;
 var NCOMBO_SOCKET = null;
 var NCOMBO_SESSION_MANAGER = null;
@@ -217,32 +216,18 @@ var NCOMBO_ERROR = 'Unkown Error';
 			setCookie(ncCacheCookieName, cacheVersion, -100);
 		}
 		
-		self.startSession = function() {
+		self.startSession = function(callback) {
 			var timeoutCallback = null;
-			var data = null;
-			var callback = null;
-			if(arguments[0] instanceof Function) {
-				callback = arguments[0];
-			} else {
-				data = arguments[0];
-				callback = arguments[1];
-			}
-		    
-			var options = {disconnectOnUnload: true};
 			
 			if(NCOMBO_SOCKET && (NCOMBO_SOCKET.readyState == 'open' || NCOMBO_SOCKET.readyState == 'opening')) {
 				NCOMBO_SOCKET.removeAllListeners();
 				NCOMBO_SOCKET.close();
 			}
 			
-			if(data) {
-				options.query = 'data=' + socketCluster.JSON.stringify(data);
-			}
-			
 			var matches = location.href.match(/^[^\/]*:\/\/[^\/:]+/);
 			var host = matches ? matches[0] + ':' + NCOMBO_PORT : '';
 			
-			NCOMBO_SOCKET = socketCluster.connect(host, options);
+			NCOMBO_SOCKET = socketCluster.connect(host);
 		    
 			if(callback) {
 				var errorCallback = function(err) {
@@ -317,26 +302,23 @@ var NCOMBO_ERROR = 'Unkown Error';
 		}
 	}
 	
-	if(NCOMBO_AUTO_SESSION) {
-		var handler = function(err, ssid) {
-			if(err) {
-				var head = document.getElementsByTagName('head');
-				if(head) {
-					head = head[0];
-				}
-				
-				NCOMBO_ERROR = err;
-				
-				var limitScript = document.createElement('script');
-				limitScript.type = 'text/javascript';
-				limitScript.src = smartCacheManager.setURLCacheVersion(NCOMBO_FRAMEWORK_CLIENT_URL + 'scripts/failedconnection.js');
-				head.appendChild(limitScript);
-			} else {
-				ncBegin();
+	var handler = function(err, ssid) {
+		if(err) {
+			var head = document.getElementsByTagName('head');
+			if(head) {
+				head = head[0];
 			}
+			
+			NCOMBO_ERROR = err;
+			
+			var limitScript = document.createElement('script');
+			limitScript.type = 'text/javascript';
+			limitScript.src = smartCacheManager.setURLCacheVersion(NCOMBO_FRAMEWORK_CLIENT_URL + 'scripts/failedconnection.js');
+			head.appendChild(limitScript);
+		} else {
+			ncBegin();
 		}
-		NCOMBO_SESSION_MANAGER.startSession(handler);
-	} else {
-		ncBegin();
 	}
+	
+	NCOMBO_SESSION_MANAGER.startSession(handler);
 })();

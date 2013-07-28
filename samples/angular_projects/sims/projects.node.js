@@ -25,10 +25,10 @@ function genId(callback) {
 */
 function dispatchProjectsChanged(req, projects) {
 	/*
-		emitOut emits an event to all clients which are bound to the current session except the current one.
+		The transmit method emits an event to all sockets which are bound to the current session except the current one.
 		This is for efficiency purposes.
 	*/
-	req.session.emitOut('projectschanged', req.session.extractValues(projects));
+	req.session.emit('projectschanged', req.session.extractValues(projects));
 }
 
 /*

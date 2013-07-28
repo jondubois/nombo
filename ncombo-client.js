@@ -188,6 +188,10 @@ $n.LocalInterface = function (wsSocket, namespace) {
 		mainSocket.on(event, handler);
 	}
 	
+	self.watchOnce = function (event, handler) {
+		mainSocket.once(event, handler);
+	}
+	
 	self.unwatch = function (event, handler) {
 		if (event && handler) {
 			mainSocket.removeListener(event, handler);
@@ -245,6 +249,10 @@ $n.RemoteInterface = function (url, namespace, wsSocket) {
 	
 	self.watch = function (event, handler) {
 		mainSocket.on(event, handler);
+	}
+	
+	self.watchOnce = function (event, handler) {
+		mainSocket.once(event, handler);
 	}
 	
 	self.unwatch = function (event, handler) {

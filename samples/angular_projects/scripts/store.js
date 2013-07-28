@@ -42,7 +42,7 @@ factory('Project', function () {
 				This event will be triggered if another open tab within the same session updates the projects data.
 				This will keep all open tabs in sync.
 			*/
-			$n.local.watchOnce('projectschanged', callback);
+			$n.local.watch('projectschanged', callback);
 		}
 	};
 

@@ -3,8 +3,10 @@
 	Middleware functions should be added here.
 */
 
+var ws = require('ncombo/webservice');
+
 module.exports.run = function(ncombo) {
-	ncombo.addMiddleware(ncombo.MIDDLEWARE_SOCKET_IO, function(req, res, next) {
+	ncombo.addMiddleware(ncombo.MIDDLEWARE_IO, function(req, res, next) {
 		if(req.sim == 'auth') {
 			// Do not need to login to use auth server interface module
 			next();

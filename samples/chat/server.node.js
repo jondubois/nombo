@@ -1,13 +1,9 @@
 var argv = require('optimist').argv;
 var port = argv._[0] ? argv._[0] : 8000;
 var release = argv.hasOwnProperty('r');
+var Master = require('ncombo').Master;
 
-var ncombo = require('ncombo');
-
-require('./master.node').run(ncombo);
-
-// Start nCombo app with some default options.
-ncombo.start({
+var options = {
 	port: port,
 	release: release,
 	workerPorts: [9000],
@@ -15,4 +11,8 @@ ncombo.start({
 	addressSocketLimit: 2,
 	logLevel: 4,
 	connectTimeout: 10
-});
+};
+
+var ncombo = new Master(options);
+require('./master.node').run(ncombo);
+ncombo.start();

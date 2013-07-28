@@ -11,6 +11,7 @@ var NCOMBO_TIMEOUT = {{timeout}};
 var NCOMBO_FRAMEWORK_URL = '{{frameworkURL}}';
 var NCOMBO_FRAMEWORK_CLIENT_URL = '{{frameworkClientURL}}';
 var NCOMBO_IS_FRESH = null;
+var NCOMBO_SOCKET_ENGINE = socketCluster;
 var NCOMBO_SOCKET = null;
 var NCOMBO_SESSION_MANAGER = null;
 var NCOMBO_IE = IE;
@@ -105,12 +106,12 @@ var NCOMBO_ERROR = 'Unkown Error';
 	function getCookie(name) {
 	    var i, x, y, ARRcookies = document.cookie.split(';');
 	    for(i = 0; i < ARRcookies.length; i++) {
-		x = ARRcookies[i].substr(0, ARRcookies[i].indexOf('='));
-		y = ARRcookies[i].substr(ARRcookies[i].indexOf('=') + 1);
-		x = x.replace(/^\s+|\s+$/g, '');
-		if(x == name) {
-		    return unescape(y);
-		}
+			x = ARRcookies[i].substr(0, ARRcookies[i].indexOf('='));
+			y = ARRcookies[i].substr(ARRcookies[i].indexOf('=') + 1);
+			x = x.replace(/^\s+|\s+$/g, '');
+			if(x == name) {
+				return unescape(y);
+			}
 	    }
 	}
 	
@@ -227,14 +228,14 @@ var NCOMBO_ERROR = 'Unkown Error';
 			var matches = location.href.match(/^[^\/]*:\/\/[^\/:]+/);
 			var host = matches ? matches[0] + ':' + NCOMBO_PORT : '';
 			
-			NCOMBO_SOCKET = socketCluster.connect(host);
+			NCOMBO_SOCKET = NCOMBO_SOCKET_ENGINE.connect(host);
 		    
 			if(callback) {
 				var errorCallback = function(err) {
 					if(err != 'client not handshaken') {
 						clearTimeout(timeoutCallback);
 						NCOMBO_SOCKET.removeListener('connect', connectCallback);
-						NCOMBO_SOCKET.removeListener('error', errorCallback);
+						NCOMBO_SOCKET.removeListener('fail', errorCallback);
 						callback(err);
 					}
 				}
@@ -242,7 +243,7 @@ var NCOMBO_ERROR = 'Unkown Error';
 				var connectCallback = function() {
 					clearTimeout(timeoutCallback);
 					NCOMBO_SOCKET.removeListener('connect', connectCallback);
-					NCOMBO_SOCKET.removeListener('error', errorCallback);
+					NCOMBO_SOCKET.removeListener('fail', errorCallback);
 					sessionID = self._setIDCookies(NCOMBO_SOCKET.id);
 					callback(null, sessionID);
 				}
@@ -250,12 +251,12 @@ var NCOMBO_ERROR = 'Unkown Error';
 				if(timeout > 0) {
 					timeoutCallback = setTimeout(function() {
 						NCOMBO_SOCKET.removeListener('connect', connectCallback);
-						NCOMBO_SOCKET.removeListener('error', errorCallback);
+						NCOMBO_SOCKET.removeListener('fail', errorCallback);
 						callback('Session initiation attempt timed out')
 					}, timeout);
 				}
 				
-				NCOMBO_SOCKET.on('error', errorCallback);
+				NCOMBO_SOCKET.on('fail', errorCallback);
 				NCOMBO_SOCKET.on('connect', connectCallback);
 			}
 		}

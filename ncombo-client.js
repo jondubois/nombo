@@ -21,12 +21,12 @@ var $n = {
 	_releaseMode: false,
 	_plugins: {},
 	
-	initIO: function() {
+	initIO: function () {
 		$n.socket = NCOMBO_SOCKET;
 		$n.local = new $n.LocalInterface($n.socket);
 	},
     
-	init: function() {
+	init: function () {
 		var appDefinition = $loader.getAppDefinition();
 		
 		$n._frameworkURL = appDefinition.frameworkURL;
@@ -46,10 +46,10 @@ var $n = {
 		
 		$n.initIO();
 		
-		$n.ready(function() {
-			if(appDefinition.angular && appDefinition.angularMainTemplate) {
+		$n.ready(function () {
+			if (appDefinition.angular && appDefinition.angularMainTemplate) {
 				$(document.body).html($n.grab.app.template(appDefinition.angularMainTemplate).toString());
-				if(appDefinition.angularMainModule) {
+				if (appDefinition.angularMainModule) {
 					angular.bootstrap(document, [appDefinition.angularMainModule]);
 				} else {
 					angular.bootstrap(document);
@@ -59,12 +59,12 @@ var $n = {
 	},
 	
 	session: {		
-		end: function(callback) {
+		end: function (callback) {
 			NCOMBO_SESSION_MANAGER.endSession(callback);
 		}
 	},
 	
-	_genID: function() {
+	_genID: function () {
 		$n._curID++;
 		$n._curID = $n._curID % $n.MAX_ID;
 		return 'l' + $n._curID;
@@ -72,16 +72,9 @@ var $n = {
 	
 	_globalEval: $loader.grab._globalEval,
 	
-	/**
-		Convert a class (function) into a mixin-extendable class. This will give the class internal access to an
-		initMixin(MixinClass, args) method and a callMixinMethod(MixinClass, method, arg1, ...argn) which will allow the current
-		class to manipulate base mixins.
-	*/
-	mixin: $loader.mixin,
-	
 	EventEmitter: $loader.EventEmitter,
 	
-	getBasicType: function(variable) {
+	getBasicType: function (variable) {
 		var classType = {}.toString
 		var typeRegex = /[^0-9A-Za-z]*([A-Z][a-zA-Z0-9]*)/;
 		var typeString = classType.call(variable);
@@ -105,11 +98,11 @@ var $n = {
 		in order to generate the appropriate error message.
 	*/
 	errors: {
-		serverInterfaceError: function(message) {
+		serverInterfaceError: function (message) {
 			return "ServerInterfaceError: " + message;
 		},
 		
-		loadError: function(resourceURL) {
+		loadError: function (resourceURL) {
 			return "LoadError: Failed to load resource: " + resourceURL;
 		}
 	},
@@ -117,14 +110,14 @@ var $n = {
 	/**
 		Get the URL of nCombo's root directory.
 	*/
-	getRootURL: function() {
+	getRootURL: function () {
 		return $n._frameworkURL;
 	},
 	
 	/**
 		Navigate to another script.
 	*/
-	navigateToScript: function(scriptName) {
+	navigateToScript: function (scriptName) {
 		location.href = $n._scriptsRouterURL + (scriptName ? "?" + scriptName : "");
 	},
 	
@@ -133,7 +126,7 @@ var $n = {
 			Enable/disable default caching for server interface AJAX calls performed by nCombo.
 			Server call caching is disabled by default.
 		*/
-		cacheServerCalls: function(bool) {
+		cacheServerCalls: function (bool) {
 			$n._cacheSeverCalls = bool;
 		}
 	},
@@ -146,21 +139,25 @@ var $n = {
 	
 	serverInterfaceDescription: {},
 	
-	_asRemoteClientURL: function(host, port, secure) {
+	_asRemoteClientURL: function (host, port, secure) {
 		return (secure ? 'https://' : 'http://') + host + ":" + port;
 	},
 	
 	_remoteClientMap: {}
 };
 
-$n.LocalInterface = function(wsSocket, namespace) {
+$n.LocalInterface = function (wsSocket, namespace) {
 	var self = this;
-	self.namespace = namespace || '__nc';
-	self.socket = wsSocket.ns(self.namespace);
-	self._serverWatchMap = {};
+	var mainNamespace = '__';
+	var simNamespace = '__nc';
+	
+	var mainSocket = wsSocket.ns(mainNamespace);
+	var simSocket = wsSocket.ns(simNamespace);
+	
+	self.namespace = namespace || mainNamespace;
 	
 	self.ns = function (namespace) {
-		return new $n.LocalInterface(self.socket, namespace);
+		return new $n.LocalInterface(wsSocket, namespace);
 	}
 	
 	self.exec = function () {
@@ -173,273 +170,111 @@ $n.LocalInterface = function(wsSocket, namespace) {
 			method: method
 		};
 		
-		if(arguments[3]) {
+		if (arguments[3]) {
 			request.data = arguments[2];
 			callback = arguments[3];
-		} else if(arguments[2] !== undefined) {
-			if(arguments[2] instanceof Function) {
+		} else if (arguments[2] !== undefined) {
+			if (arguments[2] instanceof Function) {
 				callback = arguments[2];
 			} else {
 				request.data = arguments[2];
 			}
 		}
 		
-		self.socket.emit('localCall', request, callback);
+		simSocket.emit('localCall', request, callback);
 	}
 	
 	self.watch = function (event, handler) {
-		self.socket.on(event, handler);
+		mainSocket.on(event, handler);
 	}
 	
 	self.unwatch = function (event, handler) {
 		if (event && handler) {
-			self.socket.removeListener(event, handler);
+			mainSocket.removeListener(event, handler);
 		} else {
-			self.socket.removeAllListeners(event);
+			mainSocket.removeAllListeners(event);
 		}
 	}
 	
 	self.watchers = function (event) {
-		self.socket.listeners(event);
+		mainSocket.listeners(event);
 	}
 }
 
-$n.RemoteNS = function(host, port, secure, namespace, wsSocket) {
+$n.RemoteInterface = function (url, namespace, wsSocket) {
 	var self = this;
-	self._namespace = namespace;
-	self.socket = wsSocket;
-	self._serverWatchMap = {};
+	var mainNamespace = '__';
+	var simNamespace = '__nc';
 	
-	self.watch = function(event, handler, ackCallback) {
-		var ackCalled = false;
-		var timeout = setTimeout(function() {
-			if(!ackCalled && ackCallback) {
-				ackCallback('Failed to watch remote event');
-				ackCalled = true;
-			}
-		}, $n._timeout);
-		
-		var cb = function(err) {
-			clearTimeout(timeout);
-			if(!ackCalled && ackCallback) {
-				ackCallback(err);
-				ackCalled = true;
-			}
-		}
-		
-		var id = $n._genID();
-		
-		if(!self._serverWatchMap.hasOwnProperty(event)) {
-			self._serverWatchMap[event] = [];
-		}
-		
-		self._serverWatchMap[event].push(handler);
-		
-		var ackHandler = function(err) {
-			if(err) {
-				delete self._serverWatchMap[event];
-			}
-			cb(err);
-		}
+	if (!wsSocket) {
+		wsSocket = NCOMBO_SOCKET_ENGINE.connect(url);
+	}
+	
+	var mainSocket = wsSocket.ns(mainNamespace);
+	var simSocket = wsSocket.ns(simNamespace);
+	
+	self.namespace = namespace || mainNamespace;
+	
+	self.ns = function (namespace) {
+		return new $n.RemoteInterface(url, namespace, wsSocket);
+	}
+	
+	self.exec = function () {
+		var serverInterface = arguments[0];
+		var method = arguments[1];
+		var callback = null;
 		
 		var request = {
-			id: id,
-			remote: true,
-			host: host,
-			port: port,
-			secure: secure,
-			ns: self._namespace,
-			event: event
+			sim: serverInterface,
+			method: method
 		};
 		
-		if(self._serverWatchMap[event].length < 2) {
-			$n.trackRequest(id, ackHandler);
-			self.socket.emit('watchRemote', request);
-		} else {
-			cb();
-		}
-	}
-	
-	self.watchOnce = function(event, handler, ackCallback) {
-		if(self.isWatching(event, handler)) {
-			self._serverWatchMap[event] = [handler];
-			ackCallback && ackCallback();
-		} else {
-			self.watch(event, handler, ackCallback);
-		}
-	}
-	
-	self.unwatch = function(event, handler, ackCallback) {
-		var ackCalled = false;
-		var timeout = setTimeout(function() {
-			if(!ackCalled && ackCallback) {
-				ackCallback('Failed to watch remote event');
-				ackCalled = true;
-			}
-		}, $n._timeout);
-		
-		var cb = function(err) {
-			clearTimeout(timeout);
-			if(!ackCalled && ackCallback) {
-				ackCallback(err);
-				ackCalled = true;
-			}
-		}
-	
-		var i;
-		var id = $n._genID();
-		var unwatchRequest = {
-			id: id,
-			remote: true,
-			host: host,
-			port: port,
-			secure: secure,
-			ns: self._namespace,
-			event: event
-		};
-		
-		if(!event) {
-			self._serverWatchMap = {};
-			$n.trackRequest(id, cb);
-			self.socket.emit('unwatchRemote', unwatchRequest);
-		} else if(!handler) {
-			if(self._serverWatchMap[event]) {
-				delete self._serverWatchMap[event];
-				$n.trackRequest(id, cb);
-				self.socket.emit('unwatchRemote', unwatchRequest);
-			}
-		} else {
-			if(self._serverWatchMap[event]) {
-				self._serverWatchMap[event] = $.grep(self._serverWatchMap[event], function(element, index) {
-					return element != handler;
-				});
-				if(self._serverWatchMap[event].length < 1) {
-					$n.trackRequest(id, cb);
-					self.socket.emit('unwatchRemote', unwatchRequest);
-				} else {
-					cb();
-				}
+		if (arguments[3]) {
+			request.data = arguments[2];
+			callback = arguments[3];
+		} else if (arguments[2] !== undefined) {
+			if (arguments[2] instanceof Function) {
+				callback = arguments[2];
 			} else {
-				cb();
+				request.data = arguments[2];
 			}
-		}
-	}
-	
-	self._getWatcher = function(event, handler) {
-		if(!event) {
-			throw "Exception: One or more required parameters were undefined";
 		}
 		
-		if(self._serverWatchMap[event]) {
-			var watchers = self._serverWatchMap[event];
-			if(handler) {
-				var len = watchers.length;
-				var i;
-				for(i=0; i<len; i++) {
-					if(watchers[i] == handler) {
-						return watchers[i];
-					}
-				}
-			} else {
-				return watchers;
-			}
-		}
-		return null;
+		simSocket.emit('localCall', request, callback);
 	}
 	
-	self.isWatching = function(event, handler) {
-		return self._getWatcher(event, handler) ? true : false;
+	self.watch = function (event, handler) {
+		mainSocket.on(event, handler);
 	}
 	
-	self._triggerWatchers = function(event, data) {
-		if(self._serverWatchMap && self._serverWatchMap[event]) {
-			var watchers = self._serverWatchMap[event];
-			var len = watchers.length;
-			var i;
-			for(i=0; i<len; i++) {
-				watchers[i].call(null, data);
-			}
+	self.unwatch = function (event, handler) {
+		if (event && handler) {
+			mainSocket.removeListener(event, handler);
+		} else {
+			mainSocket.removeAllListeners(event);
 		}
+	}
+	
+	self.watchers = function (event) {
+		mainSocket.listeners(event);
 	}
 }
 
-$n.remote = function(host, port, secure) {
+$n.remote = function (host, port, secure) {
 	secure = secure || false;
 	
 	var url = $n._asRemoteClientURL(host, port, secure);
 	
-	if(!$n._remoteClientMap.hasOwnProperty(url)) {
-		$n._remoteClientMap[url] = new (function(host, port, secure) {
-			var self = this;
-			self._namespaces = {};
-			
-			self.ns = function(namespace) {
-				if(!self._namespaces[namespace]) {
-					self._namespaces[namespace] = new $n.RemoteNS(host, port, secure, namespace, $n.socket);
-				}
-				return self._namespaces[namespace];
-			}
-			
-			self._mainNamespace = self.ns('__main');
-			
-			self.exec = function() {
-				var serverInterface = arguments[0];
-				var method = arguments[1];
-				var id = $n._genID();
-				var callback = null;
-				var timeout = null;
-				
-				var request = {
-					id: id,
-					remote: true,
-					host: host,
-					port: port,
-					secure: secure,
-					sim: serverInterface,
-					method: method
-				};
-				
-				if(arguments[3]) {
-					request.data = arguments[2];
-					callback = arguments[3];
-				} else if(arguments[2] !== undefined) {
-					if(arguments[2] instanceof Function) {
-						callback = arguments[2];
-					} else {
-						request.data = arguments[2];
-					}
-				}
-				if(callback) {
-					timeout = setTimeout(function() {
-						if($n._callTracker[id]) {
-							delete $n._callTracker[id];
-						}
-						if(callback) {
-							callback('Remote exec call timed out', null, true);
-						}
-					}, $n._timeout);
-				}
-				
-				$n._callTracker[id] = {callback: callback, timeout: timeout};
-				
-				$n.socket.emit('remoteCall', request);
-			}
-			
-			self.watch = function() {
-				self._mainNamespace.watch.apply(null, arguments);
-			}
-			
-			self.watchOnce = function() {
-				self._mainNamespace.watchOnce.apply(null, arguments);
-			}
-			
-			self.unwatch = function() {
-				self._mainNamespace.unwatch.apply(null, arguments);
-			}
-		})(host, port, secure);
+	if (!$n._remoteClientMap.hasOwnProperty(url)) {
+		$n._remoteClientMap[url] = new $n.RemoteInterface(url);
 	}
 	
 	return $n._remoteClientMap[url];
+}
+
+$n.destroyRemote = function (host, port, secure) {
+	var url = $n._asRemoteClientURL(host, port, secure);
+	delete $n._remoteClientMap[url];
 }
 
 /*
@@ -449,8 +284,8 @@ $n.remote = function(host, port, secure) {
 	@param {String} name The name of the plugin.
 	@param {Object} plugin A plugin Object or Function to associate with the specified plugin name
 */
-$n.registerPlugin = function(name, plugin) {
-	if($n._plugins[name] == null) {
+$n.registerPlugin = function (name, plugin) {
+	if ($n._plugins[name] == null) {
 		$n._plugins[name] = plugin;
 	} else {
 		throw new Error('A plugin with the name "' + name + '" already exists.');
@@ -463,41 +298,11 @@ $n.registerPlugin = function(name, plugin) {
 	
 	@param {String} name The name of the plugin.
 */
-$n.plugin = function(name) {
-	if($n._plugins[name] == null) {
+$n.plugin = function (name) {
+	if ($n._plugins[name] == null) {
 		throw new Error('The requested "' + name + '" plugin could not be found.');
 	}
 	return $n._plugins[name];
-}
-
-if(!Array.prototype.indexOf) {
-	Array.prototype.indexOf = function(item, start) {
-		if(!start) {
-			start = 0;
-		}
-		var len = this.length;
-		var i;
-		for(i=start; i<len; i++) {
-			if(this[i] === item) {
-				return i;
-			}
-		}
-		return -1;
-	}
-}
-
-if (!Object.create) {
-	Object.create = (function () {
-		function F() {};
-
-		return function (o) {
-			if(arguments.length != 1) {
-				throw new Error('Object.create implementation only accepts one parameter.');
-			}
-			F.prototype = o;
-			return new F();
-		}
-	})();
 }
 
 $n.init();

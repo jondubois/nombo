@@ -1,3 +1,63 @@
+/*
+	Important polyfills for compatibility with older browsers.
+	
+	Array.prototype.indexOf
+	Object.create
+	Function.prototype.bind
+*/
+
+if(!Array.prototype.indexOf) {
+	Array.prototype.indexOf = function(item, start) {
+		if(!start) {
+			start = 0;
+		}
+		var len = this.length;
+		var i;
+		for(i=start; i<len; i++) {
+			if(this[i] === item) {
+				return i;
+			}
+		}
+		return -1;
+	}
+}
+
+if (!Object.create) {
+	Object.create = (function () {
+		function F() {};
+
+		return function (o) {
+			if(arguments.length != 1) {
+				throw new Error('Object.create implementation only accepts one parameter.');
+			}
+			F.prototype = o;
+			return new F();
+		}
+	})();
+}
+
+if (!Function.prototype.bind) {
+	Function.prototype.bind = function (oThis) {
+		if (typeof this !== "function") {
+			// closest thing possible to the ECMAScript 5 internal IsCallable function
+			throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
+		}
+
+		var aArgs = Array.prototype.slice.call(arguments, 1),
+			fToBind = this,
+			fNOP = function () {},
+			fBound = function () {
+				return fToBind.apply(this instanceof fNOP && oThis ? this : oThis,
+					aArgs.concat(Array.prototype.slice.call(arguments)));
+			};
+
+		fNOP.prototype = this.prototype;
+		fBound.prototype = new fNOP();
+
+		return fBound;
+	};
+}
+
 var $loader = {
 	_ie: false,
 	_ieVersion: null,
@@ -69,72 +129,6 @@ var $loader = {
 		} else {
 			$loader.grab.scriptTag($loader._appDefinition.loadScriptURL, 'text/javascript');
 		}
-	},
-	
-	mixin: function(MainClass) {
-		var proto = MainClass.prototype;
-		proto.__internalMixinMethods = {};
-		
-		proto.initMixin = function(MixinClass) {
-			var args = Array.prototype.slice.call(arguments, 1);
-			var i, value;
-			
-			var protoClone = {};
-			for(i in proto) {
-				protoClone[i] = proto[i];
-			}
-			
-			for(i in MixinClass.prototype) {
-				this[i] = MixinClass.prototype[i];
-			}
-			
-			// using different calls for browser compatibility reasons
-			if(args) {
-				MixinClass.apply(this, args);
-			} else {
-				MixinClass.apply(this);
-			}
-			
-			var mixinMethods = {};
-			
-			for(i in this) {
-				value = this[i];
-				if(value instanceof Function) {
-					mixinMethods[i] = value;
-				}
-			}
-			
-			for(i in protoClone) {
-				value = protoClone[i];
-				if(i != '__internalMixinMethods') {
-					this[i] = value;
-				}
-			}
-			
-			this.__internalMixinMethods[MixinClass] = mixinMethods;
-		}
-		
-		proto.callMixinMethod = function(MixinClass, method) {
-			var args = Array.prototype.slice.call(arguments, 2);
-			if(args) {
-				return this.__internalMixinMethods[MixinClass][method].apply(this, args);
-			} else {
-				return this.__internalMixinMethods[MixinClass][method].apply(this);
-			}
-		}
-		
-		proto.applyMixinMethod = function(MixinClass, method, args) {
-			if(args && !(args instanceof Array)) {
-				throw 'Exception: The args parameter of the applyMixinMethod function must be an Array';
-			}
-			return this.__internalMixinMethods[MixinClass][method].apply(this, args);
-		}
-		
-		proto.instanceOf = function(classReference) {
-			return this instanceof classReference || this.__internalMixinMethods.hasOwnProperty(classReference);
-		}
-		
-		return MainClass;
 	},
 	
 	EventEmitter: function() {
@@ -1178,9 +1172,10 @@ var $loader = {
 
 $loader.EventEmitter.apply($loader);
 
-$loader.ResourceLoader = $loader.mixin(function(resourceName, resourceWrapper) {
+$loader.ResourceLoader = function(resourceName, resourceWrapper) {
 	var self = this;
-	self.initMixin($loader.EventEmitter);
+	
+	$loader.EventEmitter.call(self);
 	
 	self.name = resourceName;
 	self.loaded = false;
@@ -1198,7 +1193,9 @@ $loader.ResourceLoader = $loader.mixin(function(resourceName, resourceWrapper) {
 		self.on('error', listener);
 		return resourceWrapper;
 	}
-});
+};
+
+$loader.ResourceLoader.prototype = Object.create($loader.EventEmitter.prototype);
 
 $loader.Script = function(resourceName) {
 	var self = this;

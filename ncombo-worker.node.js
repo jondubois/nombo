@@ -25,14 +25,14 @@ var conf = require('ncombo/configmanager');
 var Worker = function (options) {
 	var self = this;
 	
-	this.errorDomain = domain.create();
-	this.errorDomain.on('error', function () {
+	self.errorDomain = domain.create();
+	self.errorDomain.on('error', function () {
 		self.errorHandler.apply(self, arguments);
 	});
-	this.errorDomain.add(this);
+	self.errorDomain.add(self);
 	
-	this.start = this.errorDomain.bind(this._start);
-	this.init = this.errorDomain.run(function() {
+	self.start = self.errorDomain.bind(self._start);
+	self.init = self.errorDomain.run(function() {
 		self._init(options);
 	});
 };
@@ -43,43 +43,42 @@ Worker.prototype._init = function (options) {
 	var self = this;
 	
 	// low level middleware
-	this.MIDDLEWARE_HTTP = 'http';
-	this.MIDDLEWARE_IO = 'io';
+	self.MIDDLEWARE_HTTP = 'http';
+	self.MIDDLEWARE_IO = 'io';
 	
 	// core middleware
-	this.MIDDLEWARE_GET = 'get';
-	this.MIDDLEWARE_POST = 'post';
+	self.MIDDLEWARE_GET = 'get';
+	self.MIDDLEWARE_POST = 'post';
 	
-	this.MIDDLEWARE_LOCAL_CALL = 'localCall';
+	self.MIDDLEWARE_LOCAL_CALL = 'localCall';
 	
-	this.EVENT_WORKER_START = 'workerstart';
-	this.EVENT_LEADER_START = 'leaderstart';
-	this.EVENT_SOCKET_CONNECT = 'socketconnect';
-	this.EVENT_SOCKET_DISCONNECT = 'socketdisconnect';
-	this.EVENT_SOCKET_FAIL = 'socketfail';
-	this.EVENT_SESSION_DESTROY = 'sessiondestroy';
-	this.EVENT_FAIL = 'fail';
+	self.EVENT_WORKER_START = 'workerstart';
+	self.EVENT_LEADER_START = 'leaderstart';
+	self.EVENT_SOCKET_CONNECT = 'socketconnect';
+	self.EVENT_SOCKET_DISCONNECT = 'socketdisconnect';
+	self.EVENT_SESSION_DESTROY = 'sessiondestroy';
+	self.EVENT_FAIL = 'fail';
 	
-	this._options = options;
+	self._options = options;
 	
-	this._options.secure = this._options.protocol == 'https';
+	self._options.secure = self._options.protocol == 'https';
 	
-	this.id = this._options.workerId;
-	this.isLeader = this._options.lead;
+	self.id = self._options.workerId;
+	self.isLeader = self._options.lead;
 	
-	this._bundles = this._options.bundles;
-	this._bundledResources = this._options.bundledResources;
+	self._bundles = self._options.bundles;
+	self._bundledResources = self._options.bundledResources;
 	
-	this._resourceSizes = {};
-	this._minifiedScripts = this._options.minifiedScripts;
+	self._resourceSizes = {};
+	self._minifiedScripts = self._options.minifiedScripts;
 	
-	this._prerouter = require('ncombo/router/prerouter.node.js');
-	this._headerAdder = require('ncombo/router/headeradder.node.js');
-	this._cacheResponder = require('ncombo/router/cacheresponder.node.js');
-	this._router = require('ncombo/router/router.node.js');
-	this._preprocessor = require('ncombo/router/preprocessor.node.js');
-	this._compressor = require('ncombo/router/compressor.node.js');
-	this._responder = require('ncombo/router/responder.node.js');
+	self._prerouter = require('ncombo/router/prerouter.node.js');
+	self._headerAdder = require('ncombo/router/headeradder.node.js');
+	self._cacheResponder = require('ncombo/router/cacheresponder.node.js');
+	self._router = require('ncombo/router/router.node.js');
+	self._preprocessor = require('ncombo/router/preprocessor.node.js');
+	self._compressor = require('ncombo/router/compressor.node.js');
+	self._responder = require('ncombo/router/responder.node.js');
 	
 	if(self._options.release) {
 		for(j in self._minifiedScripts) {
@@ -93,40 +92,41 @@ Worker.prototype._init = function (options) {
 		self._cacheResponder.setUnrefreshable(j);
 	}
 	
-	this._paths = this._options.paths;
+	self._paths = self._options.paths;
 	
-	pathManager.init(this._paths.frameworkURL, this._paths.frameworkDirPath, this._paths.appDirPath, this._paths.appExternalURL);
-	pathManager.setBaseURL(this._paths.appExternalURL);
-	scriptManager.init(self._paths.frameworkURL, self._paths.appExternalURL, this._options.minifyMangle);
-	scriptManager.setBaseURL(this._paths.appExternalURL);
+	pathManager.init(self._paths.frameworkURL, self._paths.frameworkDirPath, self._paths.appDirPath, self._paths.appExternalURL);
+	pathManager.setBaseURL(self._paths.appExternalURL);
+	scriptManager.init(self._paths.frameworkURL, self._paths.appExternalURL, self._options.minifyMangle);
+	scriptManager.setBaseURL(self._paths.appExternalURL);
 	
 	var i;
-	for (i in this._options.resourceSizes) {
-		this._resourceSizes[pathManager.expand(i)] = this._options.resourceSizes[i];
+	for (i in self._options.resourceSizes) {
+		self._resourceSizes[pathManager.expand(i)] = self._options.resourceSizes[i];
 	}
 	
-	this._rootTemplateBody = fs.readFileSync(this._paths.frameworkClientDirPath + '/index.html', 'utf8');
-	this._rootTemplate = handlebars.compile(this._rootTemplateBody);
-	this._fullAuthResources = {};
+	self._rootTemplateBody = fs.readFileSync(self._paths.frameworkClientDirPath + '/index.html', 'utf8');
+	self._rootTemplate = handlebars.compile(self._rootTemplateBody);
+	self._fullAuthResources = {};
 	
-	this._cacheVersion = this._options.cacheVersion;
-	this._smartCacheManager = new SmartCacheManager(this._cacheVersion);
+	self._cacheVersion = self._options.cacheVersion;
 	
-	this._defaultScriptType = 'text/javascript';
-	this._defaultStyleType = 'text/css';
-	this._defaultStyleRel = 'stylesheet';
+	self._smartCacheManager = new SmartCacheManager(self._cacheVersion);
 	
-	this._ssidRegex = new RegExp('(__' + this._paths.appExternalURL + 'ssid=)([^;]*)');
+	self._defaultScriptType = 'text/javascript';
+	self._defaultStyleType = 'text/css';
+	self._defaultStyleRel = 'stylesheet';
 	
-	this.allowFullAuthResource(this._paths.spinJSURL);
-	this.allowFullAuthResource(this._paths.frameworkSocketIOClientURL);
-	this.allowFullAuthResource(this._paths.frameworkClientURL + 'assets/logo.png');
-	this.allowFullAuthResource(this._paths.frameworkClientURL + 'scripts/failedconnection.js');
-	this.allowFullAuthResource(this._paths.frameworkClientURL + 'scripts/cookiesdisabled.js');
+	self._ssidRegex = new RegExp('(__' + self._paths.appExternalURL + 'ssid=)([^;]*)');
+	
+	self.allowFullAuthResource(self._paths.spinJSURL);
+	self.allowFullAuthResource(self._paths.frameworkSocketIOClientURL);
+	self.allowFullAuthResource(self._paths.frameworkClientURL + 'assets/logo.png');
+	self.allowFullAuthResource(self._paths.frameworkClientURL + 'scripts/failedconnection.js');
+	self.allowFullAuthResource(self._paths.frameworkClientURL + 'scripts/cookiesdisabled.js');
 
-	this.allowFullAuthResource(this._paths.frameworkURL + 'loader.js');
+	self.allowFullAuthResource(self._paths.frameworkURL + 'loader.js');
 	
-	this._retryOptions = {
+	self._retryOptions = {
 		retries: 10,
 		factor: 2,
 		minTimeout: 1000,
@@ -134,11 +134,11 @@ Worker.prototype._init = function (options) {
 		randomize: false
 	};
 	
-	this._fileUploader = require('ncombo/fileuploader');
+	self._fileUploader = require('ncombo/fileuploader');
 	
-	this._clusterEngine = require(this._options.clusterEngine);
+	self._clusterEngine = require(self._options.clusterEngine);
 	
-	this._config = conf.parseConfig(__dirname + '/config.node.json');
+	self._config = conf.parseConfig(__dirname + '/config.node.json');
 	
 	self._middleware = {};
 	
@@ -254,26 +254,28 @@ Worker.prototype._init = function (options) {
 		'text/html': ['handlebars']
 	});
 	
-	this._privateExtensions = this._config.privateExtensions;
-	if(this._privateExtensions) {
-		this._privateExtensionRegex = new RegExp('[.](' + this._privateExtensions.join('|').replace(/[.]/g, '[.]') + ')$');
+	self._privateExtensions = self._config.privateExtensions;
+	if(self._privateExtensions) {
+		self._privateExtensionRegex = new RegExp('[.](' + self._privateExtensions.join('|').replace(/[.]/g, '[.]') + ')$');
 	} else {
-		this._privateExtensionRegex = /$a/;
+		self._privateExtensionRegex = /$a/;
 	}
 	self._customSIMExtension =  self._config.customSIMExtension;
 	
-	this._prerouter.init(this._options);
+	self._prerouter.init(self._options);
 	self._router.init(self._privateExtensionRegex);
 	self._preprocessor.init(self._options);
 	self._headerAdder.init(self._options);
 	
 	self._ioClusterClient = new self._clusterEngine.IOClusterClient({
-		port: this._options.dataPort,
-		secretKey: this._options.dataKey,
-		connectTimeout: this._options.connectTimeout,
-		dataExpiry: this._options.sessionTimeout,
-		addressSocketLimit: this._options.addressSocketLimit
+		port: self._options.dataPort,
+		secretKey: self._options.dataKey,
+		connectTimeout: self._options.connectTimeout,
+		dataExpiry: self._options.sessionTimeout,
+		addressSocketLimit: self._options.addressSocketLimit
 	});
+
+	self.errorDomain.add(self._ioClusterClient);
 	
 	self._ioClusterClient.on('sessiondestroy', function (sessionId) {
 		self.emit(self.EVENT_SESSION_DESTROY, sessionId);
@@ -297,31 +299,13 @@ Worker.prototype.ready = function () {
 
 Worker.prototype._handleConnection = function (socket) {
 	var self = this;
-	var nComboNamespace = '__nc';
-	
-	socket.global = socket.global.ns(nComboNamespace);
-	socket.session = socket.session.ns(nComboNamespace);
 	
 	var remoteAddress = socket.address;
-	var auth = socket.auth;
-	
-	self.emit(self.EVENT_SOCKET_CONNECT, socket);
-	
-	if(auth !== undefined) {
-		socket.session.setAuth(auth, function(err) {
-			if(err) {
-				self.emit(self.EVENT_SOCKET_FAIL, socket, err);
-				socket.close();
-				console.log('   nCombo Error - Failed to save auth data');
-			}
-		});
-	}
-	
 	var nSocket = socket.ns('__nc');
 	
 	// handle local server interface call
 	nSocket.on('localCall', function(request, response) {
-		var req = new IORequest(request, nSocket, nSocket.session, nSocket.global, remoteAddress, self._options.secure);
+		var req = new IORequest(request, nSocket, socket.session, socket.global, remoteAddress, self._options.secure);
 		var res = new IOResponse(request, response);
 		self._middleware[self.MIDDLEWARE_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_CALL]);
 		self._middleware[self.MIDDLEWARE_IO].run(req, res);
@@ -330,6 +314,8 @@ Worker.prototype._handleConnection = function (socket) {
 	socket.on('close', function() {
 		self.emit(self.EVENT_SOCKET_DISCONNECT, socket);
 	});
+	
+	self.emit(self.EVENT_SOCKET_CONNECT, socket);
 };
 
 Worker.prototype._start = function () {
@@ -347,19 +333,15 @@ Worker.prototype._start = function () {
 		throw new Error("The " + self._options.protocol + " protocol is not supported");
 	}
 	
-	var shasum = crypto.createHash('sha256');
-	
-	this._socketServer = socketCluster.attach(this._server, {
-		ioClusterClient: this._ioClusterClient,
-		transports: this._options.transports,
-		pingTimeout: this._options.heartbeatTimeout,
-		pingInterval: this._options.heartbeatInterval,
-		upgradeTimeout: this._options.connectTimeout
+	self._socketServer = socketCluster.attach(self._server, {
+		ioClusterClient: self._ioClusterClient,
+		transports: self._options.transports,
+		pingTimeout: self._options.heartbeatTimeout,
+		pingInterval: self._options.heartbeatInterval,
+		upgradeTimeout: self._options.connectTimeout
 	});
 	
-	this._socketServer.on('error', function (error) {
-		console.log(error.stack);
-	});
+	self.errorDomain.add(self._socketServer);
 	
 	var oldRequestListeners = self._server.listeners('request').splice(0);
 	self._server.removeAllListeners('request');
@@ -381,18 +363,11 @@ Worker.prototype._start = function () {
 	self.global = self._ioClusterClient.global();
 
 	gateway.setReleaseMode(self._options.release);
-	ws.setReleaseMode(self._options.release);
-	ws.setTimeout(self._options.connectTimeout * 1000);
 	
-	this._socketServer.on('connection', self._handleConnection.bind(self));
-	
-	var salt = crypto.randomBytes(32).toString('hex');
-	shasum.update(this._options.dataKey + salt);
-	var hashedKey = shasum.digest('hex');
-	ws.init(hashedKey);
+	self._socketServer.on('connection', self._handleConnection.bind(self));
 	gateway.init(self._paths.appDirPath + '/sims/', self._customSIMExtension);
 	
-	this._socketServer.on('ready', this.ready.bind(this));
+	self._socketServer.on('ready', self.ready.bind(self));
 };
 
 Worker.prototype.errorHandler = function(err) {
@@ -406,7 +381,7 @@ Worker.prototype.errorHandler = function(err) {
 
 Worker.prototype.addMiddleware = function(type, callback) {
 	if(!this._middleware.hasOwnProperty(type)) {
-		console.log("   Middleware type '" + type + "' is invalid");
+		throw new Error("Middleware type '" + type + "' is invalid");
 	}
 	this._middleware[type].addFunction(callback);
 };
@@ -436,6 +411,15 @@ Worker.prototype._writeSessionStartScreen = function(req, res) {
 	
 	res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, HEAD, GET, POST');
 	res.setHeader('Access-Control-Allow-Origin', '*');
+	
+	var cacheVersion;
+	if(this._options.release) {
+		cacheVersion = this._cacheVersion;
+	} else {
+		cacheVersion = (new Date()).getTime();
+	}
+	
+	res.setHeader('Set-Cookie', '__nccacheversion=' + cacheVersion + '; Path=/');
 	
 	if(this._options.release && cache.has(encoding, req.url)) {
 		this._respond(req, res, cache.get(encoding, req.url), 'text/html', true);
@@ -483,13 +467,13 @@ Worker.prototype._getReqEncoding = function(req) {
 Worker.prototype._sessionHandler = function(req, res, next) {
 	var self = this;
 	
-	req.global = this.global;
+	req.global = self.global;
 	
-	if(req.url == this._paths.timeCacheInternalURL) {
+	if(req.url == self._paths.timeCacheInternalURL) {
 		var now = (new Date()).getTime();
-		var expiry = new Date(now + this._options.cacheLife * 1000);
+		var expiry = new Date(now + self._options.cacheLife * 1000);
 		res.setHeader('Content-Type', 'text/javascript');
-		res.setHeader('Set-Cookie', '__' + this._paths.appExternalURL + 'nccached=0; Path=/');
+		res.setHeader('Set-Cookie', '__' + self._paths.appExternalURL + 'nccached=0; Path=/');
 		res.setHeader('Cache-Control', 'private');
 		res.setHeader('Pragma', 'private');
 		res.setHeader('Expires', expiry.toUTCString());
@@ -497,25 +481,25 @@ Worker.prototype._sessionHandler = function(req, res, next) {
 		var script = '/* Check if cached */';
 		res.end(script);
 	} else {
-		var sid = this._parseSSID(req.headers.cookie);
+		var sid = self._parseSSID(req.headers.cookie);
 		var url;
 		
 		if(req.url == '/') {
-			url = this._paths.rootTemplateURL;
+			url = self._paths.rootTemplateURL;
 		} else {
 			url = req.url;
 		}
 		
 		var filePath = pathManager.urlToPath(url);
 		
-		if(url == this._paths.rootTemplateURL) {
-			this._writeSessionStartScreen(req, res);
+		if(url == self._paths.rootTemplateURL) {
+			self._writeSessionStartScreen(req, res);
 		} else {
-			var encoding = this._getReqEncoding(req);
-			var skipCache = (url == this._paths.frameworkURL + 'smartcachemanager.js');
+			var encoding = self._getReqEncoding(req);
+			var skipCache = (url == self._paths.frameworkURL + 'smartcachemanager.js');
 			
-			if(skipCache || url == this._paths.frameworkSocketIOClientURL || url == this._paths.frameworkURL + 'session.js'
-					|| this.isFullAuthResource(url)) {
+			if(skipCache || url == self._paths.frameworkSocketIOClientURL || url == self._paths.frameworkURL + 'session.js'
+					|| self.isFullAuthResource(url)) {
 				
 				if(this._options.release && cache.has(encoding, url)) {
 					this._respond(req, res, cache.get(encoding, url), null, skipCache);
@@ -525,17 +509,7 @@ Worker.prototype._sessionHandler = function(req, res, next) {
 							res.writeHead(500);
 							res.end('Failed to start session');
 						} else {
-							var cacheVersion;
-							if(self._options.release) {
-								cacheVersion = self._cacheVersion;
-							} else {
-								cacheVersion = (new Date()).getTime();
-							}
-						
-							if(url == self._paths.frameworkURL + 'smartcachemanager.js') {
-								var template = handlebars.compile(data.toString());
-								data = template({cacheVersion: '*/ = ' + cacheVersion + ' /*'});
-							} else if(url == self._paths.frameworkURL + 'session.js') {
+							if(url == self._paths.frameworkURL + 'session.js') {
 								var appDef = self._options.appDef;
 								
 								if(self._resourceSizes[appDef.appStyleBundleURL] <= 0) {
@@ -592,7 +566,7 @@ Worker.prototype._prepareHTTPHandler = function(req, res, next) {
 
 Worker.prototype._faviconHandler = function(req, res, next) {
 	var self = this;
-	var iconPath = this._paths.appDirPath + '/assets/favicon.gif';
+	var iconPath = self._paths.appDirPath + '/assets/favicon.gif';
 	
 	if(req.url == '/favicon.ico') {
 		fs.readFile(iconPath, function(err, data) {

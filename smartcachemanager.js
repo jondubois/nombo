@@ -78,6 +78,30 @@ var SmartCacheManager = function(cacheVersion) {
 if(typeof window === 'undefined') {
 	module.exports.SmartCacheManager = SmartCacheManager;
 } else {
-	var NCOMBO_CACHE_VERSION /*{{cacheVersion}}*/;
+	function getCookie(name) {
+	    var i, x, y, ARRcookies = document.cookie.split(';');
+	    for(i = 0; i < ARRcookies.length; i++) {
+			x = ARRcookies[i].substr(0, ARRcookies[i].indexOf('='));
+			y = ARRcookies[i].substr(ARRcookies[i].indexOf('=') + 1);
+			x = x.replace(/^\s+|\s+$/g, '');
+			if(x == name) {
+				return unescape(y);
+			}
+	    }
+	}
+	
+	function setCookie(name, value, expirySeconds) {
+		var exdate = null;
+		if(expirySeconds) {
+			exdate = new Date();
+			exdate.setTime(exdate.getTime() + Math.round(expirySeconds * 1000));
+		}
+		var value = escape(value) + '; path=/;' + ((exdate == null) ? '' : ' expires=' + exdate.toUTCString() + ';');
+		document.cookie = name + '=' + value;
+	}
+	var cookieName = '__nccacheversion';
+	var NCOMBO_CACHE_VERSION = getCookie(cookieName);
+	setCookie(cookieName, '', -100);
+	
 	var smartCacheManager = new SmartCacheManager(NCOMBO_CACHE_VERSION);
 }

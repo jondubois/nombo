@@ -6,7 +6,7 @@ var crypto = require('crypto');
 */
 function projectKey(req) {
 	if(req && req.data && req.data._id) {
-		return 'projects.' + req.session.input(req.data._id);
+		return ['projects', req.session.input(req.data._id)];
 	} else {
 		return 'projects';
 	}

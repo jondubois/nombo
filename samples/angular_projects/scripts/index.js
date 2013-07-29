@@ -31,7 +31,6 @@ config(function ($routeProvider, $locationProvider) {
 
 function ListCtrl($scope, Project) {
 	var loadProjects = function(projects) {
-		console.log(2222, projects);
 		$scope.$apply(function () {
 			$scope.projects = projects;
 		});

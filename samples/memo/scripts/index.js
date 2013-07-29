@@ -77,8 +77,8 @@ function main() {
 	so we can call all its SIM methods directly.
 	In practice, all private SIM methods should be protected using middleware which should authenticate calls to it.
 	*/
-	//var chatApp = $n.remote('samples.ncombo.com', 8000);
-	var chatApp = $n.remote('localhost', 8000);
+	var chatApp = $n.remote('samples.ncombo.com', 8000);
+	//var chatApp = $n.remote('localhost', 8000);
 	
 	mainView.delegate('.share', 'click', function(e) {
 		var parent = $(e.target).parent().parent();

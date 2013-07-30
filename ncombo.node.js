@@ -110,7 +110,7 @@ Master.prototype._init = function (options) {
 	self._paths.spinJSURL = self._paths.frameworkClientURL + 'libs/spin.js';
 
 	self._appName = path.basename(self._paths.appDirPath);
-	
+
 	self._paths.appExternalURL = ('/' + (self._appName || self._options.baseURL) + '/').replace(self._slashSequenceRegex, '/');
 	self._paths.appInternalURL = '/';
 	self._paths.timeCacheExternalURL = self._paths.appExternalURL + '~timecache';

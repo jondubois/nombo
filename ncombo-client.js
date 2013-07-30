@@ -181,7 +181,7 @@ $n.LocalInterface = function (wsSocket, namespace) {
 			}
 		}
 		
-		simSocket.emit('localCall', request, callback);
+		simSocket.emit('rpc', request, callback);
 	}
 	
 	self.watch = function (event, handler) {
@@ -244,7 +244,7 @@ $n.RemoteInterface = function (url, namespace, wsSocket) {
 			}
 		}
 		
-		simSocket.emit('localCall', request, callback);
+		simSocket.emit('rpc', request, callback);
 	}
 	
 	self.watch = function (event, handler) {

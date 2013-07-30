@@ -50,7 +50,7 @@ Worker.prototype._init = function (options) {
 	self.MIDDLEWARE_GET = 'get';
 	self.MIDDLEWARE_POST = 'post';
 	
-	self.MIDDLEWARE_LOCAL_CALL = 'localCall';
+	self.MIDDLEWARE_RPC = 'rpc';
 	
 	self.EVENT_WORKER_START = 'workerstart';
 	self.EVENT_LEADER_START = 'leaderstart';
@@ -246,8 +246,8 @@ Worker.prototype._init = function (options) {
 	
 	self._middleware[self.MIDDLEWARE_HTTP].setTail(self._routStepper);
 	
-	self._middleware[self.MIDDLEWARE_LOCAL_CALL] = stepper.create({context: self});
-	self._middleware[self.MIDDLEWARE_LOCAL_CALL].setTail(gateway.exec);
+	self._middleware[self.MIDDLEWARE_RPC] = stepper.create({context: self});
+	self._middleware[self.MIDDLEWARE_RPC].setTail(gateway.exec);
 	
 	mime.define({
 		'text/css': ['less'],
@@ -304,10 +304,10 @@ Worker.prototype._handleConnection = function (socket) {
 	var nSocket = socket.ns('__nc');
 	
 	// handle local server interface call
-	nSocket.on('localCall', function(request, response) {
+	nSocket.on('rpc', function(request, response) {
 		var req = new IORequest(request, nSocket, socket.session, socket.global, remoteAddress, self._options.secure);
 		var res = new IOResponse(request, response);
-		self._middleware[self.MIDDLEWARE_IO].setTail(self._middleware[self.MIDDLEWARE_LOCAL_CALL]);
+		self._middleware[self.MIDDLEWARE_IO].setTail(self._middleware[self.MIDDLEWARE_RPC]);
 		self._middleware[self.MIDDLEWARE_IO].run(req, res);
 	});
 	

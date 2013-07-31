@@ -6,7 +6,7 @@ var Master = require('ncombo').Master;
 var options = {
 	port: port,
 	release: release,
-	sessionTimeout: 5000,
+	sessionTimeout: 5,
 	title: 'Memo App'
 };
 

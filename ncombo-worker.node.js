@@ -68,6 +68,10 @@ Worker.prototype._init = function (options) {
 	self.isLeader = self._options.lead;
 	
 	self._statusWatchers = {};
+	self._httpRequestCount = 0;
+	self._ioRequestCount = 0;
+	self._httpRPM = 0;
+	self._ioRPM = 0;
 	
 	self._bundles = self._options.bundles;
 	self._bundledResources = self._options.bundledResources;
@@ -281,6 +285,7 @@ Worker.prototype._handleConnection = function (socket) {
 	
 	// handle local server interface call
 	nSocket.on('rpc', function(request, response) {
+		self._ioRequestCount++;
 		var req = new IORequest(request, nSocket, socket.session, socket.global, remoteAddress, self._options.secure);
 		var res = new IOResponse(request, response);
 		self._middleware[self.MIDDLEWARE_IO].setTail(self._middleware[self.MIDDLEWARE_RPC]);
@@ -325,9 +330,23 @@ Worker.prototype._start = function () {
 		}
 	};
 	
+	var perMinuteFactor = 60 / self._options.workerStatusInterval;
+	self._httpRequestCount = 0;
+	self._ioRequestCount = 0;
+	self._httpRPM = 0;
+	self._ioRPM = 0;
+	
 	self._emitStatus = function () {
+		self._ioRPM = self._ioRequestCount * perMinuteFactor;
+		self._httpRPM = self._httpRequestCount * perMinuteFactor;
+		self._httpRequestCount = 0;
+		self._ioRequestCount = 0;
 		for (var i in self._statusWatchers) {
-			self._statusWatchers[i].write({clientCount: self._socketServer.clientsCount});
+			self._statusWatchers[i].write({
+				clientCount: self._socketServer.clientsCount,
+				httpRPM: self._httpRPM,
+				ioRPM: self._ioRPM
+			});
 		}
 	};
 	
@@ -563,6 +582,7 @@ Worker.prototype._sessionHandler = function(req, res, next) {
 };
 
 Worker.prototype._rewriteHTTPRequest = function(req) {
+	this._httpRequestCount++;
 	req.url = pathManager.simplify(req.url);
 };
 

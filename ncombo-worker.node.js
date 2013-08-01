@@ -18,6 +18,7 @@ var pathManager = require('ncombo/pathmanager');
 var EventEmitter = require('events').EventEmitter;
 var SmartCacheManager = require("./smartcachemanager").SmartCacheManager;
 var socketCluster = require('socketcluster');
+var ncom = require('ncom');
 var retry = require('retry');
 var domain = require('domain');
 var conf = require('ncombo/configmanager');
@@ -65,6 +66,8 @@ Worker.prototype._init = function (options) {
 	
 	self.id = self._options.workerId;
 	self.isLeader = self._options.lead;
+	
+	self._statusWatchers = {};
 	
 	self._bundles = self._options.bundles;
 	self._bundledResources = self._options.bundledResources;
@@ -182,32 +185,6 @@ Worker.prototype._init = function (options) {
 		self._tailGetStepper.run(req, res);
 	}
 	
-	self._statusRequestHandler = function (req, res, next) {
-		if (req.url == '/~statusrequest') {
-			var cipher = crypto.createCipher("aes192", self._options.dataKey);
-			
-			res.setHeader('Content-Type', 'application/json');
-			res.setHeader('Cache-Control', 'no-cache');
-			res.setHeader('Pragma', 'no-cache');
-			res.writeHead(200);
-			
-			var status = {};
-			if (self._socketServer) {
-				status.clientCount = self._socketServer.clientsCount;
-			} else {
-				status.clientCount = 0;
-			}
-			
-			var content = JSON.stringify(status);
-			content = cipher.update(content, 'utf8', 'base64');
-			content += cipher.final('base64');
-			
-			res.end(content);
-		} else {
-			next();
-		}
-	};
-	
 	self._cacheEscapeHandler = function(req, res, next) {
 		if(req.params.ck && self._appScriptsURLRegex.test(req.url)) {
 			delete req.params.ck;
@@ -226,7 +203,6 @@ Worker.prototype._init = function (options) {
 	self._tailGetStepper.setValidator(self._responseNotSentValidator);
 	
 	self._middleware[self.MIDDLEWARE_GET] = stepper.create({context: self});
-	self._middleware[self.MIDDLEWARE_GET].addFunction(self._statusRequestHandler);
 	self._middleware[self.MIDDLEWARE_GET].addFunction(self._cacheEscapeHandler);
 	self._middleware[self.MIDDLEWARE_GET].setTail(self._tailGetStepper);
 	self._middleware[self.MIDDLEWARE_GET].setValidator(self._responseNotSentValidator);
@@ -332,6 +308,37 @@ Worker.prototype._start = function () {
 	} else {
 		throw new Error("The " + self._options.protocol + " protocol is not supported");
 	}
+	
+	self._addStatusWatcher = function (socket) {
+		if (socket.id) {
+			self._statusWatchers[socket.id] = socket;
+		} else {
+			throw new Error('Failed to add status watcher');
+		}
+	};
+
+	self._removeStatusWatcher = function (socket) {
+		if (socket.id) {
+			delete self._statusWatchers[socket.id];
+		} else {
+			throw new Error('Failed to remove status watcher');
+		}
+	};
+	
+	self._emitStatus = function () {
+		for (var i in self._statusWatchers) {
+			self._statusWatchers[i].write({clientCount: self._socketServer.clientsCount});
+		}
+	};
+	
+	self._statusPort = self._options.statusPort;
+	
+	var statusServer = ncom.createServer(self._addStatusWatcher);
+	statusServer.on('close', self._removeStatusWatcher);
+	self.errorDomain.add(statusServer);
+	statusServer.listen(self._statusPort);
+	
+	setInterval(self._emitStatus, self._options.workerStatusInterval * 1000);
 	
 	self._socketServer = socketCluster.attach(self._server, {
 		ioClusterClient: self._ioClusterClient,

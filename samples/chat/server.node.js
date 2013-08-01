@@ -6,9 +6,9 @@ var Master = require('ncombo').Master;
 var options = {
 	port: port,
 	release: release,
-	workerPorts: [9000],
+	workers: [{port: 9000, statusPort: 9001}, {port: 9002, statusPort: 9003}, {port: 9004, statusPort: 9005}],
 	sessionTimeout: 10,
-	addressSocketLimit: 2,
+	addressSocketLimit: 4,
 	logLevel: 4,
 	connectTimeout: 10
 };

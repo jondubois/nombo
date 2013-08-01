@@ -1,4 +1,3 @@
-var LoadBalancer = require('loadbalancer');
 var fs = require('fs');
 var url = require('url');
 var browserify = require('browserify');
@@ -38,7 +37,7 @@ Master.prototype._init = function (options) {
 	
 	self._options = {
 		port: 8000,
-		workerPorts: null,
+		workers: null,
 		dataPort: null,
 		release: false,
 		title: 'nCombo App',
@@ -62,20 +61,32 @@ Master.prototype._init = function (options) {
 		pollingDuration: 30,
 		heartbeatInterval: 25,
 		heartbeatTimeout: 60,
+		workerStatusInterval: 10,
 		allowUploads: false,
 		baseURL: null,
 		clusterEngine: 'iocluster'
 	};
 
-	for (var i in options) {
+	var i;
+	for (i in options) {
 		self._options[i] = options[i];
 	}
 	
 	if (!self._options.dataPort) {
 		self._options.dataPort = self._options.port + 1;
 	}
-	if (!self._options.workerPorts) {
-		self._options.workerPorts = [self._options.port + 2];
+	
+	if (self._options.workers) {
+		for (i in self._options.workers) {
+			if (self._options.workers[i].port == null) {
+				throw new Error('One or more worker object is missing a port property');
+			}
+			if (self._options.workers[i].statusPort == null) {
+				throw new Error('One or more worker object is missing a statusPort property');
+			}
+		}
+	} else {
+		self._options.workers = [{port: self._options.port + 2, statusPort: self._options.port + 3}];
 	}
 	
 	self._extRegex = /[.][^\/\\]*$/;
@@ -519,14 +530,14 @@ Master.prototype._start = function () {
 							event: self.EVENT_LEADER_START
 						});
 					}
-					if (self._workers.length >= self._options.workerPorts.length && firstTime) {
+					if (self._workers.length >= self._options.workers.length && firstTime) {
 						console.log('   ' + self.colorText('[Active]', 'green') + ' nCombo server started');
 						console.log('            Port: ' + self._options.port);
 						console.log('            Mode: ' + (self._options.release ? 'Release' : 'Debug'));
 						if (self._options.release) {
 							console.log('            Version: ' + self._options.cacheVersion);
 						}
-						console.log('            Number of workers: ' + self._options.workerPorts.length);
+						console.log('            Number of workers: ' + self._options.workers.length);
 						console.log();
 						firstTime = false;
 
@@ -535,13 +546,13 @@ Master.prototype._start = function () {
 							data: {
 								dataKey: pass,
 								sourcePort: self._options.port,
-								destPorts: self._options.workerPorts
+								workers: self._options.workers
 							}
 						});
 					}
 				};
 
-				var launchWorker = function (port, lead) {
+				var launchWorker = function (workerData, lead) {
 					var i;
 					var resourceSizes = {};
 					for (i in bundles) {
@@ -560,7 +571,8 @@ Master.prototype._start = function () {
 					workerOpts.appDef = self._getAppDef();
 					workerOpts.paths = self._paths;
 					workerOpts.workerId = worker.id;
-					workerOpts.workerPort = port;
+					workerOpts.workerPort = workerData.port;
+					workerOpts.statusPort = workerData.statusPort;
 					workerOpts.dataPort = dataPort;
 					workerOpts.dataKey = pass;
 					workerOpts.minifiedScripts = minifiedScripts;
@@ -622,11 +634,11 @@ Master.prototype._start = function () {
 
 				var launchWorkers = function () {
 					initBundles(function () {
-						var len = self._options.workerPorts.length;
+						var len = self._options.workers.length;
 						if (len > 0) {
-							launchWorker(self._options.workerPorts[0], true);
+							launchWorker(self._options.workers[0], true);
 							for (var i = 1; i < len; i++) {
-								launchWorker(self._options.workerPorts[i]);
+								launchWorker(self._options.workers[i]);
 							}!self._options.release && autoRebundle();
 						}
 					});

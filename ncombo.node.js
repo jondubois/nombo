@@ -620,7 +620,7 @@ Master.prototype._start = function () {
 
 						if (self._options.release) {
 							console.log('   Respawning worker');
-							launchWorker(lead);
+							launchWorker(workerData, lead);
 						} else {
 							if (self._workers.length <= 0) {
 								console.log('   All workers are dead - nCombo is shutting down');

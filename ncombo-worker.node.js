@@ -342,11 +342,15 @@ Worker.prototype._start = function () {
 		self._httpRequestCount = 0;
 		self._ioRequestCount = 0;
 		for (var i in self._statusWatchers) {
-			self._statusWatchers[i].write({
+			var cipher = crypto.createCipher('aes192', self._options.dataKey);
+			var message = JSON.stringify({
 				clientCount: self._socketServer.clientsCount,
 				httpRPM: self._httpRPM,
 				ioRPM: self._ioRPM
 			});
+			message = cipher.update(message, 'utf8', 'base64');
+			message += cipher.final('base64');
+			self._statusWatchers[i].write(message);
 		}
 	};
 	

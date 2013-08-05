@@ -225,10 +225,15 @@ var NCOMBO_ERROR = 'Unkown Error';
 				NCOMBO_SOCKET.close();
 			}
 			
-			var matches = location.href.match(/^[^\/]*:\/\/[^\/:]+/);
-			var host = matches ? matches[0] + ':' + NCOMBO_PORT : '';
+			var matches = location.href.match(/^([^\/]*):\/\/([^\/:]+)/);
 			
-			NCOMBO_SOCKET = NCOMBO_SOCKET_ENGINE.connect(host);
+			var options = {
+				protocol: matches[1],
+				hostname: matches[2],
+				port: NCOMBO_PORT
+			};
+			
+			NCOMBO_SOCKET = NCOMBO_SOCKET_ENGINE.connect(options);
 		    
 			if(callback) {
 				var errorCallback = function(err) {

@@ -368,7 +368,8 @@ Worker.prototype._start = function () {
 		transports: self._options.transports,
 		pingTimeout: self._options.heartbeatTimeout,
 		pingInterval: self._options.heartbeatInterval,
-		upgradeTimeout: self._options.connectTimeout
+		upgradeTimeout: self._options.connectTimeout,
+		logLevel: self._options.logLevel
 	});
 	
 	self.errorDomain.add(self._socketServer);

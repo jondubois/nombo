@@ -18,14 +18,14 @@ var Master = function (options) {
 	var self = this;
 
 	self.EVENT_FAIL = 'fail';
-	self.errorDomain = domain.create();
-	self.errorDomain.on('error', function () {
+	self._errorDomain = domain.create();
+	self._errorDomain.on('error', function () {
 		self.errorHandler.apply(self, arguments);
 	});
-	self.errorDomain.add(self);
+	self._errorDomain.add(self);
 
-	self.start = self.errorDomain.bind(self._start);
-	this.init = self.errorDomain.run(function() {
+	self.start = self._errorDomain.bind(self._start);
+	this.init = self._errorDomain.run(function() {
 		self._init(options);
 	});
 };
@@ -357,7 +357,7 @@ Master.prototype._start = function () {
 				size: size
 			};
 			self._workers[i].send({
-				action: 'updateCache',
+				type: 'updateCache',
 				data: data
 			});
 		}
@@ -388,7 +388,7 @@ Master.prototype._start = function () {
 				size: size
 			};
 			self._workers[i].send({
-				action: 'updateCache',
+				type: 'updateCache',
 				data: data
 			});
 		}
@@ -426,7 +426,7 @@ Master.prototype._start = function () {
 				size: size
 			};
 			self._workers[i].send({
-				action: 'updateCache',
+				type: 'updateCache',
 				data: data
 			});
 		}
@@ -464,7 +464,7 @@ Master.prototype._start = function () {
 				size: size
 			};
 			self._workers[i].send({
-				action: 'updateCache',
+				type: 'updateCache',
 				data: data
 			});
 		}
@@ -479,7 +479,6 @@ Master.prototype._start = function () {
 	};
 
 	var autoRebundle = function () {
-		// The master process does not handle requests so it's OK to do sync operations at runtime
 		styleBundle.on('bundle', function () {
 			updateCSSBundle();
 		});
@@ -508,25 +507,45 @@ Master.prototype._start = function () {
 			console.log('   nCombo Error - Port ' + self._options.port + ' is already taken');
 			process.exit();
 		} else {
-			self._balancer = fork(__dirname + '/ncombo-balancer.node.js');
+			var balancerHandler;
+			var workersActive = false;
+			
+			var initLoadBalancer = function () {
+				self._balancer.send({
+					type: 'init',
+					data: {
+						dataKey: pass,
+						sourcePort: self._options.port,
+						workers: self._options.workers
+					}
+				});
+			};
+			
+			var launchLoadBalancer = function () {
+				self._balancer = fork(__dirname + '/ncombo-balancer.node.js');
+				self._balancer.on('message', balancerHandler = function (m) {
+					if (m.type == 'error') {
+						self.errorHandler(m.data);
+					}
+				});
+				self._balancer.on('exit', launchLoadBalancer);
+				
+				if (workersActive) {
+					initLoadBalancer();
+				}
+			};
+			
+			launchLoadBalancer();
+			
 			console.log('   ' + self.colorText('[Busy]', 'yellow') + ' Launching cluster engine');
-
-			dataPort = self._options.dataPort;
-			var pass = crypto.randomBytes(32).toString('hex');
-
-			self._ioClusterServer = new self._clusterEngine.IOClusterServer({
-				port: dataPort,
-				secretKey: pass,
-				expiryAccuracy: self._dataExpiryAccuracy
-			});
-
-			self._ioClusterServer.on('ready', function () {
+			
+			var ioClusterReady = function () {
 				var i;
 				var workerReadyHandler = function (data, worker) {
 					self._workers.push(worker);
 					if (worker.id == leaderId) {
 						worker.send({
-							action: 'emit',
+							type: 'emit',
 							event: self.EVENT_LEADER_START
 						});
 					}
@@ -540,15 +559,11 @@ Master.prototype._start = function () {
 						console.log('            Number of workers: ' + self._options.workers.length);
 						console.log();
 						firstTime = false;
-
-						self._balancer.send({
-							action: 'init',
-							data: {
-								dataKey: pass,
-								sourcePort: self._options.port,
-								workers: self._options.workers
-							}
-						});
+						
+						if (!workersActive) {
+							initLoadBalancer()
+						}
+						workersActive = true;
 					}
 				};
 
@@ -565,7 +580,7 @@ Master.prototype._start = function () {
 						resourceSizes[externalAppDef.virtualURL + '../..' + i] = styleAssetSizeMap[i];
 					}
 
-					var worker = fork(__dirname + '/worker-bootstrap.node');
+					var worker = fork(__dirname + '/ncombo-worker-bootstrap.node');
 
 					var workerOpts = self._cloneObject(self._options);
 					workerOpts.appDef = self._getAppDef();
@@ -582,17 +597,18 @@ Master.prototype._start = function () {
 					workerOpts.lead = lead ? 1 : 0;
 
 					worker.send({
-						action: 'init',
+						type: 'init',
 						data: workerOpts
 					});
 
-					worker.on('message', function workerHandler(data) {
-						worker.removeListener('message', workerHandler);
-						if (data.action == 'ready') {
+					worker.on('message', function workerHandler(m) {
+						if (m.type == 'ready') {
 							if (lead) {
 								leaderId = worker.id;
 							}
-							workerReadyHandler(data, worker);
+							workerReadyHandler(m, worker);
+						} else if (m.type == 'error') {
+							self.errorHandler(m.data);
 						}
 					});
 
@@ -616,6 +632,7 @@ Master.prototype._start = function () {
 						var lead = worker.id == leaderId;
 						leaderId = -1;
 
+						self.errorHandler(new Error(message));
 						console.log(message);
 
 						if (self._options.release) {
@@ -645,7 +662,27 @@ Master.prototype._start = function () {
 				};
 
 				launchWorkers();
-			});
+			};
+
+			dataPort = self._options.dataPort;
+			var pass = crypto.randomBytes(32).toString('hex');
+			
+			var launchIOCluster = function () {
+				self._ioClusterServer = new self._clusterEngine.IOClusterServer({
+					port: dataPort,
+					secretKey: pass,
+					expiryAccuracy: self._dataExpiryAccuracy
+				});
+				
+				self._ioClusterServer.on('error', function (err) {
+					self.errorHandler(err);
+					self._ioClusterServer.destroy();
+				});
+				self._ioClusterServer.on('exit', launchIOCluster);
+			};
+			
+			launchIOCluster();
+			self._ioClusterServer.on('ready', ioClusterReady);
 		}
 	});
 };

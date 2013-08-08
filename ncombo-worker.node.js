@@ -58,7 +58,6 @@ Worker.prototype._init = function (options) {
 	self.EVENT_SOCKET_CONNECT = 'socketconnect';
 	self.EVENT_SOCKET_DISCONNECT = 'socketdisconnect';
 	self.EVENT_SESSION_DESTROY = 'sessiondestroy';
-	self.EVENT_FAIL = 'fail';
 	
 	self._options = options;
 	
@@ -274,7 +273,7 @@ Worker.prototype.handleMasterEvent = function (event, data) {
 
 Worker.prototype.ready = function () {
 	this.emit(this.EVENT_WORKER_START);
-	process.send({action: 'ready'});
+	process.send({type: 'ready'});
 };
 
 Worker.prototype._handleConnection = function (socket) {
@@ -402,7 +401,7 @@ Worker.prototype._start = function () {
 };
 
 Worker.prototype.errorHandler = function(err) {
-	this.emit(this.EVENT_FAIL, err);
+	this.emit('error', err);
 	if(err.stack) {
 		console.log(err.stack);
 	} else {

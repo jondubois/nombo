@@ -18,6 +18,8 @@ var Master = function (options) {
 	var self = this;
 
 	self.EVENT_FAIL = 'fail';
+	self.EVENT_LEADER_START = 'leaderstart';
+	
 	self._errorDomain = domain.create();
 	self._errorDomain.on('error', function () {
 		self.errorHandler.apply(self, arguments);
@@ -522,13 +524,19 @@ Master.prototype._start = function () {
 			};
 			
 			var launchLoadBalancer = function () {
+				if (self._balancer) {
+					self._errorDomain.remove(self._balancer);
+				}
 				self._balancer = fork(__dirname + '/ncombo-balancer.node.js');
+				self._errorDomain.add(self._balancer);
+
+				self._balancer.on('exit', launchLoadBalancer);
 				self._balancer.on('message', balancerHandler = function (m) {
 					if (m.type == 'error') {
 						self.errorHandler(m.data);
+						self._balancer.kill();
 					}
 				});
-				self._balancer.on('exit', launchLoadBalancer);
 				
 				if (workersActive) {
 					initLoadBalancer();
@@ -538,6 +546,8 @@ Master.prototype._start = function () {
 			launchLoadBalancer();
 			
 			console.log('   ' + self.colorText('[Busy]', 'yellow') + ' Launching cluster engine');
+			
+			var workerIdCounter = 1;
 			
 			var ioClusterReady = function () {
 				var i;
@@ -561,9 +571,9 @@ Master.prototype._start = function () {
 						firstTime = false;
 						
 						if (!workersActive) {
-							initLoadBalancer()
+							initLoadBalancer();
+							workersActive = true;
 						}
-						workersActive = true;
 					}
 				};
 
@@ -581,6 +591,7 @@ Master.prototype._start = function () {
 					}
 
 					var worker = fork(__dirname + '/ncombo-worker-bootstrap.node');
+					worker.id = workerIdCounter++;
 
 					var workerOpts = self._cloneObject(self._options);
 					workerOpts.appDef = self._getAppDef();
@@ -633,7 +644,6 @@ Master.prototype._start = function () {
 						leaderId = -1;
 
 						self.errorHandler(new Error(message));
-						console.log(message);
 
 						if (self._options.release) {
 							console.log('   Respawning worker');
@@ -656,7 +666,8 @@ Master.prototype._start = function () {
 							launchWorker(self._options.workers[0], true);
 							for (var i = 1; i < len; i++) {
 								launchWorker(self._options.workers[i]);
-							}!self._options.release && autoRebundle();
+							}
+							!self._options.release && autoRebundle();
 						}
 					});
 				};
@@ -674,10 +685,7 @@ Master.prototype._start = function () {
 					expiryAccuracy: self._dataExpiryAccuracy
 				});
 				
-				self._ioClusterServer.on('error', function (err) {
-					self.errorHandler(err);
-					self._ioClusterServer.destroy();
-				});
+				self._ioClusterServer.on('error', self.errorHandler);
 				self._ioClusterServer.on('exit', launchIOCluster);
 			};
 			

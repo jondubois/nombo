@@ -25,6 +25,10 @@ process.on('message', function (m) {
 	} else if (m.type == 'updateCache') {
 		worker.handleCacheUpdate(m.data.url, m.data.content, m.data.size);
 	} else if (m.type == 'emit') {
-		worker.handleMasterEvent(m.event, m.data);
+		if (m.data) {
+			worker.handleMasterEvent(m.event, m.data);
+		} else {
+			worker.handleMasterEvent(m.event);
+		}
 	}
 });

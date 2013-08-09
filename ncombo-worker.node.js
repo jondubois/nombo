@@ -26,14 +26,14 @@ var conf = require('ncombo/configmanager');
 var Worker = function (options) {
 	var self = this;
 	
-	self.errorDomain = domain.create();
-	self.errorDomain.on('error', function () {
+	self._errorDomain = domain.create();
+	self._errorDomain.on('error', function () {
 		self.errorHandler.apply(self, arguments);
 	});
-	self.errorDomain.add(self);
+	self._errorDomain.add(self);
 	
-	self.start = self.errorDomain.bind(self._start);
-	self.init = self.errorDomain.run(function() {
+	self.start = self._errorDomain.bind(self._start);
+	self.init = self._errorDomain.run(function() {
 		self._init(options);
 	});
 };
@@ -254,7 +254,7 @@ Worker.prototype._init = function (options) {
 		addressSocketLimit: self._options.addressSocketLimit
 	});
 
-	self.errorDomain.add(self._ioClusterClient);
+	self._errorDomain.add(self._ioClusterClient);
 	
 	self._ioClusterClient.on('sessiondestroy', function (sessionId) {
 		self.emit(self.EVENT_SESSION_DESTROY, sessionId);
@@ -267,8 +267,8 @@ Worker.prototype.handleCacheUpdate = function (url, content, size) {
 	cache.set(cache.ENCODING_PLAIN, url, content);	
 };
 
-Worker.prototype.handleMasterEvent = function (event, data) {
-	this.emit(event, data);
+Worker.prototype.handleMasterEvent = function () {
+	this.emit.apply(this, arguments);
 };
 
 Worker.prototype.ready = function () {
@@ -279,6 +279,7 @@ Worker.prototype.ready = function () {
 Worker.prototype._handleConnection = function (socket) {
 	var self = this;
 	
+	self._errorDomain.add(socket);
 	var remoteAddress = socket.address;
 	var nSocket = socket.ns('__nc');
 	
@@ -293,6 +294,7 @@ Worker.prototype._handleConnection = function (socket) {
 	
 	socket.on('close', function() {
 		self.emit(self.EVENT_SOCKET_DISCONNECT, socket);
+		self._errorDomain.remove(socket);
 	});
 	
 	self.emit(self.EVENT_SOCKET_CONNECT, socket);
@@ -315,6 +317,7 @@ Worker.prototype._start = function () {
 	
 	self._addStatusWatcher = function (socket) {
 		if (socket.id) {
+			self._errorDomain.add(socket);
 			self._statusWatchers[socket.id] = socket;
 		} else {
 			throw new Error('Failed to add status watcher');
@@ -323,6 +326,7 @@ Worker.prototype._start = function () {
 
 	self._removeStatusWatcher = function (socket) {
 		if (socket.id) {
+			//self._errorDomain.remove(socket);
 			delete self._statusWatchers[socket.id];
 		} else {
 			throw new Error('Failed to remove status watcher');
@@ -357,7 +361,7 @@ Worker.prototype._start = function () {
 	
 	var statusServer = ncom.createServer(self._addStatusWatcher);
 	statusServer.on('close', self._removeStatusWatcher);
-	self.errorDomain.add(statusServer);
+	self._errorDomain.add(statusServer);
 	statusServer.listen(self._statusPort);
 	
 	setInterval(self._emitStatus, self._options.workerStatusInterval * 1000);
@@ -371,7 +375,7 @@ Worker.prototype._start = function () {
 		logLevel: self._options.logLevel
 	});
 	
-	self.errorDomain.add(self._socketServer);
+	self._errorDomain.add(self._socketServer);
 	
 	var oldRequestListeners = self._server.listeners('request').splice(0);
 	self._server.removeAllListeners('request');

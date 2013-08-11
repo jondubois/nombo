@@ -591,6 +591,7 @@ Master.prototype._start = function () {
 					}
 
 					var worker = fork(__dirname + '/ncombo-worker-bootstrap.node');
+					self._errorDomain.add(worker);
 					worker.id = workerIdCounter++;
 
 					var workerOpts = self._cloneObject(self._options);
@@ -624,6 +625,7 @@ Master.prototype._start = function () {
 					});
 
 					worker.on('exit', function (code, signal) {
+						self._errorDomain.remove(worker);
 						var message = '   Worker ' + worker.id + ' died - Exit code: ' + code;
 
 						if (signal) {

@@ -67,6 +67,7 @@ Master.prototype._init = function (options) {
 		allowUploads: false,
 		baseURL: null,
 		hostAddress: null,
+		balancerCount: null,
 		clusterEngine: 'iocluster'
 	};
 
@@ -90,6 +91,10 @@ Master.prototype._init = function (options) {
 		}
 	} else {
 		self._options.workers = [{port: self._options.port + 2, statusPort: self._options.port + 3}];
+	}
+	
+	if (!self._options.balancerCount) {
+		self._options.balancerCount = self._options.workers.length;
 	}
 	
 	self._extRegex = /[.][^\/\\]*$/;
@@ -520,7 +525,8 @@ Master.prototype._start = function () {
 						dataKey: pass,
 						sourcePort: self._options.port,
 						workers: self._options.workers,
-						hostAddress: self._options.hostAddress
+						hostAddress: self._options.hostAddress,
+						balancerCount: self._options.balancerCount
 					}
 				});
 			};
@@ -568,7 +574,8 @@ Master.prototype._start = function () {
 						if (self._options.release) {
 							console.log('            Version: ' + self._options.cacheVersion);
 						}
-						console.log('            Number of workers: ' + self._options.workers.length);
+						console.log('            Balancer count: ' + self._options.balancerCount);
+						console.log('            Worker count: ' + self._options.workers.length);
 						console.log();
 						firstTime = false;
 						

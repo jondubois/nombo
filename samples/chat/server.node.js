@@ -10,7 +10,8 @@ var options = {
 	sessionTimeout: 10,
 	addressSocketLimit: 4,
 	logLevel: 4,
-	connectTimeout: 10
+	connectTimeout: 10,
+	balancerCount: 3
 };
 
 var ncombo = new Master(options);

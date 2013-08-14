@@ -66,6 +66,7 @@ Master.prototype._init = function (options) {
 		workerStatusInterval: 10,
 		allowUploads: false,
 		baseURL: null,
+		hostAddress: null,
 		clusterEngine: 'iocluster'
 	};
 
@@ -518,7 +519,8 @@ Master.prototype._start = function () {
 					data: {
 						dataKey: pass,
 						sourcePort: self._options.port,
-						workers: self._options.workers
+						workers: self._options.workers,
+						hostAddress: self._options.hostAddress
 					}
 				});
 			};

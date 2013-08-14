@@ -367,12 +367,14 @@ Worker.prototype._start = function () {
 	setInterval(self._emitStatus, self._options.workerStatusInterval * 1000);
 	
 	self._socketServer = socketCluster.attach(self._server, {
+		sourcePort: self._options.port,
 		ioClusterClient: self._ioClusterClient,
 		transports: self._options.transports,
 		pingTimeout: self._options.heartbeatTimeout,
 		pingInterval: self._options.heartbeatInterval,
 		upgradeTimeout: self._options.connectTimeout,
-		logLevel: self._options.logLevel
+		logLevel: self._options.logLevel,
+		hostAddress: self._options.hostAddress
 	});
 	
 	self._errorDomain.add(self._socketServer);

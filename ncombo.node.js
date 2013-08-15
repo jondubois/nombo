@@ -567,6 +567,14 @@ Master.prototype._start = function () {
 							event: self.EVENT_LEADER_START
 						});
 					}
+					
+					if (!firstTime) {
+						self._balancer.send({
+							type: 'setWorkers',
+							data: self._workers
+						});
+					}
+					
 					if (self._workers.length >= self._options.workers.length && firstTime) {
 						console.log('   ' + self.colorText('[Active]', 'green') + ' nCombo server started');
 						console.log('            Port: ' + self._options.port);
@@ -650,6 +658,11 @@ Master.prototype._start = function () {
 						}
 
 						self._workers = newWorkers;
+						
+						self._balancer.send({
+							type: 'setWorkers',
+							data: self._workers
+						});
 
 						var lead = worker.id == leaderId;
 						leaderId = -1;

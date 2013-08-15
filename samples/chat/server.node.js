@@ -7,11 +7,11 @@ var options = {
 	port: port,
 	release: release,
 	//workers: [{port: 9000, statusPort: 9001}, {port: 9002, statusPort: 9003}, {port: 9004, statusPort: 9005}],
+	workers: [{port: 9000, statusPort: 9001}],
 	sessionTimeout: 10,
 	addressSocketLimit: 4,
 	logLevel: 4,
-	connectTimeout: 10,
-	balancerCount: 3
+	connectTimeout: 10
 };
 
 var ncombo = new Master(options);

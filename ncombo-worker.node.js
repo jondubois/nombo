@@ -320,11 +320,12 @@ Worker.prototype._start = function () {
 			self._errorDomain.add(socket);
 			self._statusWatchers[socket.id] = socket;
 			
-			var removeStatusWatcher = function () {
+			var endStatusWatcher = function () {
+				socket.end();
 				self._removeStatusWatcher(socket);
 			};
 			
-			var authTimeout = setTimeout(removeStatusWatcher, self._options.connectTimeout);
+			var authTimeout = setTimeout(endStatusWatcher, self._options.connectTimeout);
 			
 			socket.on('message', function (message) {
 				var decipher = crypto.createDecipher('aes192', self._options.dataKey);
@@ -335,7 +336,7 @@ Worker.prototype._start = function () {
 				if (m.type == 'auth') {
 					clearTimeout(authTimeout);
 					if (m.data != self._options.dataKey) {
-						removeStatusWatcher();
+						endStatusWatcher();
 					}
 				}
 			});

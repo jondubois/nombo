@@ -319,14 +319,34 @@ Worker.prototype._start = function () {
 		if (socket.id) {
 			self._errorDomain.add(socket);
 			self._statusWatchers[socket.id] = socket;
+			
+			var removeStatusWatcher = function () {
+				self._removeStatusWatcher(socket);
+			};
+			
+			var authTimeout = setTimeout(removeStatusWatcher, self._options.connectTimeout);
+			
+			socket.on('message', function (message) {
+				var decipher = crypto.createDecipher('aes192', self._options.dataKey);
+				message = decipher.update(message, 'base64', 'utf8');
+				message += decipher.final('utf8');
+				
+				var m = JSON.parse(message);
+				if (m.type == 'auth') {
+					clearTimeout(authTimeout);
+					if (m.data != self._options.dataKey) {
+						removeStatusWatcher();
+					}
+				}
+			});
 		} else {
 			throw new Error('Failed to add status watcher');
 		}
 	};
 
 	self._removeStatusWatcher = function (socket) {
+		self._errorDomain.remove(socket);
 		if (socket.id) {
-			//self._errorDomain.remove(socket);
 			delete self._statusWatchers[socket.id];
 		} else {
 			throw new Error('Failed to remove status watcher');

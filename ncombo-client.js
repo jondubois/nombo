@@ -211,7 +211,9 @@ $n.RemoteInterface = function (url, namespace, wsSocket) {
 	var simNamespace = '__nc';
 	
 	if (!wsSocket) {
-		wsSocket = NCOMBO_SOCKET_ENGINE.connect(url);
+		wsSocket = NCOMBO_SOCKET_ENGINE.connect(url, {
+			forceJSONP: true
+		});
 	}
 	
 	var mainSocket = wsSocket.ns(mainNamespace);

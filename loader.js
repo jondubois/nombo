@@ -103,6 +103,9 @@ var $loader = {
 		if($loader._appDefinition.appStyleBundleURL) {
 			$loader._resources.push($loader._appDefinition.appStyleBundleURL);
 		}
+		if($loader._appDefinition.frameworkCoreBundleURL) {
+			$loader._resources.push($loader._appDefinition.frameworkCoreBundleURL);
+		}
 		if($loader._appDefinition.appLibBundleURL) {
 			$loader._resources.push($loader._appDefinition.appLibBundleURL);
 		}

@@ -572,6 +572,9 @@ Worker.prototype._sessionHandler = function(req, res, next) {
 								if(self._resourceSizes[appDef.appStyleBundleURL] <= 0) {
 									delete appDef.appStyleBundleURL;
 								}
+								if(self._resourceSizes[appDef.frameworkCoreBundleURL] <= 0) {
+									delete appDef.frameworkCoreBundleURL;
+								}
 								if(self._resourceSizes[appDef.appLibBundleURL] <= 0) {
 									delete appDef.appLibBundleURL;
 								}

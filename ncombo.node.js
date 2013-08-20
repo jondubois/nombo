@@ -76,6 +76,12 @@ Master.prototype._init = function (options) {
 		self._options[i] = options[i];
 	}
 	
+	if (self._options.logLevel > 2) {
+		process.env.DEBUG = 'engine*';
+	} else if (self._options.logLevel > 1) {
+		process.env.DEBUG = 'engine';
+	}
+	
 	if (!self._options.dataPort) {
 		self._options.dataPort = self._options.port + 1;
 	}
@@ -101,6 +107,8 @@ Master.prototype._init = function (options) {
 	self._slashSequenceRegex = /\/+/g;
 	self._startSlashRegex = /^\//;
 
+	self._clientCoreLibMap = {};
+	self._clientCoreLibs = [];
 	self._clientScriptMap = {};
 	self._clientScripts = [];
 	self._clientStyles = [];
@@ -137,6 +145,28 @@ Master.prototype._init = function (options) {
 
 	pathManager.init(self._paths.frameworkURL, self._paths.frameworkDirPath, self._paths.appDirPath, self._paths.appExternalURL);
 
+	self._useCoreLib = function (url, index) {
+		var normalURL = self._normalizeURL(url);
+		var filePath = pathManager.urlToPath(normalURL);
+		var obj = {};
+
+		if (!self._clientCoreLibMap[normalURL]) {
+			if (self._extRegex.test(url)) {
+				obj['url'] = normalURL;
+				obj['path'] = filePath;
+			} else {
+				obj['url'] = url + '.js';
+				obj['path'] = filePath + '.js';
+			}
+			if (index == null) {
+				self._clientCoreLibs.push(obj);
+			} else {
+				self._clientCoreLibs.splice(index, 0, obj);
+			}
+			self._clientCoreLibMap[normalURL] = true;
+		}
+	};
+	
 	self.useScript = function (url, index) {
 		var normalURL = self._normalizeURL(url);
 		var filePath = pathManager.urlToPath(normalURL);
@@ -288,10 +318,10 @@ Master.prototype._init = function (options) {
 	}
 
 	self.useStyle(self._paths.frameworkClientURL + 'styles/ncombo.css');
-	self.useScript(self._paths.frameworkClientURL + 'libs/jquery.js');
-	self.useScript(self._paths.frameworkModulesURL + 'handlebars/dist/handlebars.js');
-	self.useScript(self._paths.frameworkClientURL + 'libs/json2.js');
-	self.useScript(self._paths.frameworkURL + 'ncombo-client.js');
+	self._useCoreLib(self._paths.frameworkClientURL + 'libs/jquery.js');
+	self._useCoreLib(self._paths.frameworkModulesURL + 'handlebars/dist/handlebars.js');
+	self._useCoreLib(self._paths.frameworkClientURL + 'libs/json2.js');
+	self._useCoreLib(self._paths.frameworkURL + 'ncombo-client.js');
 };
 
 Master.prototype.errorHandler = function (err) {
@@ -403,34 +433,32 @@ Master.prototype._start = function () {
 		bundles[appDef.appTemplateBundleURL] = htmlBundle;
 	};
 
-	var libPaths = [];
-	var jsLibCodes = {};
-
-	for (i in self._clientScripts) {
-		libPaths.push(self._clientScripts[i].path);
-		jsLibCodes[self._clientScripts[i].path] = fs.readFileSync(self._clientScripts[i].path, 'utf8');
+	var jsCoreLibCodes = {};
+	
+	for (i in self._clientCoreLibs) {
+		jsCoreLibCodes[self._clientCoreLibs[i].path] = fs.readFileSync(self._clientCoreLibs[i].path, 'utf8');
 	}
-
-	var makeLibBundle = function () {
+	
+	var makeCoreBundle = function () {
 		var libArray = [];
 		var i;
-		for (i in jsLibCodes) {
-			if (jsLibCodes[i]) {
-				libArray.push(jsLibCodes[i]);
+		for (i in jsCoreLibCodes) {
+			if (jsCoreLibCodes[i]) {
+				libArray.push(jsCoreLibCodes[i]);
 			}
 		}
-		var libBundle = libArray.join('\n');
+		var coreLibBundle = libArray.join('\n');
 		if (self._options.release) {
-			libBundle = scriptManager.minify(libBundle);
+			coreLibBundle = scriptManager.minify(coreLibBundle);
 		}
-		bundles[appDef.appLibBundleURL] = libBundle;
+		bundles[appDef.frameworkCoreBundleURL] = coreLibBundle;
 
-		var size = Buffer.byteLength(libBundle, 'utf8');
+		var size = Buffer.byteLength(coreLibBundle, 'utf8');
 		var data;
 		for (var i in self._workers) {
 			data = {
-				url: appDef.appLibBundleURL,
-				content: libBundle,
+				url: appDef.frameworkCoreBundleURL,
+				content: coreLibBundle,
 				size: size
 			};
 			self._workers[i].send({
@@ -440,13 +468,13 @@ Master.prototype._start = function () {
 		}
 	};
 
-	var updateLibBundle = function (event, filePath) {
+	var updateCoreBundle = function (event, filePath) {
 		if (event == 'delete') {
-			jsLibCodes[filePath] = null;
-		} else if ((event == 'create' || event == 'update') && jsLibCodes.hasOwnProperty(filePath)) {
-			jsLibCodes[filePath] = fs.readFileSync(filePath, 'utf8');
+			jsCoreLibCodes[filePath] = null;
+		} else if ((event == 'create' || event == 'update') && jsCoreLibCodes.hasOwnProperty(filePath)) {
+			jsCoreLibCodes[filePath] = fs.readFileSync(filePath, 'utf8');
 		}
-		makeLibBundle();
+		makeCoreBundle();
 	};
 
 	var bundleOptions = {
@@ -454,6 +482,35 @@ Master.prototype._start = function () {
 		watch: !self._options.release,
 		exports: 'require'
 	};
+	
+	var libBundle = browserify(bundleOptions);
+	
+	for (i in self._clientScripts) {
+		libBundle.addEntry(self._clientScripts[i].path);
+	}
+
+	var updateLibBundle = function (callback) {
+		var jsBundle = libBundle.bundle();
+		if (self._options.release) {
+			jsBundle = scriptManager.minify(jsBundle);
+		}
+		bundles[appDef.appLibBundleURL] = jsBundle;
+		var size = Buffer.byteLength(jsBundle, 'utf8');
+		var data;
+		for (var i in self._workers) {
+			data = {
+				url: appDef.appLibBundleURL,
+				content: jsBundle,
+				size: size
+			};
+			self._workers[i].send({
+				type: 'updateCache',
+				data: data
+			});
+		}
+		callback && callback();
+	};
+
 	var scriptBundle = browserify(bundleOptions);
 	scriptBundle.addEntry(pathManager.urlToPath(appDef.appScriptsURL + 'index.js'));
 
@@ -482,8 +539,10 @@ Master.prototype._start = function () {
 	var initBundles = function (callback) {
 		updateCSSBundle();
 		updateTemplateBundle();
-		makeLibBundle();
-		updateScriptBundle(callback);
+		makeCoreBundle();
+		updateLibBundle(function () {
+			updateScriptBundle(callback);
+		});
 	};
 
 	var autoRebundle = function () {
@@ -496,8 +555,12 @@ Master.prototype._start = function () {
 		});
 
 		watchr.watch({
-			paths: [pathManager.urlToPath(appDef.frameworkLibsURL), pathManager.urlToPath(appDef.appLibsURL)],
-			listener: updateLibBundle
+			paths: [pathManager.urlToPath(appDef.frameworkLibsURL)],
+			listener: updateCoreBundle
+		});
+		
+		libBundle.on('bundle', function () {
+			updateLibBundle();
 		});
 
 		scriptBundle.on('bundle', function () {
@@ -603,7 +666,8 @@ Master.prototype._start = function () {
 
 					var styleAssetSizeMap = styleBundle.getAssetSizeMap();
 					for (i in styleAssetSizeMap) {
-						// Prepend with the relative path to root from style bundle url (styles will be inserted inside <style></style> tags in root document)
+						// Prepend with the relative path to root from style bundle url 
+						// (styles will be inserted inside <style></style> tags in root document).
 						resourceSizes[externalAppDef.virtualURL + '../..' + i] = styleAssetSizeMap[i];
 					}
 
@@ -749,6 +813,7 @@ Master.prototype._getAppDef = function (useInternalURLs) {
 	appDef.virtualURL = appDef.appURL + '~virtual/';
 	appDef.appStyleBundleURL = appDef.virtualURL + 'styles.css';
 	appDef.appTemplateBundleURL = appDef.virtualURL + 'templates.js';
+	appDef.frameworkCoreBundleURL = appDef.frameworkURL + '~virtual/core.js';
 	appDef.appLibBundleURL = appDef.virtualURL + 'libs.js';
 	appDef.appScriptBundleURL = appDef.virtualURL + 'scripts.js';
 	appDef.frameworkClientURL = this._paths.frameworkClientURL;

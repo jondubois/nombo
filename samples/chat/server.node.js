@@ -10,7 +10,7 @@ var options = {
 	workers: [{port: 9000, statusPort: 9001}],
 	sessionTimeout: 10,
 	addressSocketLimit: 4,
-	logLevel: 4,
+	logLevel: 1,
 	connectTimeout: 10
 };
 

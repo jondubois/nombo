@@ -770,7 +770,8 @@ Master.prototype._start = function () {
 				self._ioClusterServer = new self._clusterEngine.IOClusterServer({
 					port: dataPort,
 					secretKey: pass,
-					expiryAccuracy: self._dataExpiryAccuracy
+					expiryAccuracy: self._dataExpiryAccuracy,
+					secure: self._options.protocol == 'https'
 				});
 				
 				self._ioClusterServer.on('error', self.errorHandler);

@@ -31,6 +31,8 @@ var Worker = function (options) {
 		self.errorHandler.apply(self, arguments);
 	});
 	self._errorDomain.add(self);
+	self._nonceSize = 32;
+	self._nonceSeed = 0;
 	
 	self.start = self._errorDomain.bind(self._start);
 	self.init = self._errorDomain.run(function() {
@@ -315,30 +317,41 @@ Worker.prototype._start = function () {
 		throw new Error("The " + self._options.protocol + " protocol is not supported");
 	}
 	
+	self._generateNonce = function (callback) {
+		crypto.randomBytes(self._nonceSize, function (err, nonce) {
+			self._nonceSeed++;
+			callback(err, nonce.toString('hex') + '-' + self._nonceSeed);
+		});
+	};
+	
 	self._addStatusWatcher = function (socket) {
 		if (socket.id) {
-			self._errorDomain.add(socket);
-			self._statusWatchers[socket.id] = socket;
-			
-			var endStatusWatcher = function () {
-				socket.end();
-				self._removeStatusWatcher(socket);
-			};
-			
-			var authTimeout = setTimeout(endStatusWatcher, self._options.connectTimeout);
-			
-			socket.on('message', function (message) {
-				var decipher = crypto.createDecipher('aes192', self._options.dataKey);
-				message = decipher.update(message, 'base64', 'utf8');
-				message += decipher.final('utf8');
+			self._generateNonce(function (err, nonce) {
+				self._errorDomain.add(socket);
+				socket.write(nonce);
 				
-				var m = JSON.parse(message);
-				if (m.type == 'auth') {
-					clearTimeout(authTimeout);
-					if (m.data != self._options.dataKey) {
-						endStatusWatcher();
+				var endStatusSocket = function () {
+					socket.end();
+					self._errorDomain.remove(socket);
+				};
+				
+				var authTimeout = setTimeout(endStatusSocket, self._options.connectTimeout);
+				
+				socket.on('message', function (message) {
+					var decipher = crypto.createDecipher('aes192', self._options.dataKey);
+					message = decipher.update(message, 'base64', 'utf8');
+					message += decipher.final('utf8');
+					
+					var m = JSON.parse(message);
+					if (m.type == 'auth') {
+						clearTimeout(authTimeout);
+						if (m.data == self._options.dataKey) {
+							self._statusWatchers[socket.id] = socket;
+						} else {
+							endStatusSocket();
+						}
 					}
-				}
+				});
 			});
 		} else {
 			throw new Error('Failed to add status watcher');

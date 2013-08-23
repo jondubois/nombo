@@ -335,7 +335,7 @@ Worker.prototype._start = function () {
 					self._errorDomain.remove(socket);
 				};
 				
-				var authTimeout = setTimeout(endStatusSocket, self._options.connectTimeout);
+				var authTimeout = setTimeout(endStatusSocket, self._options.connectTimeout * 1000);
 				
 				socket.on('message', function (message) {
 					var decipher = crypto.createDecipher('aes192', self._options.dataKey);

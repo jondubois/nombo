@@ -249,6 +249,7 @@ Worker.prototype._init = function (options) {
 	self._headerAdder.init(self._options);
 	
 	self._ioClusterClient = new self._clusterEngine.IOClusterClient({
+		hostAddress: self._options.hostAddress,
 		port: self._options.dataPort,
 		secretKey: self._options.dataKey,
 		connectTimeout: self._options.connectTimeout,

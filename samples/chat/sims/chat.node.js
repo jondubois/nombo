@@ -42,6 +42,8 @@ module.exports.addMessage = function(req, res) {
 					res.end();
 				}
 			});
+
+			//req.global.emit('localhost_8002_8000_0_NCQCgzXQHPM0uy53AAAA', 'updatemessages', 1234);
 		}
 	});
 }

@@ -249,7 +249,6 @@ Worker.prototype._init = function (options) {
 	self._headerAdder.init(self._options);
 	
 	self._ioClusterClient = new self._clusterEngine.IOClusterClient({
-		hostAddress: self._options.hostAddress,
 		port: self._options.dataPort,
 		secretKey: self._options.dataKey,
 		connectTimeout: self._options.connectTimeout,
@@ -419,8 +418,9 @@ Worker.prototype._start = function () {
 	var oldUpgradeListeners = self._server.listeners('upgrade').splice(0);
 	self._server.removeAllListeners('upgrade');
 	
-	self._server.on('request', self._rewriteHTTPRequest);
-	self._server.on('upgrade', self._rewriteHTTPRequest);
+	var boundRewriteHTTPRequest = self._rewriteHTTPRequest.bind(self);
+	self._server.on('request', boundRewriteHTTPRequest);
+	self._server.on('upgrade', boundRewriteHTTPRequest);
 	
 	var i;
 	for(i in oldRequestListeners) {
@@ -439,6 +439,14 @@ Worker.prototype._start = function () {
 	gateway.init(self._paths.appDirPath + '/sims/', self._customSIMExtension);
 	
 	self._socketServer.on('ready', self.ready.bind(self));
+};
+
+Worker.prototype.getHTTPRate = function () {
+	return this._httpRPM;
+};
+
+Worker.prototype.getIORate = function () {
+	return this._ioRPM;
 };
 
 Worker.prototype.errorHandler = function(err) {

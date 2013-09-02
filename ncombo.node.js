@@ -40,7 +40,7 @@ Master.prototype._init = function (options) {
 	self._options = {
 		port: 8000,
 		workers: null,
-		dataPort: null,
+		stores: null,
 		release: false,
 		title: 'nCombo App',
 		angular: false,
@@ -68,7 +68,9 @@ Master.prototype._init = function (options) {
 		baseURL: null,
 		hostAddress: null,
 		balancerCount: null,
-		clusterEngine: 'iocluster'
+		clusterEngine: 'iocluster',
+		clusterKey: null,
+		clusterPort: null
 	};
 
 	var i;
@@ -82,8 +84,12 @@ Master.prototype._init = function (options) {
 		process.env.DEBUG = 'engine';
 	}
 	
-	if (!self._options.dataPort) {
-		self._options.dataPort = self._options.port + 1;
+	if (!self._options.clusterPort) {
+		self._options.clusterPort = self._options.port + 1;
+	}
+	
+	if (!self._options.stores || self._options.stores.length < 1) {
+		self._options.stores = [{port: self._options.port + 2}];
 	}
 	
 	if (self._options.workers) {
@@ -96,7 +102,7 @@ Master.prototype._init = function (options) {
 			}
 		}
 	} else {
-		self._options.workers = [{port: self._options.port + 2, statusPort: self._options.port + 3}];
+		self._options.workers = [{port: self._options.port + 3, statusPort: self._options.port + 4}];
 	}
 	
 	if (!self._options.balancerCount) {
@@ -681,7 +687,7 @@ Master.prototype._start = function () {
 					workerOpts.workerId = worker.id;
 					workerOpts.workerPort = workerData.port;
 					workerOpts.statusPort = workerData.statusPort;
-					workerOpts.dataPort = dataPort;
+					workerOpts.stores = stores;
 					workerOpts.dataKey = pass;
 					workerOpts.minifiedScripts = minifiedScripts;
 					workerOpts.bundles = bundles;
@@ -763,13 +769,18 @@ Master.prototype._start = function () {
 				launchWorkers();
 			};
 
-			dataPort = self._options.dataPort;
+			var stores = self._options.stores;
 			var pass = crypto.randomBytes(32).toString('hex');
+			
+			if (!self._options.clusterKey) {
+				self._options.clusterKey = crypto.randomBytes(32).toString('hex');
+			}
 			
 			var launchIOCluster = function () {
 				self._ioClusterServer = new self._clusterEngine.IOClusterServer({
-					port: dataPort,
-					secretKey: pass,
+					stores: stores,
+					dataKey: pass,
+					clusterKey: self._options.clusterKey,
 					expiryAccuracy: self._dataExpiryAccuracy,
 					secure: self._options.protocol == 'https'
 				});

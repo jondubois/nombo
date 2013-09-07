@@ -25,7 +25,6 @@ var prevList = "";
 
 var chatHandler = function(messages) {
 	var msgStr = '';
-	
 	var i;
 	for(i in messages) {
 		msgStr += '<li>' + messages[i].user + ': ' + messages[i].message + '</li>';

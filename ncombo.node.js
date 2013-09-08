@@ -653,6 +653,7 @@ Master.prototype._start = function () {
 						}
 						console.log('            Balancer count: ' + self._options.balancerCount);
 						console.log('            Worker count: ' + self._options.workers.length);
+						console.log('            Store count: ' + self._options.stores.length);
 						console.log();
 						firstTime = false;
 						

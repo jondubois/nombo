@@ -676,7 +676,7 @@ Master.prototype._start = function () {
 						// (styles will be inserted inside <style></style> tags in root document).
 						resourceSizes[externalAppDef.virtualURL + '../..' + i] = styleAssetSizeMap[i];
 					}
-
+					
 					var worker = fork(__dirname + '/ncombo-worker-bootstrap.node');
 					self._errorDomain.add(worker);
 					worker.id = workerIdCounter++;

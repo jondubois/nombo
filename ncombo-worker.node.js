@@ -430,7 +430,6 @@ Worker.prototype._start = function () {
 	for(i in oldUpgradeListeners) {
 		self._server.on('upgrade', oldUpgradeListeners[i]);
 	}
-	
 	self._server.listen(self._options.workerPort);
 	self.global = self._ioClusterClient.global();
 

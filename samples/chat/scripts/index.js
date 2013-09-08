@@ -32,6 +32,7 @@ var chatHandler = function(messages) {
 	
 	$('.messageContainer').html(msgStr);
 }
+
 /*
 	This is a presenter (look up Model View Presenter pattern), it handles data from the chat serverinterface
 	It updates the view whenever the message log changes on the server.

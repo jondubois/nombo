@@ -195,6 +195,7 @@ var NCOMBO_ERROR = 'Unkown Error';
 		var timeout = NCOMBO_TIMEOUT;
 		var sessionID = null;
 		var sessionCookieName = '__' + NCOMBO_APP_DEF.appURL + 'ssid';
+		
 		var sessionDestRegex = /^([^_]*)_([^_]*)_([^_]*)_([^_]*)_/;
 	
 		self._setIDCookies = function(soid) {

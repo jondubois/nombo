@@ -25,7 +25,7 @@ exports = module.exports = {
 // /foo/dep.js
 
 var dep = require('./foo/dep');
-console.log(dep.hello'); // world
+console.log('dep.hello'); // world
 ```
 
 Now, inside your browser console, you can look up every module on the global require

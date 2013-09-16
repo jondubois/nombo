@@ -1,0 +1,28 @@
+{
+  "name": "requireify",
+  "version": "0.0.1",
+  "description": "Browserify plugin to access all modules from browser console",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test/test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/johnkpaul/requireify"
+  },
+  "keywords": [
+    "browserify",
+    "v2",
+    "js",
+    "plugin",
+    "transform"
+  ],
+  "author": "John K. Paul",
+  "license": "MIT",
+  "dependencies": {
+    "through": "~2.2.7"
+  },
+  "devDependencies": {
+    "browserify": "~2.29.1"
+  }
+}

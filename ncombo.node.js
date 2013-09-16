@@ -794,7 +794,6 @@ Master.prototype._start = function () {
 				});
 				
 				self._ioClusterServer.on('error', self.errorHandler);
-				self._ioClusterServer.on('exit', launchIOCluster);
 			};
 			
 			launchIOCluster();

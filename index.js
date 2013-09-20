@@ -1,6 +1,7 @@
 /*jshint node: true*/
 
 var through = require('through');
+var regex = /function\s{0,2}\w*\(\){([\s\S]*)}/
 
 module.exports = function() {
   var buffer = '';
@@ -9,9 +10,54 @@ module.exports = function() {
     buffer += chunk.toString();
   },
   function() {
-    this.queue(buffer+';window.require[__filename] = module.exports;');
+    var prepend = addRequire.toString().match(regex)[1];
+    var postpend = addModule.toString().match(regex)[1];
+    this.queue(prepend + buffer +';' + postpend);
     this.queue(null);
   });
 
 };
+
+function addModule(){
+  var global = (function(){ return this; }).call(null);;
+  if(typeof __filename !== 'undefined'){
+    global.require[__filename.substring(0, __filename.length - 3)] = module.exports;
+  }
+}
+
+function addRequire(){
+  var global = (function(){ return this; }).call(null);;
+  if(!global.require){
+    global.require = global.require || function require(key){return global.require[key];};
+
+    (function(){
+    var require = global.require;
+    var ret = global.require;
+        
+    Object.defineProperty(global, 'require', {
+        get: function(){
+          return ret;
+        },
+        set: function(newRequire){
+            ret = function(key){
+                if(require[key]){
+                  return require[key];
+                }else{
+                  var temp = ret;
+                  ret = newRequire;
+                  var module = newRequire(key);
+                  ret = temp;
+                  return module;
+                }
+            }
+            for(key in require){
+              ret[key] = require[key];
+            }
+        }
+    });
+
+    })();
+  }
+
+}
 

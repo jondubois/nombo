@@ -14,16 +14,26 @@ var b = browserify();
 
 b.transform(requireify);
 
-b.add(modulePath)
- .bundle({insertGlobals: true}, function(err, src){
-   fs.writeFileSync(__dirname+'/compiled.js', src);
-   var script = vm.createScript(src+';window.test = window.require["/foo/dep.js"].hello');
+b.require(__dirname + '/foo/dep2.js', {expose: 'x'});
 
-   var context = {console: {log: function(){}}, window:{require: function(){}}};
+b.add(modulePath)
+ .bundle(function(err, src){
+   var completeScript = src+';window.test = require("/foo/dep").hello;window.test2 = require("x");'
+   var script = vm.createScript(completeScript);
+   fs.writeFileSync(__dirname+'/compiled.js', completeScript);
+
+   var context = getContext();
    context.self = context.window;
 
    script.runInNewContext(context);
+
    assert.equal(context.window.test, 'world');
+   assert.equal(context.window.test2, 'world');
  });
 
+function getContext(){
+  return {console:{log: function(){
+     console.log.apply(console, arguments);
+   }},window:{}};
 
+}

@@ -1,5 +1,5 @@
 var foo = require('./foo/dep');
-exports = module.exports = function(){
-  console.log(foo.hello);
+var dep2 = require('./foo/dep2');
+exports = module.exports = {
+  hello: foo.hello
 }
-exports();

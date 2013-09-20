@@ -11,9 +11,8 @@ Install requireify locally to your project:
 
 Then use it as Browserify transform module with `-t`:
 
-    browserify --insert-globals --require --transform requireify main.js > bundle.js
+    browserify --transform requireify main.js > bundle.js
 
---insert-globals and --require are necessary options for this tranform to work correctly
 
 
 ```javascript
@@ -30,5 +29,5 @@ console.log(dep.hello); // world
 
 Now, inside your browser console, you can look up every module on the global require
 
-    >> var hello = require['/foo/dep.js'].hello;
+    >> var hello = require('/foo/dep').hello;
     >> console.log(hello); // world

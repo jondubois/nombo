@@ -1,6 +1,6 @@
 {
   "name": "requireify",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Browserify plugin to access all modules from browser console",
   "main": "index.js",
   "scripts": {

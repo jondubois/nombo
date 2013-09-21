@@ -9,7 +9,6 @@ var cache = require('ncombo/cache');
 var handlebars = require('handlebars');
 var stepper = require('stepper');
 var cache = require('ncombo/cache');
-var crypto = require('crypto');
 var ws = require('ncombo/webservice');
 var gateway = require('ncombo/gateway');
 var mime = require('mime');
@@ -31,8 +30,6 @@ var Worker = function (options) {
 		self.errorHandler.apply(self, arguments);
 	});
 	self._errorDomain.add(self);
-	self._nonceSize = 32;
-	self._nonceSeed = 0;
 	
 	self.start = self._errorDomain.bind(self._start);
 	self.init = self._errorDomain.run(function() {
@@ -88,14 +85,14 @@ Worker.prototype._init = function (options) {
 	self._compressor = require('ncombo/router/compressor.node.js');
 	self._responder = require('ncombo/router/responder.node.js');
 	
-	if(self._options.release) {
-		for(j in self._minifiedScripts) {
+	if (self._options.release) {
+		for (j in self._minifiedScripts) {
 			cache.set(cache.ENCODING_PLAIN, j, self._minifiedScripts[j]);
 			self._cacheResponder.setUnrefreshable(j);
 		}
 	}
 	
-	for(j in self._bundles) {
+	for (j in self._bundles) {
 		cache.set(cache.ENCODING_PLAIN, j, self._bundles[j]);
 		self._cacheResponder.setUnrefreshable(j);
 	}
@@ -117,7 +114,6 @@ Worker.prototype._init = function (options) {
 	self._fullAuthResources = {};
 	
 	self._cacheVersion = self._options.cacheVersion;
-	
 	self._smartCacheManager = new SmartCacheManager(self._cacheVersion);
 	
 	self._defaultScriptType = 'text/javascript';
@@ -155,7 +151,7 @@ Worker.prototype._init = function (options) {
 	
 	self._middleware[self.MIDDLEWARE_IO] = stepper.create({context: self});
 	
-	self._responseNotSentValidator = function(req, res) {
+	self._responseNotSentValidator = function (req, res) {
 		return req && res && !res.finished;
 	}
 	
@@ -168,37 +164,37 @@ Worker.prototype._init = function (options) {
 	self._tailGetStepper.addFunction(self._compressor.run);
 	self._tailGetStepper.setTail(self._responder.run);
 	
-	self._respond = function(req, res, data, mimeType, skipCache) {
-		if(!req.hasOwnProperty('rout')) {
+	self._respond = function (req, res, data, mimeType, skipCache) {
+		if (!req.hasOwnProperty('rout')) {
 			req.rout = {};
 		}
 		
-		if(typeof data == 'string') {
+		if (typeof data == 'string') {
 			req.rout.buffer = new Buffer(data);
 		} else {
 			req.rout.buffer = data;
 		}
 		
-		if(mimeType) {
+		if (mimeType) {
 			req.rout.mimeType = mimeType;
 		}
 		
-		if(skipCache) {
+		if (skipCache) {
 			req.rout.skipCache = 1;
 		}
 		
 		self._tailGetStepper.run(req, res);
 	}
 	
-	self._cacheEscapeHandler = function(req, res, next) {
-		if(req.params.ck && self._appScriptsURLRegex.test(req.url)) {
+	self._cacheEscapeHandler = function (req, res, next) {
+		if (req.params.ck && self._appScriptsURLRegex.test(req.url)) {
 			delete req.params.ck;
 		}
 		next();
 	}
 	
-	self._httpMethodJunction = function(req, res) {
-		if(req.method == 'POST') {
+	self._httpMethodJunction = function (req, res) {
+		if (req.method == 'POST') {
 			self._middleware[self.MIDDLEWARE_POST].run(req, res)
 		} else {
 			self._middleware[self.MIDDLEWARE_GET].run(req, res)
@@ -216,11 +212,12 @@ Worker.prototype._init = function (options) {
 	self._routStepper.addFunction(self._faviconHandler);
 	self._routStepper.addFunction(self._getParamsHandler);
 	self._routStepper.addFunction(self._sessionHandler);
+	self._routStepper.addFunction(self._cacheHandler);
 	self._routStepper.setTail(self._httpMethodJunction);
 	
 	self._middleware[self.MIDDLEWARE_POST] = stepper.create({context: self});
 	self._middleware[self.MIDDLEWARE_POST].setTail(function() {
-		if(self._options.allowUploads) {
+		if (self._options.allowUploads) {
 			self._fileUploader.upload.apply(self._fileUploader, arguments);
 		}
 	});
@@ -236,7 +233,7 @@ Worker.prototype._init = function (options) {
 	});
 	
 	self._privateExtensions = self._config.privateExtensions;
-	if(self._privateExtensions) {
+	if (self._privateExtensions) {
 		self._privateExtensionRegex = new RegExp('[.](' + self._privateExtensions.join('|').replace(/[.]/g, '[.]') + ')$');
 	} else {
 		self._privateExtensionRegex = /$a/;
@@ -306,10 +303,17 @@ Worker.prototype._handleConnection = function (socket) {
 Worker.prototype._start = function () {
 	var self = this;
 	
-	if(self._options.protocol == 'http') {
+	self._includeString = self._createScriptTag(self._paths.freshnessExternalURL, 'text/javascript') + "\n\t";
+	self._includeString += self._createScriptTag(self._paths.frameworkURL + 'smartcachemanager.js', 'text/javascript') + "\n\t";
+	self._includeString += self._createScriptTag(self._paths.cachenessExternalURL, 'text/javascript') + "\n\t";
+	self._includeString += self._createScriptTag(self._paths.spinJSURL, 'text/javascript') + "\n\t";
+	self._includeString += self._createScriptTag(self._paths.frameworkSocketIOClientURL, 'text/javascript') + "\n\t";
+	self._includeString += self._createScriptTag(self._paths.appExternalURL + self._paths.frameworkURL + 'session.js', 'text/javascript');
+	
+	if (self._options.protocol == 'http') {
 		self._server = http.createServer(self._middleware[self.MIDDLEWARE_HTTP].run);
-	} else if(self._options.protocol == 'https') {
-		if(self._options.protocolOptions) {
+	} else if (self._options.protocol == 'https') {
+		if (self._options.protocolOptions) {
 			self._server = https.createServer(self._options.protocolOptions, self._middleware[self.MIDDLEWARE_HTTP].run);
 		} else {
 			throw new Error("The protocolOptions option must be set when https is used");
@@ -318,41 +322,27 @@ Worker.prototype._start = function () {
 		throw new Error("The " + self._options.protocol + " protocol is not supported");
 	}
 	
-	self._generateNonce = function (callback) {
-		crypto.randomBytes(self._nonceSize, function (err, nonce) {
-			self._nonceSeed++;
-			callback(err, nonce.toString('hex') + '-' + self._nonceSeed);
-		});
-	};
-	
 	self._addStatusWatcher = function (socket) {
 		if (socket.id) {
-			self._generateNonce(function (err, nonce) {
-				self._errorDomain.add(socket);
-				socket.write(nonce);
-				
-				var endStatusSocket = function () {
-					socket.end();
-					self._errorDomain.remove(socket);
-				};
-				
-				var authTimeout = setTimeout(endStatusSocket, self._options.connectTimeout * 1000);
-				
-				socket.on('message', function (message) {
-					var decipher = crypto.createDecipher('aes192', self._options.dataKey);
-					message = decipher.update(message, 'base64', 'utf8');
-					message += decipher.final('utf8');
-					
-					var m = JSON.parse(message);
-					if (m.type == 'auth') {
-						clearTimeout(authTimeout);
-						if (m.data == self._options.dataKey) {
-							self._statusWatchers[socket.id] = socket;
-						} else {
-							endStatusSocket();
-						}
+			self._errorDomain.add(socket);
+			
+			var endStatusSocket = function () {
+				socket.end();
+				self._errorDomain.remove(socket);
+			};
+			
+			var authTimeout = setTimeout(endStatusSocket, self._options.connectTimeout * 1000);
+			
+			socket.on('message', function (message) {
+				var m = JSON.parse(message);
+				if (m.type == 'auth') {
+					clearTimeout(authTimeout);
+					if (m.data == self._options.dataKey) {
+						self._statusWatchers[socket.id] = socket;
+					} else {
+						endStatusSocket();
 					}
-				});
+				}
 			});
 		} else {
 			throw new Error('Failed to add status watcher');
@@ -379,16 +369,14 @@ Worker.prototype._start = function () {
 		self._httpRPM = self._httpRequestCount * perMinuteFactor;
 		self._httpRequestCount = 0;
 		self._ioRequestCount = 0;
+		
 		for (var i in self._statusWatchers) {
 			if (self._statusWatchers[i].connected) {
-				var cipher = crypto.createCipher('aes192', self._options.dataKey);
 				var message = JSON.stringify({
 					clientCount: self._socketServer.clientsCount,
 					httpRPM: self._httpRPM,
 					ioRPM: self._ioRPM
 				});
-				message = cipher.update(message, 'utf8', 'base64');
-				message += cipher.final('base64');
 				self._statusWatchers[i].write(message);
 			}
 		}
@@ -427,10 +415,10 @@ Worker.prototype._start = function () {
 	self._server.on('upgrade', boundRewriteHTTPRequest);
 	
 	var i;
-	for(i in oldRequestListeners) {
+	for (i in oldRequestListeners) {
 		self._server.on('request', oldRequestListeners[i]);
 	}
-	for(i in oldUpgradeListeners) {
+	for (i in oldUpgradeListeners) {
 		self._server.on('upgrade', oldUpgradeListeners[i]);
 	}
 	self._server.listen(self._options.workerPort);
@@ -452,74 +440,61 @@ Worker.prototype.getIORate = function () {
 	return this._ioRPM;
 };
 
-Worker.prototype.errorHandler = function(err) {
+Worker.prototype.errorHandler = function (err) {
 	this.emit('error', err);
-	if(err.stack) {
+	if (err.stack) {
 		console.log(err.stack);
 	} else {
 		console.log(err);
 	}
 };
 
-Worker.prototype.addMiddleware = function(type, callback) {
-	if(!this._middleware.hasOwnProperty(type)) {
+Worker.prototype.addMiddleware = function (type, callback) {
+	if (!this._middleware.hasOwnProperty(type)) {
 		throw new Error("Middleware type '" + type + "' is invalid");
 	}
 	this._middleware[type].addFunction(callback);
 };
 
-Worker.prototype.removeMiddleware = function(type, callback) {
-	if(this._middleware[type].getLength() > 0) {
+Worker.prototype.removeMiddleware = function (type, callback) {
+	if (this._middleware[type].getLength() > 0) {
 		this._middleware[type].remove(callback);
 	}
 };
 
-Worker.prototype.allowFullAuthResource = function(url) {
+Worker.prototype.allowFullAuthResource = function (url) {
 	this._fullAuthResources[url] = true;
 };
 
-Worker.prototype.denyFullAuthResource = function(url) {
-	if(this._fullAuthResources.hasOwnProperty(url)) {
+Worker.prototype.denyFullAuthResource = function (url) {
+	if (this._fullAuthResources.hasOwnProperty(url)) {
 		delete this._fullAuthResources[url];
 	}
 };
 
-Worker.prototype.isFullAuthResource = function(url) {
+Worker.prototype.isFullAuthResource = function (url) {
 	return this._fullAuthResources.hasOwnProperty(url);
 };
 
-Worker.prototype._writeSessionStartScreen = function(req, res) {
+Worker.prototype._writeSessionStartScreen = function (req, res) {
 	var encoding = this._getReqEncoding(req);
 	
 	res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, HEAD, GET, POST');
 	res.setHeader('Access-Control-Allow-Origin', '*');
 	
-	var cacheVersion;
-	if(this._options.release) {
-		cacheVersion = this._cacheVersion;
-	} else {
-		cacheVersion = (new Date()).getTime();
-	}
-	
-	res.setHeader('Set-Cookie', '__nccacheversion=' + cacheVersion + '; Path=/');
-	
-	if(this._options.release && cache.has(encoding, req.url)) {
+	if (this._options.release && cache.has(encoding, req.url)) {
 		this._respond(req, res, cache.get(encoding, req.url), 'text/html', true);
 	} else {
-		var includeString = this._createScriptTag(this._paths.frameworkURL + 'smartcachemanager.js', 'text/javascript') + "\n\t";
-		includeString += this._createScriptTag(this._paths.timeCacheExternalURL, 'text/javascript') + "\n\t";
-		includeString += this._createScriptTag(this._paths.spinJSURL, 'text/javascript') + "\n\t";
-		includeString += this._createScriptTag(this._paths.frameworkSocketIOClientURL, 'text/javascript') + "\n\t";
-		includeString += this._createScriptTag(this._paths.appExternalURL + this._paths.frameworkURL + 'session.js', 'text/javascript');
+		var includeString = this._includeString;
 		
 		var htmlAttr = '';
 		var bodyAttr = '';
 		
-		if(this._options.angular) {
-			htmlAttr = ' xmlns:ng="http://angularjs.org"';
+		if (this._options.angular) {
+			htmlAttr += ' xmlns:ng="http://angularjs.org"';
 			bodyAttr = ' ng-cloak';
 		} else {
-			htmlAttr = ' xmlns="http://www.w3.org/1999/xhtml"';
+			htmlAttr += ' xmlns="http://www.w3.org/1999/xhtml"';
 		}
 		
 		var html = this._rootTemplate({
@@ -532,11 +507,11 @@ Worker.prototype._writeSessionStartScreen = function(req, res) {
 	}
 };
 
-Worker.prototype._getReqEncoding = function(req) {
+Worker.prototype._getReqEncoding = function (req) {
 	var acceptEncoding = req.headers['accept-encoding'] || '';
 	
 	var encoding;
-	if(acceptEncoding.match(/\bgzip\b/)) {
+	if (acceptEncoding.match(/\bgzip\b/)) {
 		encoding = 'gzip';
 	} else if (acceptEncoding.match(/\bdeflate\b/)) {
 		encoding = 'deflate';
@@ -546,122 +521,139 @@ Worker.prototype._getReqEncoding = function(req) {
 	return encoding;
 };
 
-Worker.prototype._sessionHandler = function(req, res, next) {
-	var self = this;
-	
-	req.global = self.global;
-	
-	if(req.url == self._paths.timeCacheInternalURL) {
+Worker.prototype._cacheHandler = function (req, res, next) {
+	if (req.url == this._paths.freshnessInternalURL) {
+		var cacheVersion;
+		if (this._options.release) {
+			cacheVersion = this._cacheVersion;
+		} else {
+			cacheVersion = (new Date()).getTime();
+		}
+		res.setHeader('Content-Type', 'application/javascript');
+		res.setHeader('Cache-Control', 'no-cache');
+		res.setHeader('Pragma', 'no-cache');
+		res.writeHead(200);
+		var script = 'var NCOMBO_CACHE_VERSION = "' + cacheVersion + '";';
+		res.end(script);
+		
+	} else if (req.url == this._paths.cachenessInternalURL) {
 		var now = (new Date()).getTime();
-		var expiry = new Date(now + self._options.cacheLife * 1000);
-		res.setHeader('Content-Type', 'text/javascript');
-		res.setHeader('Set-Cookie', '__' + self._paths.appExternalURL + 'nccached=0; Path=/');
-		res.setHeader('Cache-Control', 'private');
-		res.setHeader('Pragma', 'private');
+		var expiry = new Date(now + this._options.cacheLife * 1000);
+		res.setHeader('Content-Type', 'application/javascript');
+		res.setHeader('Set-Cookie', '__' + this._paths.appExternalURL + 'nccached=0; Path=/');		
+		res.setHeader('Cache-Control', this._options.cacheType);
+		res.setHeader('Pragma', this._options.cacheType);
 		res.setHeader('Expires', expiry.toUTCString());
 		res.writeHead(200);
 		var script = '/* Check if cached */';
 		res.end(script);
 	} else {
-		var sid = self._parseSSID(req.headers.cookie);
-		var url;
+		next();
+	}
+};
+
+Worker.prototype._sessionHandler = function (req, res, next) {
+	var self = this;
+	
+	req.global = self.global;
+	
+	var sid = self._parseSSID(req.headers.cookie);
+	var url;
+	
+	if (req.url == '/') {
+		url = self._paths.rootTemplateURL;
+	} else {
+		url = req.url;
+	}
+	
+	var filePath = pathManager.urlToPath(url);
+	
+	if (url == self._paths.rootTemplateURL) {
+		self._writeSessionStartScreen(req, res);
+	} else {
+		var encoding = self._getReqEncoding(req);
 		
-		if(req.url == '/') {
-			url = self._paths.rootTemplateURL;
-		} else {
-			url = req.url;
-		}
-		
-		var filePath = pathManager.urlToPath(url);
-		
-		if(url == self._paths.rootTemplateURL) {
-			self._writeSessionStartScreen(req, res);
-		} else {
-			var encoding = self._getReqEncoding(req);
-			var skipCache = (url == self._paths.frameworkURL + 'smartcachemanager.js');
+		if (url == self._paths.frameworkURL + 'smartcachemanager.js' || url == self._paths.frameworkSocketIOClientURL || 
+				url == self._paths.frameworkURL + 'session.js' || self.isFullAuthResource(url)) {
 			
-			if(skipCache || url == self._paths.frameworkSocketIOClientURL || url == self._paths.frameworkURL + 'session.js'
-					|| self.isFullAuthResource(url)) {
-				
-				if(this._options.release && cache.has(encoding, url)) {
-					this._respond(req, res, cache.get(encoding, url), null, skipCache);
-				} else {
-					fs.readFile(filePath, function(err, data) {
-						if(err) {
-							res.writeHead(500);
-							res.end('Failed to start session');
-						} else {
-							if(url == self._paths.frameworkURL + 'session.js') {
-								var appDef = self._options.appDef;
-								
-								if(self._resourceSizes[appDef.appStyleBundleURL] <= 0) {
-									delete appDef.appStyleBundleURL;
-								}
-								if(self._resourceSizes[appDef.frameworkCoreBundleURL] <= 0) {
-									delete appDef.frameworkCoreBundleURL;
-								}
-								if(self._resourceSizes[appDef.appLibBundleURL] <= 0) {
-									delete appDef.appLibBundleURL;
-								}
-								if(self._resourceSizes[appDef.appTemplateBundleURL] <= 0) {
-									delete appDef.appTemplateBundleURL;
-								}
-								if(self._resourceSizes[appDef.appScriptBundleURL] <= 0) {
-									delete appDef.appScriptBundleURL;
-								}
-								
-								var template = handlebars.compile(data.toString());
-								data = template({
-									port: self._options.port,
-									frameworkURL: self._paths.frameworkURL,
-									frameworkClientURL: self._paths.frameworkClientURL,
-									timeout: self._options.connectTimeout * 1000,
-									appDef: JSON.stringify(appDef),
-									resources: JSON.stringify(self._bundledResources),
-									debug: self._options.release ? 'false' : 'true'
-								});
-							}
-							self._respond(req, res, data, null, skipCache);
-						}
-					});
-				}
+			if (this._options.release && cache.has(encoding, url)) {
+				this._respond(req, res, cache.get(encoding, url), null);
 			} else {
-				if(sid) {
-					req.session = this._ioClusterClient.session(sid);
-					next();
-				} else if(!this._options.publicResources) {
-					res.writeHead(500);
-					res.end('File cannot be accessed outside of a session');
-				} else {
-					next();
-				}
+				fs.readFile(filePath, function(err, data) {
+					if (err) {
+						res.writeHead(500);
+						res.end('Failed to start session');
+					} else {
+						if (url == self._paths.frameworkURL + 'session.js') {
+							var appDef = self._options.appDef;
+							
+							if (self._resourceSizes[appDef.appStyleBundleURL] <= 0) {
+								delete appDef.appStyleBundleURL;
+							}
+							if (self._resourceSizes[appDef.frameworkCoreBundleURL] <= 0) {
+								delete appDef.frameworkCoreBundleURL;
+							}
+							if (self._resourceSizes[appDef.appLibBundleURL] <= 0) {
+								delete appDef.appLibBundleURL;
+							}
+							if (self._resourceSizes[appDef.appTemplateBundleURL] <= 0) {
+								delete appDef.appTemplateBundleURL;
+							}
+							if (self._resourceSizes[appDef.appScriptBundleURL] <= 0) {
+								delete appDef.appScriptBundleURL;
+							}
+							
+							var template = handlebars.compile(data.toString());
+							data = template({
+								port: self._options.port,
+								frameworkURL: self._paths.frameworkURL,
+								frameworkClientURL: self._paths.frameworkClientURL,
+								timeout: self._options.connectTimeout * 1000,
+								appDef: JSON.stringify(appDef),
+								resources: JSON.stringify(self._bundledResources),
+								debug: self._options.release ? 'false' : 'true'
+							});
+						}
+						self._respond(req, res, data, null);
+					}
+				});
+			}
+		} else {
+			if (sid) {
+				req.session = this._ioClusterClient.session(sid);
+				next();
+			} else if (!this._options.publicResources) {
+				res.writeHead(500);
+				res.end('File cannot be accessed outside of a session');
+			} else {
+				next();
 			}
 		}
 	}
 };
 
-Worker.prototype._rewriteHTTPRequest = function(req) {
+Worker.prototype._rewriteHTTPRequest = function (req) {
 	this._httpRequestCount++;
 	req.url = pathManager.simplify(req.url);
 };
 
-Worker.prototype._prepareHTTPHandler = function(req, res, next) {
+Worker.prototype._prepareHTTPHandler = function (req, res, next) {
 	res.connection && res.connection.setNoDelay(true);
 	next();
 };
 
-Worker.prototype._faviconHandler = function(req, res, next) {
+Worker.prototype._faviconHandler = function (req, res, next) {
 	var self = this;
 	var iconPath = self._paths.appDirPath + '/assets/favicon.gif';
 	
-	if(req.url == '/favicon.ico') {
+	if (req.url == '/favicon.ico') {
 		fs.readFile(iconPath, function(err, data) {
-			if(err) {
-				if(err.code == 'ENOENT') {
+			if (err) {
+				if (err.code == 'ENOENT') {
 					iconPath = self._paths.frameworkClientDirPath + '/assets/favicon.gif';
 					fs.readFile(iconPath, function(err, data) {
-						if(err) {
-							if(err.code == 'ENOENT') {
+						if (err) {
+							if (err.code == 'ENOENT') {
 								res.writeHead(404);
 								res.end();
 							} else {
@@ -689,7 +681,7 @@ Worker.prototype._faviconHandler = function(req, res, next) {
 	}
 };
 
-Worker.prototype._getParamsHandler = function(req, res, next) {
+Worker.prototype._getParamsHandler = function (req, res, next) {
 	var urlParts = url.parse(req.url);
 	var query = urlParts.query;
 	req.url = urlParts.pathname;
@@ -697,22 +689,22 @@ Worker.prototype._getParamsHandler = function(req, res, next) {
 	next();
 };
 
-Worker.prototype._parseSSID = function(cookieString) {
-	if(cookieString) {
+Worker.prototype._parseSSID = function (cookieString) {
+	if (cookieString) {
 		var result = cookieString.match(this._ssidRegex);
-		if(result) {
+		if (result) {
 			return result[2];
 		}
 	}
 	return null;
 };
 
-Worker.prototype._applyFileResponseHeaders = function(res, filePath, mimeType, forceRefresh) {
-	if(!mimeType) {
+Worker.prototype._applyFileResponseHeaders = function (res, filePath, mimeType, forceRefresh) {
+	if (!mimeType) {
 		mimeType = mime.lookup(filePath);
 	}
 	
-	if(this._options.release && !forceRefresh) {
+	if (this._options.release && !forceRefresh) {
 		var now = new Date();
 		var expiry = new Date(now.getTime() + this._options.cacheLife * 1000);
 		
@@ -732,24 +724,24 @@ Worker.prototype._normalizeURL = function (url) {
 	return url.replace(/\\/g, '/');
 };
 
-Worker.prototype._createScriptCodeTag = function(code, type) {
-	if(!type) {
+Worker.prototype._createScriptCodeTag = function (code, type) {
+	if (!type) {
 		type = this._defaultScriptType;
 	}
 	return '<script type="' + type + '">' + code + '</script>';
 };
 
-Worker.prototype._createScriptTag = function(url, type) {
+Worker.prototype._createScriptTag = function (url, type) {
 	url = this._normalizeURL(url);
-	if(this._options.release) {
+	if (this._options.release) {
 		url = this._smartCacheManager.setURLCacheVersion(url);
 	}
 	return '<script type="' + type + '" src="' + url + '"></script>';
 };
 
-Worker.prototype._createStyleTag = function(url, type) {
+Worker.prototype._createStyleTag = function (url, type) {
 	url = this._normalizeURL(url);
-	if(this._options.release) {
+	if (this._options.release) {
 		url = this._smartCacheManager.setURLCacheVersion(url);
 	}
 	return '<link rel="' + this._defaultStyleRel + '" type="' + type + '" href="' + url + '" />';
@@ -757,7 +749,7 @@ Worker.prototype._createStyleTag = function(url, type) {
 
 function IORequest(req, socket, session, global, remoteAddress, secure) {
 	var i;
-	for(i in req) {
+	for (i in req) {
 		this[i] = req[i];
 	}
 	this.session = session;
@@ -771,15 +763,15 @@ function IORequest(req, socket, session, global, remoteAddress, secure) {
 function IOResponse(req, res) {
 	var self = this;
 	var i;
-	for(i in req) {
+	for (i in req) {
 		self[i] = req[i];
 	}
 	
-	self.end = function(data) {
+	self.end = function (data) {
 		res.end(data);
 	}
 	
-	self.error = function(error, data) {
+	self.error = function (error, data) {
 		res.error(error, data);
 	}
 };

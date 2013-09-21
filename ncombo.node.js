@@ -53,7 +53,7 @@ Master.prototype._init = function (options) {
 		connectTimeout: 10,
 		sessionTimeout: 1200,
 		cacheLife: 2592000,
-		cacheType: 'private',
+		cacheType: 'public',
 		cacheVersion: null,
 		origins: '*:*',
 		publicResources: true,
@@ -147,9 +147,12 @@ Master.prototype._init = function (options) {
 
 	self._paths.appExternalURL = ('/' + (self._appName || self._options.baseURL) + '/').replace(self._slashSequenceRegex, '/');
 	self._paths.appInternalURL = '/';
-	self._paths.timeCacheExternalURL = self._paths.appExternalURL + '~timecache';
-	self._paths.timeCacheInternalURL = self._paths.appInternalURL + '~timecache';
-
+	self._paths.cachenessExternalURL = self._paths.appExternalURL + '~cacheness';
+	self._paths.cachenessInternalURL = self._paths.appInternalURL + '~cacheness';
+	
+	self._paths.freshnessExternalURL = self._paths.appExternalURL + '~freshness';
+	self._paths.freshnessInternalURL = self._paths.appInternalURL + '~freshness';
+	
 	pathManager.init(self._paths.frameworkURL, self._paths.frameworkDirPath, self._paths.appDirPath, self._paths.appExternalURL);
 
 	self._useCoreLib = function (url, index) {

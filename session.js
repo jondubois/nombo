@@ -188,7 +188,7 @@ var NCOMBO_ERROR = 'Unkown Error';
 	var ncCacheCookieName = '__' + NCOMBO_APP_DEF.appURL + 'nccached';
 	var ncCacheCookie = getCookie(ncCacheCookieName);
 	
-	NCOMBO_IS_FRESH = (ncCacheCookie && ncCacheCookie == cacheVersion) ? false : true;
+	NCOMBO_IS_FRESH = (ncCacheCookie && cacheVersion == ncCacheCookie) ? false : true;
 	
 	NCOMBO_SESSION_MANAGER = new (function() {
 		var self = this;

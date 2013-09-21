@@ -4,7 +4,8 @@
   "description": "Browserify plugin to access all modules from browser console",
   "main": "index.js",
   "scripts": {
-    "test": "node test/test.js"
+    "test": "node test/test.js",
+    "hint": "jshint --config .jshintrc ."
   },
   "repository": {
     "type": "git",
@@ -24,6 +25,7 @@
     "innersource": "0.0.1"
   },
   "devDependencies": {
-    "browserify": "~2.29.1"
+    "browserify": "~2.29.1",
+    "jshint": "~2.1.11"
   }
 }

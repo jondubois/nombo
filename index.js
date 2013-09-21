@@ -1,4 +1,4 @@
-/*jshint node: true*/
+'use strict';
 
 var through = require('through');
 var innersource = require('innersource');
@@ -19,14 +19,14 @@ module.exports = function() {
 };
 
 function addModule(){
-  var global = (function(){ return this; }).call(null);;
+  var global = (function(){ return this; }).call(null);
   if(typeof __filename !== 'undefined'){
     global.require[__filename.substring(0, __filename.length - 3)] = module.exports;
   }
 }
 
 function addRequire(){
-  var global = (function(){ return this; }).call(null);;
+  var global = (function(){ return this; }).call(null);
   if(!global.require){
     global.require = global.require || function require(key){return global.require[key];};
 
@@ -49,8 +49,8 @@ function addRequire(){
                   ret = temp;
                   return module;
                 }
-            }
-            for(key in require){
+            };
+            for(var key in require){
               ret[key] = require[key];
             }
         }

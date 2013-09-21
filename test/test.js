@@ -1,4 +1,4 @@
-/*jshint node: true*/
+'use strict';
 
 var fs = require('fs');
 var vm = require('vm');
@@ -18,7 +18,7 @@ b.require(__dirname + '/foo/dep2.js', {expose: 'x'});
 
 b.add(modulePath)
  .bundle(function(err, src){
-   var completeScript = src+';window.test = require("/foo/dep").hello;window.test2 = require("x");'
+   var completeScript = src+';window.test = require("/foo/dep").hello;window.test2 = require("x");';
    var script = vm.createScript(completeScript);
    fs.writeFileSync(__dirname+'/compiled.js', completeScript);
 

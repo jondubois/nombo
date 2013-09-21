@@ -1,7 +1,7 @@
 /*jshint node: true*/
 
 var through = require('through');
-var regex = /function\s{0,2}\w*\(\){([\s\S]*)}/
+var innersource = require('innersource');
 
 module.exports = function() {
   var buffer = '';
@@ -10,8 +10,8 @@ module.exports = function() {
     buffer += chunk.toString();
   },
   function() {
-    var prepend = addRequire.toString().match(regex)[1];
-    var postpend = addModule.toString().match(regex)[1];
+    var prepend = innersource(addRequire);
+    var postpend = innersource(addModule);
     this.queue(prepend + buffer +';' + postpend);
     this.queue(null);
   });

@@ -20,7 +20,8 @@
   "author": "John K. Paul",
   "license": "MIT",
   "dependencies": {
-    "through": "~2.2.7"
+    "through": "~2.2.7",
+    "innersource": "0.0.1"
   },
   "devDependencies": {
     "browserify": "~2.29.1"

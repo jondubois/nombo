@@ -108,7 +108,7 @@ dataClient.get('this.is.a', function(value) {
 
 The above would output: {deep:{key:'Hello world'}}
 
-nCombo generally doesn't restrict you from doing anything you want. It is perfectly OK to call this:
+Nombo generally doesn't restrict you from doing anything you want. It is perfectly OK to call this:
 
 dataClient.add('this.is.a', 'foo');
 

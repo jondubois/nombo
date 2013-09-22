@@ -16,7 +16,7 @@ console.log('Loading scripts...');
 	Use $n.ready when you want to run code that makes use of dependencies. For simplicity, it is advisable to
 	have at least one main ready block for each script file which has dependencies.
 	
-	$n.ready also accounts for all images referenced within CSS files as well as additional CSS loaded using @import - nCombo will wait for all style data to be loaded before
+	$n.ready also accounts for all images referenced within CSS files as well as additional CSS loaded using @import - Nombo will wait for all style data to be loaded before
 	the ready callback is executed.
 */
 $n.ready(function() {

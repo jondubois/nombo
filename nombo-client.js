@@ -1,5 +1,5 @@
 /**
-	This script provides the core client-side functionality of nCombo.
+	This script provides the core client-side functionality of Nombo.
 */
 var $n = {
 	MAX_ID: Math.pow(2, 53) - 2,
@@ -22,7 +22,7 @@ var $n = {
 	_plugins: {},
 	
 	initIO: function () {
-		$n.socket = NCOMBO_SOCKET;
+		$n.socket = NOMBO_SOCKET;
 		$n.local = new $n.LocalInterface($n.socket);
 	},
     
@@ -42,7 +42,7 @@ var $n = {
 		$n._timeout = appDefinition.timeout;
 		
 		// global variable from session.js
-		$n._cacheVersion = NCOMBO_CACHE_VERSION;
+		$n._cacheVersion = NOMBO_CACHE_VERSION;
 		
 		$n.initIO();
 		
@@ -60,7 +60,7 @@ var $n = {
 	
 	session: {		
 		end: function (callback) {
-			NCOMBO_SESSION_MANAGER.endSession(callback);
+			NOMBO_SESSION_MANAGER.endSession(callback);
 		}
 	},
 	
@@ -82,12 +82,12 @@ var $n = {
 	},
 	
 	/**
-		Bind a callback function to nCombo's ready event. The specified function will be called when nCombo is ready to begin processing.
+		Bind a callback function to Nombo's ready event. The specified function will be called when Nombo is ready to begin processing.
 	*/
 	ready: $loader.grab.ready,
 	
 	/**
-		Bind a callback function to nCombo's fail event. The specified function will be called when nCombo fails to load a resource.
+		Bind a callback function to Nombo's fail event. The specified function will be called when Nombo fails to load a resource.
 		The callback can accept a parameter which indicates the URL of the resource which failed to load.
 	*/
 	fail:  $loader.grab.fail,
@@ -108,7 +108,7 @@ var $n = {
 	},
 	
 	/**
-		Get the URL of nCombo's root directory.
+		Get the URL of Nombo's root directory.
 	*/
 	getRootURL: function () {
 		return $n._frameworkURL;
@@ -123,7 +123,7 @@ var $n = {
 	
 	caching: {
 		/**
-			Enable/disable default caching for server interface AJAX calls performed by nCombo.
+			Enable/disable default caching for server interface AJAX calls performed by Nombo.
 			Server call caching is disabled by default.
 		*/
 		cacheServerCalls: function (bool) {
@@ -211,7 +211,7 @@ $n.RemoteInterface = function (url, namespace, wsSocket) {
 	var simNamespace = '__nc';
 	
 	if (!wsSocket) {
-		wsSocket = NCOMBO_SOCKET_ENGINE.connect(url, {
+		wsSocket = NOMBO_SOCKET_ENGINE.connect(url, {
 			forceJSONP: true
 		});
 	}

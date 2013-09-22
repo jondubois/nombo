@@ -1,1 +1,1 @@
-module.exports = require('./ncombo.node.js');
+module.exports = require('./nombo.node.js');

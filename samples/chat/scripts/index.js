@@ -1,7 +1,7 @@
 /*
 	Import stylesheet from framework/styles/ directory
 	You can also import a .less stylesheet which will be pre-compiled on the serverside; In this case, make sure that your files have a .less extension
-	Note that all nCombo framework files are stored under framework/ - App-specific files are stored under the app/ directory
+	Note that all Nombo framework files are stored under framework/ - App-specific files are stored under the app/ directory
 */
 $n.grab.framework.style('jqueryui/ui-lightness/style.css');
 

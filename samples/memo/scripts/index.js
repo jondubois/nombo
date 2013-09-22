@@ -1,6 +1,6 @@
 /*
 	This is a very basic note-taking app. It stores notes for the duration of a session.
-	For simplicity, we are not using any special MVP views (from nCombo's MVP plugin) - Just plain jQuery. 
+	For simplicity, we are using plain jQuery. 
 	In a practical setting, you may want to split your code into several files and include them into one another using 
 	$n.grab.app.script().
 */
@@ -72,12 +72,12 @@ function main() {
 	var shareButtons = mainView.find('.share');
 	
 	/*
-	This is a handle to the chat app running at samples.ncombo.com port 8000.
+	This is a handle to the chat app running at samples.nombo.io port 8000.
 	Chat app is configured to accept all remote communications by default (there is no middleware which stops this from happening), 
 	so we can call all its SIM methods directly.
 	In practice, all private SIM methods should be protected using middleware which should authenticate calls to it.
 	*/
-	var chatApp = $n.remote('samples.ncombo.com', 8000);
+	var chatApp = $n.remote('samples.nombo.io', 8000);
 	//var chatApp = $n.remote('localhost', 8000);
 	
 	mainView.delegate('.share', 'click', function(e) {

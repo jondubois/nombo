@@ -1,4 +1,4 @@
-var Worker = require('./ncombo-worker.node');
+var Worker = require('./nombo-worker.node');
 var worker;
 
 var handleError = function (err) {

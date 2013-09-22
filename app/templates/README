@@ -1,4 +1,4 @@
 This directory contains template files for use by the application.
 If AngularJS is enabled, index.html will be used as the main template by default.
 Note that this template will be embeded inside the <body> tag of the DOM - Manipulation of the head element
-such as bundling of scripts and setting an app title) should be done through nCombo start options (see app/server.node.js).
+such as bundling of scripts and setting an app title) should be done through Nombo start options (see app/server.node.js).

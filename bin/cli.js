@@ -13,7 +13,7 @@ var argv = require('optimist').argv;
 var command = argv._[0];
 var arg1 = argv._[1];
 var force = argv.force ? true : false;
-var sampleDirName = 'ncombo-samples';
+var sampleDirName = 'nombo-samples';
 
 var parsePackageFile = function(moduleDir) {
 	var packageFile = moduleDir + '/package.json';
@@ -39,15 +39,15 @@ var warningMessage = function(message) {
 }
 
 var showCorrectUsage = function() {
-	console.log('Usage: ncombo [options] [command]\n');
+	console.log('Usage: nombo [options] [command]\n');
 	console.log('Options:');
-	console.log("  -v                Get the version number of the current nCombo installation");
+	console.log("  -v                Get the version number of the current Nombo installation");
 	console.log('  --help            Get info on how to use this command');
 	console.log('  --force           Force all necessary directory modifications without prompts');
 	console.log();
 	console.log('Commands:');
 	console.log('  create <appname>  Create a new app <appname> within the working directory');
-	console.log('  samples           Create an ncombo-samples directory');
+	console.log('  samples           Create an nombo-samples directory');
 }
 
 var failedToRemoveDirMessage = function(dirPath) {
@@ -94,8 +94,8 @@ var rmdirRecursive = function(dirname) {
 }
 
 var createFrameworkDir = function(destDir, callback) {
-	var nComboSrcDir = __dirname + '/..';
-	var progressMessage = 'Installing nCombo modules... This may take a while.';
+	var nomboSrcDir = __dirname + '/..';
+	var progressMessage = 'Installing Nombo modules... This may take a while.';
 	var finishedMessage = 'Done';
 	var success = true;
 	var subModulesDir = destDir + '/node_modules';
@@ -109,7 +109,7 @@ var createFrameworkDir = function(destDir, callback) {
 		var i, j;
 		for(i in nodeModules) {
 			curFile = subModulesDir + '/' + nodeModules[i];
-			if(nodeModules[i] == 'ncombo') {
+			if(nodeModules[i] == 'nombo') {
 				coreModules = fs.readdirSync(curFile);
 				for(j in coreModules) {
 					if(coreModules[j] != 'index.js') {
@@ -132,7 +132,7 @@ var createFrameworkDir = function(destDir, callback) {
 	var proceed = function(confirm) {
 		if(confirm) {
 			console.log(progressMessage);
-			success = rmdirRecursive(destDir) && copyDirRecursive(nComboSrcDir, destDir);
+			success = rmdirRecursive(destDir) && copyDirRecursive(nomboSrcDir, destDir);
 			moveModules();
 			console.log(finishedMessage);
 		}
@@ -140,7 +140,7 @@ var createFrameworkDir = function(destDir, callback) {
 	}
 	
 	if(fs.existsSync(destDir)) {
-		var srcPkg = parsePackageFile(nComboSrcDir);
+		var srcPkg = parsePackageFile(nomboSrcDir);
 		var destPkg = parsePackageFile(destDir);
 		
 		if(srcPkg.version == destPkg.version) {
@@ -148,16 +148,16 @@ var createFrameworkDir = function(destDir, callback) {
 			callback(success);
 		} else if(force) {
 			console.log(progressMessage);
-			success = rmdirRecursive(destDir) && copyDirRecursive(nComboSrcDir, destDir);
+			success = rmdirRecursive(destDir) && copyDirRecursive(nomboSrcDir, destDir);
 			moveModules();
 			console.log(finishedMessage);
 			callback(success);
 		} else {
-			prompConfirm('A different version of the nCombo framework directory already exists at ' + nComboDestDir + '. Overwrite it (y/n)?', proceed);
+			prompConfirm('A different version of the Nombo framework directory already exists at ' + nomboDestDir + '. Overwrite it (y/n)?', proceed);
 		}
 	} else {
 		console.log(progressMessage);
-		success = copyDirRecursive(nComboSrcDir, destDir);
+		success = copyDirRecursive(nomboSrcDir, destDir);
 		moveModules();
 		console.log(finishedMessage);
 		callback(success);
@@ -238,16 +238,16 @@ if(argv.help) {
 }
 
 if(argv.v) {
-	var nComboDir = __dirname + '/../../ncombo';
-	var nComboPkg = parsePackageFile(nComboDir);
-	console.log('v' + nComboPkg.version);
+	var nomboDir = __dirname + '/../../nombo';
+	var nomboPkg = parsePackageFile(nomboDir);
+	console.log('v' + nomboPkg.version);
 	process.exit();
 }
 
 var wd = process.cwd();
 
 var nodeModulesDir = wd + '/node_modules';
-var nComboDestDir = nodeModulesDir + '/ncombo';
+var nomboDestDir = nodeModulesDir + '/nombo';
 
 if(!fs.existsSync(nodeModulesDir)) {
 	fs.mkdirSync(nodeModulesDir);
@@ -256,7 +256,7 @@ if(!fs.existsSync(nodeModulesDir)) {
 if(command == 'create' || command == 'samples') {
 	var begin = function(confirm) {
 		if(confirm) {
-			createFrameworkDir(nComboDestDir, function(frameworkSuccess) {
+			createFrameworkDir(nomboDestDir, function(frameworkSuccess) {
 				if(frameworkSuccess) {
 					if(command == 'samples') {
 						var samplesDestDir = path.normalize(wd + '/' + sampleDirName);
@@ -276,7 +276,7 @@ if(command == 'create' || command == 'samples') {
 								process.exit();
 							});
 						} else {
-							successMessage('nCombo framework core has been installed. nCombo apps which are placed within the ' + wd + ' directory (including subdirectories) will use this framework core.');
+							successMessage('The Nombo framework core has been installed. Nombo apps which are placed within the ' + wd + ' directory (including subdirectories) will use this framework core.');
 							process.exit();
 						}
 					}
@@ -285,7 +285,7 @@ if(command == 'create' || command == 'samples') {
 				}
 			});
 		} else {
-			errorMessage("nCombo installation was cancelled");
+			errorMessage("The Nombo installation was cancelled");
 			process.exit();
 		}
 	}
@@ -293,10 +293,10 @@ if(command == 'create' || command == 'samples') {
 	if(force) {
 		begin(true);
 	} else {
-		prompConfirm('You are about to install nCombo. Please note that as part of the installation process, new modules will be added inside the ' + nodeModulesDir + ' directory - Existing modules may be overwitten. Would you like to continue (y/n)?', begin);
+		prompConfirm('You are about to install Nombo. Please note that as part of the installation process, new modules will be added inside the ' + nodeModulesDir + ' directory - Existing modules may be overwitten. Would you like to continue (y/n)?', begin);
 	}
 } else {
-	errorMessage("'" + command + "' is not a valid nCombo command");
+	errorMessage("'" + command + "' is not a valid Nombo command");
 	showCorrectUsage();
 	process.exit();
 }

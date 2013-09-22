@@ -4,7 +4,7 @@ angular.module('project', ['store']).
 config(function ($routeProvider, $locationProvider) {
 	/*
 		The $n.grab.app.templateURL() is optional, you also simply type out the full URL.
-		Note that nCombo app URLs have a short from and a long form - The long form should be used when
+		Note that Nombo app URLs have a short from and a long form - The long form should be used when
 		multiple apps are sharing the same domain name.
 		The short URL for 'list.html' is simply: /template/list.html
 		and the long URL is /angular_projects/scripts/list.html (the /angular_projects/ bit can be 

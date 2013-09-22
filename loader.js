@@ -66,7 +66,7 @@ var $loader = {
 	_modules: {},
 	
 	_loaderStart: null,
-	_cacheVersion: NCOMBO_CACHE_VERSION,
+	_cacheVersion: NOMBO_CACHE_VERSION,
 	
 	_appDefinition: null,
 	_resources: null,
@@ -285,7 +285,7 @@ var $loader = {
 	
 	finish: function() {
 		if($loader.grab._options.releaseMode) {
-			NCOMBO_SESSION_MANAGER.markAsCached();
+			NOMBO_SESSION_MANAGER.markAsCached();
 		}
 		$loader._embedAllResources();
 	},
@@ -409,7 +409,7 @@ var $loader = {
 		},
 		
 		/**
-			Bind a callback function to nCombo's ready event. The specified function will be called when nCombo is ready to begin processing.
+			Bind a callback function to Nombo's ready event. The specified function will be called when Nombo is ready to begin processing.
 		*/
 		ready: function(callback) {
 			if(!$loader.grab.isGrabbing()) {
@@ -420,7 +420,7 @@ var $loader = {
 		},
 
 		/**
-			Bind a callback function to nCombo's fail event. The specified function will be called when nCombo fails to load a resource.
+			Bind a callback function to Nombo's fail event. The specified function will be called when Nombo fails to load a resource.
 			The callback can accept a parameter which indicates the URL of the resource which failed to load.
 		*/
 		fail: function(callback) {

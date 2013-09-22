@@ -1,5 +1,5 @@
 {
-	"name": "ncombo",
+	"name": "nombo",
 	"description": "Cloud application framework",
 	"version": "0.9.105",
 	"author": {
@@ -14,7 +14,7 @@
 	],
 	"devDependencies": {},
 	"keywords": [
-		"ncombo",
+		"nombo",
 		"framework",
 		"cloud",
 		"web",
@@ -25,11 +25,11 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "git://github.com/topcloud/ncombo.git"
+		"url": "git://github.com/topcloud/nombo.git"
 	},
-	"main": "./ncombo.node.js",
+	"main": "./nombo.node.js",
 	"bin": {
-		"ncombo": "bin/cli.js"
+		"nombo": "bin/cli.js"
 	},
 	"engines": {
 		"node": ">= 0.8.0"
@@ -76,7 +76,7 @@
 		"fileuploader",
 		"iocluster",
 		"json",
-		"ncombo",
+		"nombo",
 		"stepper",
 		"socket.io",
 		"socket.io-client"

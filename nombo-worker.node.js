@@ -1,26 +1,26 @@
 var http = require('http');
 var https = require('https');
-var pathManager = require('ncombo/pathmanager');
-var scriptManager = require('ncombo/scriptmanager');
+var pathManager = require('nombo/pathmanager');
+var scriptManager = require('nombo/scriptmanager');
 var fs = require('fs');
 var url = require('url');
 var querystring = require('querystring');
-var cache = require('ncombo/cache');
+var cache = require('nombo/cache');
 var handlebars = require('handlebars');
 var stepper = require('stepper');
-var cache = require('ncombo/cache');
-var ws = require('ncombo/webservice');
-var gateway = require('ncombo/gateway');
+var cache = require('nombo/cache');
+var ws = require('nombo/webservice');
+var gateway = require('nombo/gateway');
 var mime = require('mime');
 var path = require('path');
-var pathManager = require('ncombo/pathmanager');
+var pathManager = require('nombo/pathmanager');
 var EventEmitter = require('events').EventEmitter;
 var SmartCacheManager = require("./smartcachemanager").SmartCacheManager;
 var socketCluster = require('socketcluster-server');
 var ncom = require('ncom');
 var retry = require('retry');
 var domain = require('domain');
-var conf = require('ncombo/configmanager');
+var conf = require('nombo/configmanager');
 
 var Worker = function (options) {
 	var self = this;
@@ -77,13 +77,13 @@ Worker.prototype._init = function (options) {
 	self._resourceSizes = {};
 	self._minifiedScripts = self._options.minifiedScripts;
 	
-	self._prerouter = require('ncombo/router/prerouter.node.js');
-	self._headerAdder = require('ncombo/router/headeradder.node.js');
-	self._cacheResponder = require('ncombo/router/cacheresponder.node.js');
-	self._router = require('ncombo/router/router.node.js');
-	self._preprocessor = require('ncombo/router/preprocessor.node.js');
-	self._compressor = require('ncombo/router/compressor.node.js');
-	self._responder = require('ncombo/router/responder.node.js');
+	self._prerouter = require('nombo/router/prerouter.node.js');
+	self._headerAdder = require('nombo/router/headeradder.node.js');
+	self._cacheResponder = require('nombo/router/cacheresponder.node.js');
+	self._router = require('nombo/router/router.node.js');
+	self._preprocessor = require('nombo/router/preprocessor.node.js');
+	self._compressor = require('nombo/router/compressor.node.js');
+	self._responder = require('nombo/router/responder.node.js');
 	
 	if (self._options.release) {
 		for (j in self._minifiedScripts) {
@@ -138,7 +138,7 @@ Worker.prototype._init = function (options) {
 		randomize: false
 	};
 	
-	self._fileUploader = require('ncombo/fileuploader');
+	self._fileUploader = require('nombo/fileuploader');
 	
 	self._clusterEngine = require(self._options.clusterEngine);
 	
@@ -533,14 +533,14 @@ Worker.prototype._cacheHandler = function (req, res, next) {
 		res.setHeader('Cache-Control', 'no-cache');
 		res.setHeader('Pragma', 'no-cache');
 		res.writeHead(200);
-		var script = 'var NCOMBO_CACHE_VERSION = "' + cacheVersion + '";';
+		var script = 'var NOMBO_CACHE_VERSION = "' + cacheVersion + '";';
 		res.end(script);
 		
 	} else if (req.url == this._paths.cachenessInternalURL) {
 		var now = (new Date()).getTime();
 		var expiry = new Date(now + this._options.cacheLife * 1000);
 		res.setHeader('Content-Type', 'application/javascript');
-		res.setHeader('Set-Cookie', '__' + this._paths.appExternalURL + 'nccached=0; Path=/');		
+		res.setHeader('Set-Cookie', '__' + this._paths.appExternalURL + 'cached=0; Path=/');		
 		res.setHeader('Cache-Control', this._options.cacheType);
 		res.setHeader('Pragma', this._options.cacheType);
 		res.setHeader('Expires', expiry.toUTCString());

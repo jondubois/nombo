@@ -1,12 +1,12 @@
 /*
-	This function is executed for each nCombo worker instance.
+	This function is executed for each Nombo worker instance.
 	Middleware functions should be added here.
 */
 
-var ws = require('ncombo/webservice');
+var ws = require('nombo/webservice');
 
-module.exports.run = function(ncombo) {
-	ncombo.addMiddleware(ncombo.MIDDLEWARE_IO, function(req, res, next) {
+module.exports.run = function(nombo) {
+	nombo.addMiddleware(nombo.MIDDLEWARE_IO, function(req, res, next) {
 		if(req.sim == 'auth') {
 			// Do not need to login to use auth server interface module
 			next();

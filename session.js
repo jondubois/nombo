@@ -6,24 +6,24 @@ if(/MSIE (\d+\.\d+);/.test(navigator.userAgent)) {
 	IE_VERSION = new Number(RegExp.$1)
 }
 
-var NCOMBO_PORT = {{port}};
-var NCOMBO_TIMEOUT = {{timeout}};
-var NCOMBO_FRAMEWORK_URL = '{{frameworkURL}}';
-var NCOMBO_FRAMEWORK_CLIENT_URL = '{{frameworkClientURL}}';
-var NCOMBO_IS_FRESH = null;
-var NCOMBO_SOCKET_ENGINE = socketCluster;
-var NCOMBO_SOCKET = null;
-var NCOMBO_SESSION_MANAGER = null;
-var NCOMBO_IE = IE;
-var NCOMBO_IE_VERSION = IE_VERSION;
-var NCOMBO_APP_DEF = {{{appDef}}};
-var NCOMBO_RESOURCES = {{{resources}}};
-var NCOMBO_DEBUG = {{debug}};
-var NCOMBO_ERROR = 'Unkown Error';
+var NOMBO_PORT = {{port}};
+var NOMBO_TIMEOUT = {{timeout}};
+var NOMBO_FRAMEWORK_URL = '{{frameworkURL}}';
+var NOMBO_FRAMEWORK_CLIENT_URL = '{{frameworkClientURL}}';
+var NOMBO_IS_FRESH = null;
+var NOMBO_SOCKET_ENGINE = socketCluster;
+var NOMBO_SOCKET = null;
+var NOMBO_SESSION_MANAGER = null;
+var NOMBO_IE = IE;
+var NOMBO_IE_VERSION = IE_VERSION;
+var NOMBO_APP_DEF = {{{appDef}}};
+var NOMBO_RESOURCES = {{{resources}}};
+var NOMBO_DEBUG = {{debug}};
+var NOMBO_ERROR = 'Unkown Error';
 
 (function() {
 	var beginLoading = function() {
-		$loader.init(NCOMBO_APP_DEF, NCOMBO_RESOURCES, NCOMBO_DEBUG);
+		$loader.init(NOMBO_APP_DEF, NOMBO_RESOURCES, NOMBO_DEBUG);
 	}
 
 	var head = document.getElementsByTagName('head');
@@ -32,7 +32,7 @@ var NCOMBO_ERROR = 'Unkown Error';
 	}
 
 	var ncOnScriptLoad = function(scriptTag, callback) {
-		if(!NCOMBO_IE || NCOMBO_IE_VERSION > 8) {
+		if(!NOMBO_IE || NOMBO_IE_VERSION > 8) {
 			scriptTag.onload = function() {
 				callback();
 			}
@@ -50,9 +50,9 @@ var NCOMBO_ERROR = 'Unkown Error';
 	var loadScript = document.createElement('script');
 	loadScript.type = 'text/javascript';
 	
-	url = NCOMBO_FRAMEWORK_URL + 'loader.js';
+	url = NOMBO_FRAMEWORK_URL + 'loader.js';
 	
-	if(!NCOMBO_DEBUG) {
+	if(!NOMBO_DEBUG) {
 		url = smartCacheManager.setURLCacheVersion(url);
 	}
 	
@@ -145,9 +145,9 @@ var NCOMBO_ERROR = 'Unkown Error';
 					var cookiesDisabledScript = document.createElement('script');
 					cookiesDisabledScript.type = 'text/javascript';
 					
-					url = NCOMBO_FRAMEWORK_CLIENT_URL + 'scripts/cookiesdisabled.js';
+					url = NOMBO_FRAMEWORK_CLIENT_URL + 'scripts/cookiesdisabled.js';
 					
-					if(!NCOMBO_DEBUG) {
+					if(!NOMBO_DEBUG) {
 						url = smartCacheManager.setURLCacheVersion(url);
 					}
 					
@@ -160,7 +160,7 @@ var NCOMBO_ERROR = 'Unkown Error';
 
 	var _getHTTPReqObject = function() {
 		var xmlhttp = null;
-		if(NCOMBO_IE) {
+		if(NOMBO_IE) {
 			try {
 				xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
 			} catch (exceptionA) {
@@ -185,16 +185,16 @@ var NCOMBO_ERROR = 'Unkown Error';
 	}
 	
 	var cacheVersion = smartCacheManager.getCacheVersion();
-	var ncCacheCookieName = '__' + NCOMBO_APP_DEF.appURL + 'nccached';
-	var ncCacheCookie = getCookie(ncCacheCookieName);
+	var cacheCookieName = '__' + NOMBO_APP_DEF.appURL + 'cached';
+	var cacheCookie = getCookie(cacheCookieName);
 	
-	NCOMBO_IS_FRESH = (ncCacheCookie && cacheVersion == ncCacheCookie) ? false : true;
+	NOMBO_IS_FRESH = (cacheCookie && cacheVersion == cacheCookie) ? false : true;
 	
-	NCOMBO_SESSION_MANAGER = new (function() {
+	NOMBO_SESSION_MANAGER = new (function() {
 		var self = this;
-		var timeout = NCOMBO_TIMEOUT;
+		var timeout = NOMBO_TIMEOUT;
 		var sessionID = null;
-		var sessionCookieName = '__' + NCOMBO_APP_DEF.appURL + 'ssid';
+		var sessionCookieName = '__' + NOMBO_APP_DEF.appURL + 'ssid';
 		
 		var sessionDestRegex = /^([^_]*)_([^_]*)_([^_]*)_([^_]*)_/;
 	
@@ -219,19 +219,19 @@ var NCOMBO_ERROR = 'Unkown Error';
 		}
 		
 		self.markAsCached = function() {
-			setCookie(ncCacheCookieName, cacheVersion, 31536000);
+			setCookie(cacheCookieName, cacheVersion, 31536000);
 		}
 		
 		self.markAsUncached = function() {
-			setCookie(ncCacheCookieName, cacheVersion, -100);
+			setCookie(cacheCookieName, cacheVersion, -100);
 		}
 		
 		self.startSession = function(callback) {
 			var timeoutCallback = null;
 			
-			if(NCOMBO_SOCKET && (NCOMBO_SOCKET.readyState == 'open' || NCOMBO_SOCKET.readyState == 'opening')) {
-				NCOMBO_SOCKET.removeAllListeners();
-				NCOMBO_SOCKET.close();
+			if(NOMBO_SOCKET && (NOMBO_SOCKET.readyState == 'open' || NOMBO_SOCKET.readyState == 'opening')) {
+				NOMBO_SOCKET.removeAllListeners();
+				NOMBO_SOCKET.close();
 			}
 			
 			var matches = location.href.match(/^([^\/]*):\/\/([^\/:]+)/);
@@ -239,39 +239,39 @@ var NCOMBO_ERROR = 'Unkown Error';
 			var options = {
 				protocol: matches[1],
 				hostname: matches[2],
-				port: NCOMBO_PORT
+				port: NOMBO_PORT
 			};
 			
-			NCOMBO_SOCKET = NCOMBO_SOCKET_ENGINE.connect(options);
+			NOMBO_SOCKET = NOMBO_SOCKET_ENGINE.connect(options);
 		    
 			if(callback) {
 				var errorCallback = function(err) {
 					if(err != 'client not handshaken') {
 						clearTimeout(timeoutCallback);
-						NCOMBO_SOCKET.removeListener('connect', connectCallback);
-						NCOMBO_SOCKET.removeListener('fail', errorCallback);
+						NOMBO_SOCKET.removeListener('connect', connectCallback);
+						NOMBO_SOCKET.removeListener('fail', errorCallback);
 						callback(err);
 					}
 				}
 				
 				var connectCallback = function() {
 					clearTimeout(timeoutCallback);
-					NCOMBO_SOCKET.removeListener('connect', connectCallback);
-					NCOMBO_SOCKET.removeListener('fail', errorCallback);
-					sessionID = self._setIDCookies(NCOMBO_SOCKET.id);
+					NOMBO_SOCKET.removeListener('connect', connectCallback);
+					NOMBO_SOCKET.removeListener('fail', errorCallback);
+					sessionID = self._setIDCookies(NOMBO_SOCKET.id);
 					callback(null, sessionID);
 				}
 				
 				if(timeout > 0) {
 					timeoutCallback = setTimeout(function() {
-						NCOMBO_SOCKET.removeListener('connect', connectCallback);
-						NCOMBO_SOCKET.removeListener('fail', errorCallback);
+						NOMBO_SOCKET.removeListener('connect', connectCallback);
+						NOMBO_SOCKET.removeListener('fail', errorCallback);
 						callback('Session initiation attempt timed out')
 					}, timeout);
 				}
 				
-				NCOMBO_SOCKET.on('fail', errorCallback);
-				NCOMBO_SOCKET.on('connect', connectCallback);
+				NOMBO_SOCKET.on('fail', errorCallback);
+				NOMBO_SOCKET.on('connect', connectCallback);
 			}
 		}
 		
@@ -285,14 +285,14 @@ var NCOMBO_ERROR = 'Unkown Error';
 			
 				if(timeout > 0) {
 					timeoutCallback = setTimeout(function() {
-						NCOMBO_SOCKET.removeListener('close', disconnectCallback);
+						NOMBO_SOCKET.removeListener('close', disconnectCallback);
 						callback('Disconnection attempt timed out')
 					}, timeout);
 				}
 				
-				NCOMBO_SOCKET.on('close', disconnectCallback);
+				NOMBO_SOCKET.on('close', disconnectCallback);
 			}
-			NCOMBO_SOCKET.close();
+			NOMBO_SOCKET.close();
 		}
 	})();
 	
@@ -324,16 +324,16 @@ var NCOMBO_ERROR = 'Unkown Error';
 				head = head[0];
 			}
 			
-			NCOMBO_ERROR = err;
+			NOMBO_ERROR = err;
 			
 			var limitScript = document.createElement('script');
 			limitScript.type = 'text/javascript';
-			limitScript.src = smartCacheManager.setURLCacheVersion(NCOMBO_FRAMEWORK_CLIENT_URL + 'scripts/failedconnection.js');
+			limitScript.src = smartCacheManager.setURLCacheVersion(NOMBO_FRAMEWORK_CLIENT_URL + 'scripts/failedconnection.js');
 			head.appendChild(limitScript);
 		} else {
 			ncBegin();
 		}
 	}
 	
-	NCOMBO_SESSION_MANAGER.startSession(handler);
+	NOMBO_SESSION_MANAGER.startSession(handler);
 })();

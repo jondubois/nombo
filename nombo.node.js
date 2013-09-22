@@ -1,13 +1,13 @@
 var fs = require('fs');
 var url = require('url');
 var browserify = require('browserify');
-var scriptManager = require('ncombo/scriptmanager');
-var cssBundler = require('ncombo/css-bundler');
-var templateBundler = require('ncombo/template-bundler');
+var scriptManager = require('nombo/scriptmanager');
+var cssBundler = require('nombo/css-bundler');
+var templateBundler = require('nombo/template-bundler');
 var SmartCacheManager = require("./smartcachemanager").SmartCacheManager;
 var watchr = require('watchr');
 var path = require('path');
-var pathManager = require('ncombo/pathmanager');
+var pathManager = require('nombo/pathmanager');
 var portScanner = require('portscanner');
 var crypto = require('crypto');
 var EventEmitter = require('events').EventEmitter;
@@ -42,7 +42,7 @@ Master.prototype._init = function (options) {
 		workers: null,
 		stores: null,
 		release: false,
-		title: 'nCombo App',
+		title: 'Nombo App',
 		angular: false,
 		angularMainModule: null,
 		angularMainTemplate: 'index.html',
@@ -317,7 +317,7 @@ Master.prototype._init = function (options) {
 		yellow: 33
 	};
 
-	console.log('   ' + self.colorText('[Busy]', 'yellow') + ' Launching nCombo server');
+	console.log('   ' + self.colorText('[Busy]', 'yellow') + ' Launching Nombo server');
 	if (!self._options.release) {
 		process.stdin.resume();
 		process.stdin.setEncoding('utf8');
@@ -327,11 +327,11 @@ Master.prototype._init = function (options) {
 		self._options.cacheVersion = (new Date()).getTime();
 	}
 
-	self.useStyle(self._paths.frameworkClientURL + 'styles/ncombo.css');
+	self.useStyle(self._paths.frameworkClientURL + 'styles/nombo.css');
 	self._useCoreLib(self._paths.frameworkClientURL + 'libs/jquery.js');
 	self._useCoreLib(self._paths.frameworkModulesURL + 'handlebars/dist/handlebars.js');
 	self._useCoreLib(self._paths.frameworkClientURL + 'libs/json2.js');
-	self._useCoreLib(self._paths.frameworkURL + 'ncombo-client.js');
+	self._useCoreLib(self._paths.frameworkURL + 'nombo-client.js');
 };
 
 Master.prototype.errorHandler = function (err) {
@@ -348,7 +348,7 @@ Master.prototype._start = function () {
 	
 	var appDef = self._getAppDef(true);
 	self._options.minifyURLs = [appDef.appScriptsURL, appDef.appLibsURL, appDef.frameworkClientURL + 'scripts/load.js',
-		self._paths.frameworkURL + 'ncombo-client.js', self._paths.frameworkURL + 'loader.js',
+		self._paths.frameworkURL + 'nombo-client.js', self._paths.frameworkURL + 'loader.js',
 		self._paths.frameworkURL + 'smartcachemanager.js'
 	];
 
@@ -591,7 +591,7 @@ Master.prototype._start = function () {
 
 	portScanner.checkPortStatus(self._options.port, 'localhost', function (err, status) {
 		if (err || status == 'open') {
-			console.log('   nCombo Error - Port ' + self._options.port + ' is already taken');
+			console.log('   Nombo Error - Port ' + self._options.port + ' is already taken');
 			process.exit();
 		} else {
 			var balancerHandler;
@@ -614,7 +614,7 @@ Master.prototype._start = function () {
 				if (self._balancer) {
 					self._errorDomain.remove(self._balancer);
 				}
-				self._balancer = fork(__dirname + '/ncombo-balancer.node.js');
+				self._balancer = fork(__dirname + '/nombo-balancer.node.js');
 				self._errorDomain.add(self._balancer);
 
 				self._balancer.on('exit', launchLoadBalancer);
@@ -655,7 +655,7 @@ Master.prototype._start = function () {
 					}
 					
 					if (self._workers.length >= self._options.workers.length && firstTime) {
-						console.log('   ' + self.colorText('[Active]', 'green') + ' nCombo server started');
+						console.log('   ' + self.colorText('[Active]', 'green') + ' Nombo server started');
 						console.log('            Port: ' + self._options.port);
 						console.log('            Mode: ' + (self._options.release ? 'Release' : 'Debug'));
 						if (self._options.release) {
@@ -688,7 +688,7 @@ Master.prototype._start = function () {
 						resourceSizes[externalAppDef.virtualURL + '../..' + i] = styleAssetSizeMap[i];
 					}
 					
-					var worker = fork(__dirname + '/ncombo-worker-bootstrap.node');
+					var worker = fork(__dirname + '/nombo-worker-bootstrap.node');
 					self._errorDomain.add(worker);
 					worker.id = workerIdCounter++;
 
@@ -755,7 +755,7 @@ Master.prototype._start = function () {
 							launchWorker(workerData, lead);
 						} else {
 							if (self._workers.length <= 0) {
-								console.log('   All workers are dead - nCombo is shutting down');
+								console.log('   All workers are dead - Nombo is shutting down');
 								process.exit();
 							}
 						}

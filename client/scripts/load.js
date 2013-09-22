@@ -1,5 +1,5 @@
 /**
-	Default loader for nCombo apps.
+	Default loader for Nombo apps.
 */
 
 var jLoad = {
@@ -22,7 +22,7 @@ var jLoad = {
 		var imgURL = smartCacheManager.setURLCacheVersion(jLoad._frameworkClientURL + 'assets/logo.png');
 		var text = 'Loading';
 		
-		jLoad._load(imgURL, 'nCombo', 'http://ncombo.com/', text);
+		jLoad._load(imgURL, 'Nombo', 'http://nombo.io/', text);
 	},
 	
 	progress: function(status) {
@@ -91,7 +91,7 @@ var jLoad = {
 			
 			jLoad._loader.style.visibility = 'visible';
 			
-			if(NCOMBO_IS_FRESH) {
+			if(NOMBO_IS_FRESH) {
 				$loader.progress(jLoad.progress);
 				jLoad._fadeInterval = setInterval(function() {
 					if(jLoad._alpha < 100) {

@@ -1,40 +1,37 @@
 Nombo
 ======
 
-Nombo is an Open Source Node.js framework that allows you to easily build powerful, rich cloud applications.
+Nombo is an Open Source Node.js framework that allows you to easily build highly scalable, rich cloud applications.
 Nombo is distributed under the MIT license. Please see license_mit.txt for details. Visit http://nombo.io for more information.
 
 To install, run:
 
 ```bash
-npm install -g nombo
+npm install -g ncombo
 ```
 
 Once installation is complete, to create a new app in the current directory run (replace myapp with your app's name):
 
 ```bash
-nombo create myapp
+ncombo create myapp
 ```
 
 To create a 'nombo-samples/' directory containing sample apps use:
 
 ```bash
-nombo samples
+ncombo samples
 ```
 
-Nombo offers several ground-breaking features:
+The key focus of Nombo is scalability. 
+A Nombo server is made up of multiple processes which run in parallel to efficiently deliver your app to users.
+You can specify the number of load balancers, workers and stores you want to use and Nombo will automatically spawn and manage everything.
+Processes are highly parallel so they share very few resources - The more CPU cores you have have, the faster Nombo will run.
 
-- It's efficient with server resources
-- It dramatically reduces development time
-- It lets you program in a single language (JavaScript)
-- Full duplex client-server communication (thanks to socket.io)
-- Allows you to call server-side functions from your client-side scripts
-- Offers a simple webservice module which allows you to seamlessly interact with other Nombo applications
-- Allows your client-side scripts to listen to server-side events. (You can also listen to events which occur on remote Nombo servers - If they allow you of course)
-- Makes efficient use of caching (in release mode) - Restarting an Nombo server causes browsers to refresh their cache - So clients stay up to date
-- A Session object which uniquely identifies each client is appended to all requests - The session object can be manipulated to store data unique to each client
-- Session state is maintained accross all open tabs within a browser
-- A Global object can be used to store data that can be shared between all clients - It also gives you access to all connected clients and lets you selectively exchange data between them
-- Comes with all the standard middleware for session management, routing and the like - Nombo lets you add custom middleware to do tasks such as user authorization (such as controlling who has access to a file or server interface or who can listen to specific server events)
-- Makes use of all available CPU cores for maximum efficiency and concurrency (or you can optionally specify the number of workers to use)
-- Comes with default upload middleware and offers Valumn's uploader client-side - Creating an upload feature only takes a few lines of code
+Some other key features include:
+
+- Allows you to call server-side JavaScript functions from your client-side scripts.
+- Allows your client-side scripts to listen to server-side events. (You can also listen to events which occur on remote Nombo servers - If they authorize you).
+- Allows you to seamlessly interface with remote Nombo servers using the nombo/webservice module (a single function call is needed).
+- Makes efficient use of caching (in release mode) - Allows you to set a cache version so that clients will be forced to update the next time they refresh.
+- Session state is synchronized across all open tabs within a browser.
+- Comes with all the standard middleware for session management, routing and the like - Nombo lets you add custom middleware to do tasks such as user authorization.

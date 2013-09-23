@@ -28,5 +28,8 @@
   "devDependencies": {
     "browserify": "~2.29.1",
     "jshint": "~2.1.11"
+  },
+  "peerDependencies": {
+    "browserify": "2.x"
   }
 }

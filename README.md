@@ -7,19 +7,19 @@ Nombo is distributed under the MIT license. Please see license_mit.txt for detai
 To install, run:
 
 ```bash
-npm install -g ncombo
+npm install -g nombo
 ```
 
 Once installation is complete, to create a new app in the current directory run (replace myapp with your app's name):
 
 ```bash
-ncombo create myapp
+nombo create myapp
 ```
 
 To create a 'nombo-samples/' directory containing sample apps use:
 
 ```bash
-ncombo samples
+nombo samples
 ```
 
 The key focus of Nombo is scalability. 

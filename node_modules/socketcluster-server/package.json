@@ -1,0 +1,17 @@
+{
+  "name": "socketcluster-server",
+  "description": "Server side of SocketCluster",
+  "version": "0.9.0",
+  "homepage": "https://github.com/topcloud/socketcluster-server",
+  "contributors": [
+    {
+      "name": "Jonathan Gros-Dubois",
+      "email": "grosjona@yahoo.com.au"
+    }
+  ],
+  "dependencies": {
+    "engine.io": ">=0.6.3",
+	"base64id": "0.1.0"
+  },
+  "readmeFilename": "README.md"
+}

@@ -2,6 +2,7 @@
 
 var through = require('through');
 var innersource = require('innersource');
+var detective = require('detective');
 
 module.exports = function() {
   var buffer = '';
@@ -12,7 +13,8 @@ module.exports = function() {
   function() {
     var prepend = innersource(addRequire);
     var postpend = innersource(addModule);
-    this.queue(prepend + buffer +';' + postpend);
+    var nodeModuleRequires = getNodeModuleRequires(buffer);
+    this.queue(prepend + nodeModuleRequires+buffer +';' + postpend);
     this.queue(null);
   });
 
@@ -59,5 +61,15 @@ function addRequire(){
     })();
   }
 
+}
+
+function getNodeModuleRequires(source){
+  var requires = detective(source);
+  requires = requires.filter(function(require){
+    return require[0] !== '.';
+  });
+  return requires.map(function(require){
+    return ";var global = (function(){ return this; }).call(null);global.require['"+require+"'] = require('"+require+"');";
+  }).join('');
 }
 

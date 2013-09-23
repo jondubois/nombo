@@ -18,7 +18,7 @@ b.require(__dirname + '/foo/dep2.js', {expose: 'x'});
 
 b.add(modulePath)
  .bundle(function(err, src){
-   var completeScript = src+';window.test = require("/foo/dep").hello;window.test2 = require("x");';
+   var completeScript = src+';window.test = require("/foo/dep").hello;window.test2 = require("x");window.test3 = require("innersource")(function(){window;})';
    var script = vm.createScript(completeScript);
    fs.writeFileSync(__dirname+'/compiled.js', completeScript);
 
@@ -29,6 +29,7 @@ b.add(modulePath)
 
    assert.equal(context.window.test, 'world');
    assert.equal(context.window.test2, 'world');
+   assert.equal(context.window.test3, 'window;');
  });
 
 function getContext(){

@@ -1,6 +1,6 @@
 {
   "name": "requireify",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Browserify plugin to access all modules from browser console",
   "main": "index.js",
   "scripts": {
@@ -22,7 +22,8 @@
   "license": "MIT",
   "dependencies": {
     "through": "~2.2.7",
-    "innersource": "0.0.1"
+    "innersource": "0.0.1",
+    "detective": "~2.2.0"
   },
   "devDependencies": {
     "browserify": "~2.29.1",

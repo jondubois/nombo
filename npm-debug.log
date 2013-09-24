@@ -1,0 +1,1578 @@
+0 info it worked if it ends with ok
+1 verbose cli [ 'C:\\Program Files\\nodejs\\\\node.exe',
+1 verbose cli   'C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js',
+1 verbose cli   'publish' ]
+2 info using npm@1.3.8
+3 info using node@v0.10.18
+4 verbose node symlink C:\Program Files\nodejs\\node.exe
+5 verbose publish [ '.' ]
+6 verbose cache add [ '.', null ]
+7 verbose cache add name=undefined spec="." args=[".",null]
+8 verbose parsed url { protocol: null,
+8 verbose parsed url   slashes: null,
+8 verbose parsed url   auth: null,
+8 verbose parsed url   host: null,
+8 verbose parsed url   port: null,
+8 verbose parsed url   hostname: null,
+8 verbose parsed url   hash: null,
+8 verbose parsed url   search: null,
+8 verbose parsed url   query: null,
+8 verbose parsed url   pathname: '.',
+8 verbose parsed url   path: '.',
+8 verbose parsed url   href: '.' }
+9 silly lockFile 3a52ce78- .
+10 verbose lock . C:\Users\jonathan\AppData\Roaming\npm-cache\3a52ce78-.lock
+11 verbose tar pack [ 'C:\\Users\\jonathan\\AppData\\Local\\Temp\\npm-5648-xT6ODAFE\\1380017897550-0.9893183235544711\\tmp.tgz',
+11 verbose tar pack   '.' ]
+12 verbose tarball C:\Users\jonathan\AppData\Local\Temp\npm-5648-xT6ODAFE\1380017897550-0.9893183235544711\tmp.tgz
+13 verbose folder .
+14 silly lockFile 1f1177db-tar tar://.
+15 verbose lock tar://. C:\Users\jonathan\AppData\Roaming\npm-cache\1f1177db-tar.lock
+16 silly lockFile 8304ac53-97550-0-9893183235544711-tmp-tgz tar://C:\Users\jonathan\AppData\Local\Temp\npm-5648-xT6ODAFE\1380017897550-0.9893183235544711\tmp.tgz
+17 verbose lock tar://C:\Users\jonathan\AppData\Local\Temp\npm-5648-xT6ODAFE\1380017897550-0.9893183235544711\tmp.tgz C:\Users\jonathan\AppData\Roaming\npm-cache\8304ac53-97550-0-9893183235544711-tmp-tgz.lock
+18 silly lockFile 1f1177db-tar tar://.
+19 silly lockFile 1f1177db-tar tar://.
+20 silly lockFile 8304ac53-97550-0-9893183235544711-tmp-tgz tar://C:\Users\jonathan\AppData\Local\Temp\npm-5648-xT6ODAFE\1380017897550-0.9893183235544711\tmp.tgz
+21 silly lockFile 8304ac53-97550-0-9893183235544711-tmp-tgz tar://C:\Users\jonathan\AppData\Local\Temp\npm-5648-xT6ODAFE\1380017897550-0.9893183235544711\tmp.tgz
+22 verbose tar unpack C:\Users\jonathan\AppData\Local\Temp\npm-5648-xT6ODAFE\1380017897550-0.9893183235544711\tmp.tgz
+23 silly lockFile 14fd296b-97550-0-9893183235544711-package tar://C:\Users\jonathan\AppData\Local\Temp\npm-5648-xT6ODAFE\1380017897550-0.9893183235544711\package
+24 verbose lock tar://C:\Users\jonathan\AppData\Local\Temp\npm-5648-xT6ODAFE\1380017897550-0.9893183235544711\package C:\Users\jonathan\AppData\Roaming\npm-cache\14fd296b-97550-0-9893183235544711-package.lock
+25 silly lockFile 8304ac53-97550-0-9893183235544711-tmp-tgz tar://C:\Users\jonathan\AppData\Local\Temp\npm-5648-xT6ODAFE\1380017897550-0.9893183235544711\tmp.tgz
+26 verbose lock tar://C:\Users\jonathan\AppData\Local\Temp\npm-5648-xT6ODAFE\1380017897550-0.9893183235544711\tmp.tgz C:\Users\jonathan\AppData\Roaming\npm-cache\8304ac53-97550-0-9893183235544711-tmp-tgz.lock
+27 silly gunzTarPerm modes [ '755', '644' ]
+28 silly gunzTarPerm extractEntry package.json
+29 silly gunzTarPerm modified mode [ 'package.json', 438, 420 ]
+30 silly gunzTarPerm extractEntry README.md
+31 silly gunzTarPerm modified mode [ 'README.md', 438, 420 ]
+32 silly gunzTarPerm extractEntry smartcachemanager.js
+33 silly gunzTarPerm modified mode [ 'smartcachemanager.js', 438, 420 ]
+34 silly gunzTarPerm extractEntry session.js
+35 silly gunzTarPerm modified mode [ 'session.js', 438, 420 ]
+36 silly gunzTarPerm extractEntry index.js
+37 silly gunzTarPerm modified mode [ 'index.js', 438, 420 ]
+38 silly gunzTarPerm extractEntry loader.js
+39 silly gunzTarPerm modified mode [ 'loader.js', 438, 420 ]
+40 silly gunzTarPerm extractEntry nombo.node.js
+41 silly gunzTarPerm modified mode [ 'nombo.node.js', 438, 420 ]
+42 silly gunzTarPerm extractEntry nombo-balancer.node.js
+43 silly gunzTarPerm modified mode [ 'nombo-balancer.node.js', 438, 420 ]
+44 silly gunzTarPerm extractEntry nombo-worker.node.js
+45 silly gunzTarPerm modified mode [ 'nombo-worker.node.js', 438, 420 ]
+46 silly gunzTarPerm extractEntry nombo-worker-bootstrap.node.js
+47 silly gunzTarPerm modified mode [ 'nombo-worker-bootstrap.node.js', 438, 420 ]
+48 silly gunzTarPerm extractEntry nombo-client.js
+49 silly gunzTarPerm modified mode [ 'nombo-client.js', 438, 420 ]
+50 silly gunzTarPerm extractEntry bin/cli.js
+51 silly gunzTarPerm modified mode [ 'bin/cli.js', 438, 420 ]
+52 silly gunzTarPerm extractEntry license_mit.txt
+53 silly gunzTarPerm modified mode [ 'license_mit.txt', 438, 420 ]
+54 silly gunzTarPerm extractEntry config.node.json
+55 silly gunzTarPerm modified mode [ 'config.node.json', 438, 420 ]
+56 silly gunzTarPerm extractEntry samples/angular_projects/README.md
+57 silly gunzTarPerm modified mode [ 'samples/angular_projects/README.md', 438, 420 ]
+58 silly gunzTarPerm extractEntry samples/angular_projects/server.node.js
+59 silly gunzTarPerm modified mode [ 'samples/angular_projects/server.node.js', 438, 420 ]
+60 silly gunzTarPerm extractEntry samples/angular_projects/master.node.js
+61 silly gunzTarPerm modified mode [ 'samples/angular_projects/master.node.js', 438, 420 ]
+62 silly gunzTarPerm extractEntry samples/angular_projects/worker.node.js
+63 silly gunzTarPerm modified mode [ 'samples/angular_projects/worker.node.js', 438, 420 ]
+64 silly gunzTarPerm extractEntry samples/angular_projects/license_mit.txt
+65 silly gunzTarPerm modified mode [ 'samples/angular_projects/license_mit.txt', 438, 420 ]
+66 silly gunzTarPerm extractEntry samples/angular_projects/files/README
+67 silly gunzTarPerm modified mode [ 'samples/angular_projects/files/README', 438, 420 ]
+68 silly gunzTarPerm extractEntry samples/angular_projects/scripts/README
+69 silly gunzTarPerm modified mode [ 'samples/angular_projects/scripts/README', 438, 420 ]
+70 silly gunzTarPerm extractEntry samples/angular_projects/scripts/index.js
+71 silly gunzTarPerm modified mode [ 'samples/angular_projects/scripts/index.js', 438, 420 ]
+72 silly gunzTarPerm extractEntry samples/angular_projects/scripts/store.js
+73 silly gunzTarPerm modified mode [ 'samples/angular_projects/scripts/store.js', 438, 420 ]
+74 silly gunzTarPerm extractEntry samples/angular_projects/libs/README
+75 silly gunzTarPerm modified mode [ 'samples/angular_projects/libs/README', 438, 420 ]
+76 silly gunzTarPerm extractEntry samples/angular_projects/sims/README
+77 silly gunzTarPerm modified mode [ 'samples/angular_projects/sims/README', 438, 420 ]
+78 silly gunzTarPerm extractEntry samples/angular_projects/sims/projects.node.js
+79 silly gunzTarPerm modified mode [ 'samples/angular_projects/sims/projects.node.js', 438, 420 ]
+80 silly gunzTarPerm extractEntry samples/angular_projects/styles/README
+81 silly gunzTarPerm modified mode [ 'samples/angular_projects/styles/README', 438, 420 ]
+82 silly gunzTarPerm extractEntry samples/angular_projects/styles/main.css
+83 silly gunzTarPerm modified mode [ 'samples/angular_projects/styles/main.css', 438, 420 ]
+84 silly gunzTarPerm extractEntry samples/angular_projects/templates/README
+85 silly gunzTarPerm modified mode [ 'samples/angular_projects/templates/README', 438, 420 ]
+86 silly gunzTarPerm extractEntry samples/angular_projects/templates/detail.html
+87 silly gunzTarPerm modified mode [ 'samples/angular_projects/templates/detail.html', 438, 420 ]
+88 silly gunzTarPerm extractEntry samples/angular_projects/templates/index.html
+89 silly gunzTarPerm modified mode [ 'samples/angular_projects/templates/index.html', 438, 420 ]
+90 silly gunzTarPerm extractEntry samples/angular_projects/templates/list.html
+91 silly gunzTarPerm modified mode [ 'samples/angular_projects/templates/list.html', 438, 420 ]
+92 silly gunzTarPerm extractEntry samples/angular_projects/assets/README
+93 silly gunzTarPerm modified mode [ 'samples/angular_projects/assets/README', 438, 420 ]
+94 silly gunzTarPerm extractEntry samples/angular_projects/assets/favicon.gif
+95 silly gunzTarPerm modified mode [ 'samples/angular_projects/assets/favicon.gif', 438, 420 ]
+96 silly gunzTarPerm extractEntry samples/angular_projects/node_modules/README
+97 silly gunzTarPerm modified mode [ 'samples/angular_projects/node_modules/README', 438, 420 ]
+98 silly gunzTarPerm extractEntry samples/angular_todo/README.md
+99 silly gunzTarPerm modified mode [ 'samples/angular_todo/README.md', 438, 420 ]
+100 silly gunzTarPerm extractEntry samples/angular_todo/server.node.js
+101 silly gunzTarPerm modified mode [ 'samples/angular_todo/server.node.js', 438, 420 ]
+102 silly gunzTarPerm extractEntry samples/angular_todo/master.node.js
+103 silly gunzTarPerm modified mode [ 'samples/angular_todo/master.node.js', 438, 420 ]
+104 silly gunzTarPerm extractEntry samples/angular_todo/worker.node.js
+105 silly gunzTarPerm modified mode [ 'samples/angular_todo/worker.node.js', 438, 420 ]
+106 silly gunzTarPerm extractEntry samples/angular_todo/license_mit.txt
+107 silly gunzTarPerm modified mode [ 'samples/angular_todo/license_mit.txt', 438, 420 ]
+108 silly gunzTarPerm extractEntry samples/angular_todo/files/README
+109 silly gunzTarPerm modified mode [ 'samples/angular_todo/files/README', 438, 420 ]
+110 silly gunzTarPerm extractEntry samples/angular_todo/scripts/README
+111 silly gunzTarPerm modified mode [ 'samples/angular_todo/scripts/README', 438, 420 ]
+112 silly gunzTarPerm extractEntry samples/angular_todo/scripts/index.js
+113 silly gunzTarPerm modified mode [ 'samples/angular_todo/scripts/index.js', 438, 420 ]
+114 silly gunzTarPerm extractEntry samples/angular_todo/libs/README
+115 silly gunzTarPerm modified mode [ 'samples/angular_todo/libs/README', 438, 420 ]
+116 silly gunzTarPerm extractEntry samples/angular_todo/sims/README
+117 silly gunzTarPerm modified mode [ 'samples/angular_todo/sims/README', 438, 420 ]
+118 silly gunzTarPerm extractEntry samples/angular_todo/sims/projects.js
+119 silly gunzTarPerm modified mode [ 'samples/angular_todo/sims/projects.js', 438, 420 ]
+120 silly gunzTarPerm extractEntry samples/angular_todo/styles/README
+121 silly gunzTarPerm modified mode [ 'samples/angular_todo/styles/README', 438, 420 ]
+122 silly gunzTarPerm extractEntry samples/angular_todo/styles/main.css
+123 silly gunzTarPerm modified mode [ 'samples/angular_todo/styles/main.css', 438, 420 ]
+124 silly gunzTarPerm extractEntry samples/angular_todo/templates/README
+125 silly gunzTarPerm modified mode [ 'samples/angular_todo/templates/README', 438, 420 ]
+126 silly gunzTarPerm extractEntry samples/angular_todo/templates/index.html
+127 silly gunzTarPerm modified mode [ 'samples/angular_todo/templates/index.html', 438, 420 ]
+128 silly gunzTarPerm extractEntry samples/angular_todo/assets/README
+129 silly gunzTarPerm modified mode [ 'samples/angular_todo/assets/README', 438, 420 ]
+130 silly gunzTarPerm extractEntry samples/angular_todo/assets/favicon.gif
+131 silly gunzTarPerm modified mode [ 'samples/angular_todo/assets/favicon.gif', 438, 420 ]
+132 silly gunzTarPerm extractEntry samples/angular_todo/node_modules/README
+133 silly gunzTarPerm modified mode [ 'samples/angular_todo/node_modules/README', 438, 420 ]
+134 silly gunzTarPerm extractEntry samples/chat/README.md
+135 silly gunzTarPerm modified mode [ 'samples/chat/README.md', 438, 420 ]
+136 silly gunzTarPerm extractEntry samples/chat/server.node.js
+137 silly gunzTarPerm modified mode [ 'samples/chat/server.node.js', 438, 420 ]
+138 silly gunzTarPerm extractEntry samples/chat/master.node.js
+139 silly gunzTarPerm modified mode [ 'samples/chat/master.node.js', 438, 420 ]
+140 silly gunzTarPerm extractEntry samples/chat/worker.node.js
+141 silly gunzTarPerm modified mode [ 'samples/chat/worker.node.js', 438, 420 ]
+142 silly gunzTarPerm extractEntry samples/chat/license_mit.txt
+143 silly gunzTarPerm modified mode [ 'samples/chat/license_mit.txt', 438, 420 ]
+144 silly gunzTarPerm extractEntry samples/chat/files/README
+145 silly gunzTarPerm modified mode [ 'samples/chat/files/README', 438, 420 ]
+146 silly gunzTarPerm extractEntry samples/chat/scripts/README
+147 silly gunzTarPerm modified mode [ 'samples/chat/scripts/README', 438, 420 ]
+148 silly gunzTarPerm extractEntry samples/chat/scripts/index.js
+149 silly gunzTarPerm modified mode [ 'samples/chat/scripts/index.js', 438, 420 ]
+150 silly gunzTarPerm extractEntry samples/chat/libs/README
+151 silly gunzTarPerm modified mode [ 'samples/chat/libs/README', 438, 420 ]
+152 silly gunzTarPerm extractEntry samples/chat/sims/README
+153 silly gunzTarPerm modified mode [ 'samples/chat/sims/README', 438, 420 ]
+154 silly gunzTarPerm extractEntry samples/chat/sims/chat.node.js
+155 silly gunzTarPerm modified mode [ 'samples/chat/sims/chat.node.js', 438, 420 ]
+156 silly gunzTarPerm extractEntry samples/chat/styles/README
+157 silly gunzTarPerm modified mode [ 'samples/chat/styles/README', 438, 420 ]
+158 silly gunzTarPerm extractEntry samples/chat/templates/README
+159 silly gunzTarPerm modified mode [ 'samples/chat/templates/README', 438, 420 ]
+160 silly gunzTarPerm extractEntry samples/chat/templates/chatbox.html
+161 silly gunzTarPerm modified mode [ 'samples/chat/templates/chatbox.html', 438, 420 ]
+162 silly gunzTarPerm extractEntry samples/chat/templates/chatlist.html
+163 silly gunzTarPerm modified mode [ 'samples/chat/templates/chatlist.html', 438, 420 ]
+164 silly gunzTarPerm extractEntry samples/chat/assets/README
+165 silly gunzTarPerm modified mode [ 'samples/chat/assets/README', 438, 420 ]
+166 silly gunzTarPerm extractEntry samples/chat/assets/favicon.gif
+167 silly gunzTarPerm modified mode [ 'samples/chat/assets/favicon.gif', 438, 420 ]
+168 silly gunzTarPerm extractEntry samples/chat/node_modules/README
+169 silly gunzTarPerm modified mode [ 'samples/chat/node_modules/README', 438, 420 ]
+170 silly gunzTarPerm extractEntry samples/dynamic_linking/README.md
+171 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/README.md', 438, 420 ]
+172 silly gunzTarPerm extractEntry samples/dynamic_linking/server.node.js
+173 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/server.node.js', 438, 420 ]
+174 silly gunzTarPerm extractEntry samples/dynamic_linking/master.node.js
+175 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/master.node.js', 438, 420 ]
+176 silly gunzTarPerm extractEntry samples/dynamic_linking/worker.node.js
+177 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/worker.node.js', 438, 420 ]
+178 silly gunzTarPerm extractEntry samples/dynamic_linking/license_mit.txt
+179 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/license_mit.txt', 438, 420 ]
+180 silly gunzTarPerm extractEntry samples/dynamic_linking/files/README
+181 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/files/README', 438, 420 ]
+182 silly gunzTarPerm extractEntry samples/dynamic_linking/scripts/README
+183 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/scripts/README', 438, 420 ]
+184 silly gunzTarPerm extractEntry samples/dynamic_linking/scripts/a.js
+185 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/scripts/a.js', 438, 420 ]
+186 silly gunzTarPerm extractEntry samples/dynamic_linking/scripts/b.js
+187 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/scripts/b.js', 438, 420 ]
+188 silly gunzTarPerm extractEntry samples/dynamic_linking/scripts/c.js
+189 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/scripts/c.js', 438, 420 ]
+190 silly gunzTarPerm extractEntry samples/dynamic_linking/scripts/d.js
+191 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/scripts/d.js', 438, 420 ]
+192 silly gunzTarPerm extractEntry samples/dynamic_linking/scripts/index.js
+193 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/scripts/index.js', 438, 420 ]
+194 silly gunzTarPerm extractEntry samples/dynamic_linking/libs/README
+195 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/libs/README', 438, 420 ]
+196 silly gunzTarPerm extractEntry samples/dynamic_linking/sims/README
+197 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/sims/README', 438, 420 ]
+198 silly gunzTarPerm extractEntry samples/dynamic_linking/styles/README
+199 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/styles/README', 438, 420 ]
+200 silly gunzTarPerm extractEntry samples/dynamic_linking/templates/README
+201 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/templates/README', 438, 420 ]
+202 silly gunzTarPerm extractEntry samples/dynamic_linking/assets/README
+203 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/assets/README', 438, 420 ]
+204 silly gunzTarPerm extractEntry samples/dynamic_linking/assets/favicon.gif
+205 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/assets/favicon.gif', 438, 420 ]
+206 silly gunzTarPerm extractEntry samples/dynamic_linking/node_modules/README
+207 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/node_modules/README', 438, 420 ]
+208 silly gunzTarPerm extractEntry samples/memo/README.md
+209 silly gunzTarPerm modified mode [ 'samples/memo/README.md', 438, 420 ]
+210 silly gunzTarPerm extractEntry samples/memo/server.node.js
+211 silly gunzTarPerm modified mode [ 'samples/memo/server.node.js', 438, 420 ]
+212 silly gunzTarPerm extractEntry samples/memo/master.node.js
+213 silly gunzTarPerm modified mode [ 'samples/memo/master.node.js', 438, 420 ]
+214 silly gunzTarPerm extractEntry samples/memo/worker.node.js
+215 silly gunzTarPerm modified mode [ 'samples/memo/worker.node.js', 438, 420 ]
+216 silly gunzTarPerm extractEntry samples/memo/license_mit.txt
+217 silly gunzTarPerm modified mode [ 'samples/memo/license_mit.txt', 438, 420 ]
+218 silly gunzTarPerm extractEntry samples/memo/files/README
+219 silly gunzTarPerm modified mode [ 'samples/memo/files/README', 438, 420 ]
+220 silly gunzTarPerm extractEntry samples/memo/scripts/README
+221 silly gunzTarPerm modified mode [ 'samples/memo/scripts/README', 438, 420 ]
+222 silly gunzTarPerm extractEntry samples/memo/scripts/index.js
+223 silly gunzTarPerm modified mode [ 'samples/memo/scripts/index.js', 438, 420 ]
+224 silly gunzTarPerm extractEntry samples/memo/libs/README
+225 silly gunzTarPerm modified mode [ 'samples/memo/libs/README', 438, 420 ]
+226 silly gunzTarPerm extractEntry samples/memo/sims/README
+227 silly gunzTarPerm modified mode [ 'samples/memo/sims/README', 438, 420 ]
+228 silly gunzTarPerm extractEntry samples/memo/sims/auth.node.js
+229 silly gunzTarPerm modified mode [ 'samples/memo/sims/auth.node.js', 438, 420 ]
+230 silly gunzTarPerm extractEntry samples/memo/sims/notes.node.js
+231 silly gunzTarPerm modified mode [ 'samples/memo/sims/notes.node.js', 438, 420 ]
+232 silly gunzTarPerm extractEntry samples/memo/styles/README
+233 silly gunzTarPerm modified mode [ 'samples/memo/styles/README', 438, 420 ]
+234 silly gunzTarPerm extractEntry samples/memo/styles/main.css
+235 silly gunzTarPerm modified mode [ 'samples/memo/styles/main.css', 438, 420 ]
+236 silly gunzTarPerm extractEntry samples/memo/templates/README
+237 silly gunzTarPerm modified mode [ 'samples/memo/templates/README', 438, 420 ]
+238 silly gunzTarPerm extractEntry samples/memo/templates/add_note_dialog.html
+239 silly gunzTarPerm modified mode [ 'samples/memo/templates/add_note_dialog.html', 438, 420 ]
+240 silly gunzTarPerm extractEntry samples/memo/templates/login.html
+241 silly gunzTarPerm modified mode [ 'samples/memo/templates/login.html', 438, 420 ]
+242 silly gunzTarPerm extractEntry samples/memo/templates/main.html
+243 silly gunzTarPerm modified mode [ 'samples/memo/templates/main.html', 438, 420 ]
+244 silly gunzTarPerm extractEntry samples/memo/templates/notes_table.html
+245 silly gunzTarPerm modified mode [ 'samples/memo/templates/notes_table.html', 438, 420 ]
+246 silly gunzTarPerm extractEntry samples/memo/assets/README
+247 silly gunzTarPerm modified mode [ 'samples/memo/assets/README', 438, 420 ]
+248 silly gunzTarPerm extractEntry samples/memo/assets/favicon.gif
+249 silly gunzTarPerm modified mode [ 'samples/memo/assets/favicon.gif', 438, 420 ]
+250 silly gunzTarPerm extractEntry samples/memo/node_modules/README
+251 silly gunzTarPerm modified mode [ 'samples/memo/node_modules/README', 438, 420 ]
+252 silly gunzTarPerm extractEntry samples/static_linking/README.md
+253 silly gunzTarPerm modified mode [ 'samples/static_linking/README.md', 438, 420 ]
+254 silly gunzTarPerm extractEntry samples/static_linking/server.node.js
+255 silly gunzTarPerm modified mode [ 'samples/static_linking/server.node.js', 438, 420 ]
+256 silly gunzTarPerm extractEntry samples/static_linking/master.node.js
+257 silly gunzTarPerm modified mode [ 'samples/static_linking/master.node.js', 438, 420 ]
+258 silly gunzTarPerm extractEntry samples/static_linking/worker.node.js
+259 silly gunzTarPerm modified mode [ 'samples/static_linking/worker.node.js', 438, 420 ]
+260 silly gunzTarPerm extractEntry samples/static_linking/license_mit.txt
+261 silly gunzTarPerm modified mode [ 'samples/static_linking/license_mit.txt', 438, 420 ]
+262 silly gunzTarPerm extractEntry samples/static_linking/files/README
+263 silly gunzTarPerm modified mode [ 'samples/static_linking/files/README', 438, 420 ]
+264 silly gunzTarPerm extractEntry samples/static_linking/scripts/README
+265 silly gunzTarPerm modified mode [ 'samples/static_linking/scripts/README', 438, 420 ]
+266 silly gunzTarPerm extractEntry samples/static_linking/scripts/a.js
+267 silly gunzTarPerm modified mode [ 'samples/static_linking/scripts/a.js', 438, 420 ]
+268 silly gunzTarPerm extractEntry samples/static_linking/scripts/b.js
+269 silly gunzTarPerm modified mode [ 'samples/static_linking/scripts/b.js', 438, 420 ]
+270 silly gunzTarPerm extractEntry samples/static_linking/scripts/c.js
+271 silly gunzTarPerm modified mode [ 'samples/static_linking/scripts/c.js', 438, 420 ]
+272 silly gunzTarPerm extractEntry samples/static_linking/scripts/d.js
+273 silly gunzTarPerm modified mode [ 'samples/static_linking/scripts/d.js', 438, 420 ]
+274 silly gunzTarPerm extractEntry samples/static_linking/scripts/index.js
+275 silly gunzTarPerm modified mode [ 'samples/static_linking/scripts/index.js', 438, 420 ]
+276 silly gunzTarPerm extractEntry samples/static_linking/libs/README
+277 silly gunzTarPerm modified mode [ 'samples/static_linking/libs/README', 438, 420 ]
+278 silly gunzTarPerm extractEntry samples/static_linking/sims/README
+279 silly gunzTarPerm modified mode [ 'samples/static_linking/sims/README', 438, 420 ]
+280 silly gunzTarPerm extractEntry samples/static_linking/styles/README
+281 silly gunzTarPerm modified mode [ 'samples/static_linking/styles/README', 438, 420 ]
+282 silly gunzTarPerm extractEntry samples/static_linking/templates/README
+283 silly gunzTarPerm modified mode [ 'samples/static_linking/templates/README', 438, 420 ]
+284 silly gunzTarPerm extractEntry samples/static_linking/assets/README
+285 silly gunzTarPerm modified mode [ 'samples/static_linking/assets/README', 438, 420 ]
+286 silly gunzTarPerm extractEntry samples/static_linking/assets/favicon.gif
+287 silly gunzTarPerm modified mode [ 'samples/static_linking/assets/favicon.gif', 438, 420 ]
+288 silly gunzTarPerm extractEntry samples/static_linking/node_modules/README
+289 silly gunzTarPerm modified mode [ 'samples/static_linking/node_modules/README', 438, 420 ]
+290 silly gunzTarPerm extractEntry samples/uploader/README.md
+291 silly gunzTarPerm modified mode [ 'samples/uploader/README.md', 438, 420 ]
+292 silly gunzTarPerm extractEntry samples/uploader/server.node.js
+293 silly gunzTarPerm modified mode [ 'samples/uploader/server.node.js', 438, 420 ]
+294 silly gunzTarPerm extractEntry samples/uploader/master.node.js
+295 silly gunzTarPerm modified mode [ 'samples/uploader/master.node.js', 438, 420 ]
+296 silly gunzTarPerm extractEntry samples/uploader/worker.node.js
+297 silly gunzTarPerm modified mode [ 'samples/uploader/worker.node.js', 438, 420 ]
+298 silly gunzTarPerm extractEntry samples/uploader/license_mit.txt
+299 silly gunzTarPerm modified mode [ 'samples/uploader/license_mit.txt', 438, 420 ]
+300 silly gunzTarPerm extractEntry samples/uploader/files/README
+301 silly gunzTarPerm modified mode [ 'samples/uploader/files/README', 438, 420 ]
+302 silly gunzTarPerm extractEntry samples/uploader/scripts/README
+303 silly gunzTarPerm modified mode [ 'samples/uploader/scripts/README', 438, 420 ]
+304 silly gunzTarPerm extractEntry samples/uploader/scripts/index.js
+305 silly gunzTarPerm modified mode [ 'samples/uploader/scripts/index.js', 438, 420 ]
+306 silly gunzTarPerm extractEntry samples/uploader/libs/README
+307 silly gunzTarPerm modified mode [ 'samples/uploader/libs/README', 438, 420 ]
+308 silly gunzTarPerm extractEntry samples/uploader/sims/README
+309 silly gunzTarPerm modified mode [ 'samples/uploader/sims/README', 438, 420 ]
+310 silly gunzTarPerm extractEntry samples/uploader/styles/README
+311 silly gunzTarPerm modified mode [ 'samples/uploader/styles/README', 438, 420 ]
+312 silly gunzTarPerm extractEntry samples/uploader/templates/README
+313 silly gunzTarPerm modified mode [ 'samples/uploader/templates/README', 438, 420 ]
+314 silly gunzTarPerm extractEntry samples/uploader/assets/README
+315 silly gunzTarPerm modified mode [ 'samples/uploader/assets/README', 438, 420 ]
+316 silly gunzTarPerm extractEntry samples/uploader/assets/favicon.gif
+317 silly gunzTarPerm modified mode [ 'samples/uploader/assets/favicon.gif', 438, 420 ]
+318 silly gunzTarPerm extractEntry samples/uploader/node_modules/README
+319 silly gunzTarPerm modified mode [ 'samples/uploader/node_modules/README', 438, 420 ]
+320 silly gunzTarPerm extractEntry client/assets/README
+321 silly gunzTarPerm modified mode [ 'client/assets/README', 438, 420 ]
+322 silly gunzTarPerm extractEntry client/assets/favicon.gif
+323 silly gunzTarPerm modified mode [ 'client/assets/favicon.gif', 438, 420 ]
+324 silly gunzTarPerm extractEntry client/assets/logo.png
+325 silly gunzTarPerm modified mode [ 'client/assets/logo.png', 438, 420 ]
+326 silly gunzTarPerm extractEntry client/index.html
+327 silly gunzTarPerm modified mode [ 'client/index.html', 438, 420 ]
+328 silly gunzTarPerm extractEntry client/libs/README
+329 silly gunzTarPerm modified mode [ 'client/libs/README', 438, 420 ]
+330 silly gunzTarPerm extractEntry client/libs/spin.js
+331 silly gunzTarPerm modified mode [ 'client/libs/spin.js', 438, 420 ]
+332 silly gunzTarPerm extractEntry client/libs/easeljs.js
+333 silly gunzTarPerm modified mode [ 'client/libs/easeljs.js', 438, 420 ]
+334 silly gunzTarPerm extractEntry client/libs/fileuploader.js
+335 silly gunzTarPerm modified mode [ 'client/libs/fileuploader.js', 438, 420 ]
+336 silly gunzTarPerm extractEntry client/libs/handlebars.js
+337 silly gunzTarPerm modified mode [ 'client/libs/handlebars.js', 438, 420 ]
+338 silly gunzTarPerm extractEntry client/libs/async.js
+339 silly gunzTarPerm modified mode [ 'client/libs/async.js', 438, 420 ]
+340 silly gunzTarPerm extractEntry client/libs/jquery.js
+341 silly gunzTarPerm modified mode [ 'client/libs/jquery.js', 438, 420 ]
+342 silly gunzTarPerm extractEntry client/libs/json2.js
+343 silly gunzTarPerm modified mode [ 'client/libs/json2.js', 438, 420 ]
+344 silly gunzTarPerm extractEntry client/libs/less.js
+345 silly gunzTarPerm modified mode [ 'client/libs/less.js', 438, 420 ]
+346 silly gunzTarPerm extractEntry client/libs/soundjs.js
+347 silly gunzTarPerm modified mode [ 'client/libs/soundjs.js', 438, 420 ]
+348 silly gunzTarPerm extractEntry client/libs/angular.js
+349 silly gunzTarPerm modified mode [ 'client/libs/angular.js', 438, 420 ]
+350 silly gunzTarPerm extractEntry client/libs/bootstrap/bootstrap-alerts.js
+351 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/bootstrap-alerts.js', 438, 420 ]
+352 silly gunzTarPerm extractEntry client/libs/bootstrap/bootstrap-buttons.js
+353 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/bootstrap-buttons.js', 438, 420 ]
+354 silly gunzTarPerm extractEntry client/libs/bootstrap/bootstrap-dropdown.js
+355 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/bootstrap-dropdown.js', 438, 420 ]
+356 silly gunzTarPerm extractEntry client/libs/bootstrap/bootstrap-modal.js
+357 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/bootstrap-modal.js', 438, 420 ]
+358 silly gunzTarPerm extractEntry client/libs/bootstrap/bootstrap-popover.js
+359 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/bootstrap-popover.js', 438, 420 ]
+360 silly gunzTarPerm extractEntry client/libs/bootstrap/bootstrap-scrollspy.js
+361 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/bootstrap-scrollspy.js', 438, 420 ]
+362 silly gunzTarPerm extractEntry client/libs/bootstrap/bootstrap-tabs.js
+363 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/bootstrap-tabs.js', 438, 420 ]
+364 silly gunzTarPerm extractEntry client/libs/bootstrap/bootstrap-twipsy.js
+365 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/bootstrap-twipsy.js', 438, 420 ]
+366 silly gunzTarPerm extractEntry client/libs/bootstrap/tests/index.html
+367 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/tests/index.html', 438, 420 ]
+368 silly gunzTarPerm extractEntry client/libs/bootstrap/tests/unit/bootstrap-alerts.js
+369 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/tests/unit/bootstrap-alerts.js',
+369 silly gunzTarPerm   438,
+369 silly gunzTarPerm   420 ]
+370 silly gunzTarPerm extractEntry client/libs/bootstrap/tests/unit/bootstrap-buttons.js
+371 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/tests/unit/bootstrap-buttons.js',
+371 silly gunzTarPerm   438,
+371 silly gunzTarPerm   420 ]
+372 silly gunzTarPerm extractEntry client/libs/bootstrap/tests/unit/bootstrap-dropdown.js
+373 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/tests/unit/bootstrap-dropdown.js',
+373 silly gunzTarPerm   438,
+373 silly gunzTarPerm   420 ]
+374 silly gunzTarPerm extractEntry client/libs/bootstrap/tests/unit/bootstrap-modal.js
+375 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/tests/unit/bootstrap-modal.js',
+375 silly gunzTarPerm   438,
+375 silly gunzTarPerm   420 ]
+376 silly gunzTarPerm extractEntry client/libs/bootstrap/tests/unit/bootstrap-popover.js
+377 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/tests/unit/bootstrap-popover.js',
+377 silly gunzTarPerm   438,
+377 silly gunzTarPerm   420 ]
+378 silly gunzTarPerm extractEntry client/libs/bootstrap/tests/unit/bootstrap-scrollspy.js
+379 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/tests/unit/bootstrap-scrollspy.js',
+379 silly gunzTarPerm   438,
+379 silly gunzTarPerm   420 ]
+380 silly gunzTarPerm extractEntry client/libs/bootstrap/tests/unit/bootstrap-tabs.js
+381 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/tests/unit/bootstrap-tabs.js',
+381 silly gunzTarPerm   438,
+381 silly gunzTarPerm   420 ]
+382 silly gunzTarPerm extractEntry client/libs/bootstrap/tests/unit/bootstrap-twipsy.js
+383 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/tests/unit/bootstrap-twipsy.js',
+383 silly gunzTarPerm   438,
+383 silly gunzTarPerm   420 ]
+384 silly gunzTarPerm extractEntry client/libs/bootstrap/tests/vendor/qunit.js
+385 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/tests/vendor/qunit.js', 438, 420 ]
+386 silly gunzTarPerm extractEntry client/libs/bootstrap/tests/vendor/qunit.css
+387 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/tests/vendor/qunit.css', 438, 420 ]
+388 silly gunzTarPerm extractEntry client/libs/angular/resource.js
+389 silly gunzTarPerm modified mode [ 'client/libs/angular/resource.js', 438, 420 ]
+390 silly gunzTarPerm extractEntry client/libs/angular/ui-ieshiv.js
+391 silly gunzTarPerm modified mode [ 'client/libs/angular/ui-ieshiv.js', 438, 420 ]
+392 silly gunzTarPerm extractEntry client/libs/angular/ui.js
+393 silly gunzTarPerm modified mode [ 'client/libs/angular/ui.js', 438, 420 ]
+394 silly gunzTarPerm extractEntry client/libs/jquery/address.js
+395 silly gunzTarPerm modified mode [ 'client/libs/jquery/address.js', 438, 420 ]
+396 silly gunzTarPerm extractEntry client/libs/jquery/cookie.js
+397 silly gunzTarPerm modified mode [ 'client/libs/jquery/cookie.js', 438, 420 ]
+398 silly gunzTarPerm extractEntry client/libs/jquery/fileupload.js
+399 silly gunzTarPerm modified mode [ 'client/libs/jquery/fileupload.js', 438, 420 ]
+400 silly gunzTarPerm extractEntry client/libs/jquery/iframe-transport.js
+401 silly gunzTarPerm modified mode [ 'client/libs/jquery/iframe-transport.js', 438, 420 ]
+402 silly gunzTarPerm extractEntry client/libs/jquery/qunit.js
+403 silly gunzTarPerm modified mode [ 'client/libs/jquery/qunit.js', 438, 420 ]
+404 silly gunzTarPerm extractEntry client/libs/jquery/ui.js
+405 silly gunzTarPerm modified mode [ 'client/libs/jquery/ui.js', 438, 420 ]
+406 silly gunzTarPerm extractEntry client/libs/jquery/effects/blind.js
+407 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/blind.js', 438, 420 ]
+408 silly gunzTarPerm extractEntry client/libs/jquery/effects/core.js
+409 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/core.js', 438, 420 ]
+410 silly gunzTarPerm extractEntry client/libs/jquery/effects/drop.js
+411 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/drop.js', 438, 420 ]
+412 silly gunzTarPerm extractEntry client/libs/jquery/effects/explode.js
+413 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/explode.js', 438, 420 ]
+414 silly gunzTarPerm extractEntry client/libs/jquery/effects/fade.js
+415 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/fade.js', 438, 420 ]
+416 silly gunzTarPerm extractEntry client/libs/jquery/effects/clip.js
+417 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/clip.js', 438, 420 ]
+418 silly gunzTarPerm extractEntry client/libs/jquery/effects/highlight.js
+419 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/highlight.js', 438, 420 ]
+420 silly gunzTarPerm extractEntry client/libs/jquery/effects/pulsate.js
+421 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/pulsate.js', 438, 420 ]
+422 silly gunzTarPerm extractEntry client/libs/jquery/effects/scale.js
+423 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/scale.js', 438, 420 ]
+424 silly gunzTarPerm extractEntry client/libs/jquery/effects/shake.js
+425 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/shake.js', 438, 420 ]
+426 silly gunzTarPerm extractEntry client/libs/jquery/effects/slide.js
+427 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/slide.js', 438, 420 ]
+428 silly gunzTarPerm extractEntry client/libs/jquery/effects/bounce.js
+429 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/bounce.js', 438, 420 ]
+430 silly gunzTarPerm extractEntry client/libs/jquery/effects/transfer.js
+431 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/transfer.js', 438, 420 ]
+432 silly gunzTarPerm extractEntry client/libs/jquery/effects/fold.js
+433 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/fold.js', 438, 420 ]
+434 silly gunzTarPerm extractEntry client/plugins/README
+435 silly gunzTarPerm modified mode [ 'client/plugins/README', 438, 420 ]
+436 silly gunzTarPerm extractEntry client/scripts/README
+437 silly gunzTarPerm modified mode [ 'client/scripts/README', 438, 420 ]
+438 silly gunzTarPerm extractEntry client/scripts/cookiesdisabled.js
+439 silly gunzTarPerm modified mode [ 'client/scripts/cookiesdisabled.js', 438, 420 ]
+440 silly gunzTarPerm extractEntry client/scripts/failedconnection.js
+441 silly gunzTarPerm modified mode [ 'client/scripts/failedconnection.js', 438, 420 ]
+442 silly gunzTarPerm extractEntry client/scripts/load.js
+443 silly gunzTarPerm modified mode [ 'client/scripts/load.js', 438, 420 ]
+444 silly gunzTarPerm extractEntry client/scripts/notaccessible.js
+445 silly gunzTarPerm modified mode [ 'client/scripts/notaccessible.js', 438, 420 ]
+446 silly gunzTarPerm extractEntry client/scripts/notfound.js
+447 silly gunzTarPerm modified mode [ 'client/scripts/notfound.js', 438, 420 ]
+448 silly gunzTarPerm extractEntry client/styles/README
+449 silly gunzTarPerm modified mode [ 'client/styles/README', 438, 420 ]
+450 silly gunzTarPerm extractEntry client/styles/angular-ui.css
+451 silly gunzTarPerm modified mode [ 'client/styles/angular-ui.css', 438, 420 ]
+452 silly gunzTarPerm extractEntry client/styles/bootstrap/assets/glyphicons-halflings-white.png
+453 silly gunzTarPerm modified mode [ 'client/styles/bootstrap/assets/glyphicons-halflings-white.png',
+453 silly gunzTarPerm   438,
+453 silly gunzTarPerm   420 ]
+454 silly gunzTarPerm extractEntry client/styles/bootstrap/assets/glyphicons-halflings.png
+455 silly gunzTarPerm modified mode [ 'client/styles/bootstrap/assets/glyphicons-halflings.png',
+455 silly gunzTarPerm   438,
+455 silly gunzTarPerm   420 ]
+456 silly gunzTarPerm extractEntry client/styles/bootstrap.css
+457 silly gunzTarPerm modified mode [ 'client/styles/bootstrap.css', 438, 420 ]
+458 silly gunzTarPerm extractEntry client/styles/fileuploader/loading.gif
+459 silly gunzTarPerm modified mode [ 'client/styles/fileuploader/loading.gif', 438, 420 ]
+460 silly gunzTarPerm extractEntry client/styles/fileuploader.css
+461 silly gunzTarPerm modified mode [ 'client/styles/fileuploader.css', 438, 420 ]
+462 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-bg_glass_95_fef1ec_1x400.png
+463 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-bg_glass_95_fef1ec_1x400.png',
+463 silly gunzTarPerm   438,
+463 silly gunzTarPerm   420 ]
+464 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/animated-overlay.gif
+465 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/animated-overlay.gif',
+465 silly gunzTarPerm   438,
+465 silly gunzTarPerm   420 ]
+466 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-bg_flat_75_ffffff_40x100.png
+467 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-bg_flat_75_ffffff_40x100.png',
+467 silly gunzTarPerm   438,
+467 silly gunzTarPerm   420 ]
+468 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-bg_glass_55_fbf9ee_1x400.png
+469 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-bg_glass_55_fbf9ee_1x400.png',
+469 silly gunzTarPerm   438,
+469 silly gunzTarPerm   420 ]
+470 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-bg_glass_65_ffffff_1x400.png
+471 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-bg_glass_65_ffffff_1x400.png',
+471 silly gunzTarPerm   438,
+471 silly gunzTarPerm   420 ]
+472 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-bg_glass_75_dadada_1x400.png
+473 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-bg_glass_75_dadada_1x400.png',
+473 silly gunzTarPerm   438,
+473 silly gunzTarPerm   420 ]
+474 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-bg_glass_75_e6e6e6_1x400.png
+475 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-bg_glass_75_e6e6e6_1x400.png',
+475 silly gunzTarPerm   438,
+475 silly gunzTarPerm   420 ]
+476 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-bg_flat_0_aaaaaa_40x100.png
+477 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-bg_flat_0_aaaaaa_40x100.png',
+477 silly gunzTarPerm   438,
+477 silly gunzTarPerm   420 ]
+478 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-bg_highlight-soft_75_cccccc_1x100.png
+479 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-bg_highlight-soft_75_cccccc_1x100.png',
+479 silly gunzTarPerm   438,
+479 silly gunzTarPerm   420 ]
+480 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-icons_222222_256x240.png
+481 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-icons_222222_256x240.png',
+481 silly gunzTarPerm   438,
+481 silly gunzTarPerm   420 ]
+482 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-icons_2e83ff_256x240.png
+483 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-icons_2e83ff_256x240.png',
+483 silly gunzTarPerm   438,
+483 silly gunzTarPerm   420 ]
+484 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-icons_454545_256x240.png
+485 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-icons_454545_256x240.png',
+485 silly gunzTarPerm   438,
+485 silly gunzTarPerm   420 ]
+486 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-icons_888888_256x240.png
+487 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-icons_888888_256x240.png',
+487 silly gunzTarPerm   438,
+487 silly gunzTarPerm   420 ]
+488 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-icons_cd0a0a_256x240.png
+489 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-icons_cd0a0a_256x240.png',
+489 silly gunzTarPerm   438,
+489 silly gunzTarPerm   420 ]
+490 silly gunzTarPerm extractEntry client/styles/jqueryui/base/style.css
+491 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/style.css', 438, 420 ]
+492 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-bg_gloss-wave_35_f6a828_500x100.png
+493 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-bg_gloss-wave_35_f6a828_500x100.png',
+493 silly gunzTarPerm   438,
+493 silly gunzTarPerm   420 ]
+494 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/animated-overlay.gif
+495 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/animated-overlay.gif',
+495 silly gunzTarPerm   438,
+495 silly gunzTarPerm   420 ]
+496 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-bg_diagonals-thick_20_666666_40x40.png
+497 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-bg_diagonals-thick_20_666666_40x40.png',
+497 silly gunzTarPerm   438,
+497 silly gunzTarPerm   420 ]
+498 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-bg_flat_10_000000_40x100.png
+499 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-bg_flat_10_000000_40x100.png',
+499 silly gunzTarPerm   438,
+499 silly gunzTarPerm   420 ]
+500 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-bg_glass_100_f6f6f6_1x400.png
+501 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-bg_glass_100_f6f6f6_1x400.png',
+501 silly gunzTarPerm   438,
+501 silly gunzTarPerm   420 ]
+502 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-bg_glass_100_fdf5ce_1x400.png
+503 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-bg_glass_100_fdf5ce_1x400.png',
+503 silly gunzTarPerm   438,
+503 silly gunzTarPerm   420 ]
+504 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-bg_glass_65_ffffff_1x400.png
+505 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-bg_glass_65_ffffff_1x400.png',
+505 silly gunzTarPerm   438,
+505 silly gunzTarPerm   420 ]
+506 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-bg_diagonals-thick_18_b81900_40x40.png
+507 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-bg_diagonals-thick_18_b81900_40x40.png',
+507 silly gunzTarPerm   438,
+507 silly gunzTarPerm   420 ]
+508 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-bg_highlight-soft_100_eeeeee_1x100.png
+509 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-bg_highlight-soft_100_eeeeee_1x100.png',
+509 silly gunzTarPerm   438,
+509 silly gunzTarPerm   420 ]
+510 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-bg_highlight-soft_75_ffe45c_1x100.png
+511 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-bg_highlight-soft_75_ffe45c_1x100.png',
+511 silly gunzTarPerm   438,
+511 silly gunzTarPerm   420 ]
+512 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-icons_222222_256x240.png
+513 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-icons_222222_256x240.png',
+513 silly gunzTarPerm   438,
+513 silly gunzTarPerm   420 ]
+514 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-icons_228ef1_256x240.png
+515 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-icons_228ef1_256x240.png',
+515 silly gunzTarPerm   438,
+515 silly gunzTarPerm   420 ]
+516 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-icons_ef8c08_256x240.png
+517 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-icons_ef8c08_256x240.png',
+517 silly gunzTarPerm   438,
+517 silly gunzTarPerm   420 ]
+518 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-icons_ffd27a_256x240.png
+519 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-icons_ffd27a_256x240.png',
+519 silly gunzTarPerm   438,
+519 silly gunzTarPerm   420 ]
+520 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-icons_ffffff_256x240.png
+521 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-icons_ffffff_256x240.png',
+521 silly gunzTarPerm   438,
+521 silly gunzTarPerm   420 ]
+522 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/style.css
+523 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/style.css', 438, 420 ]
+524 silly gunzTarPerm extractEntry client/styles/nombo.css
+525 silly gunzTarPerm modified mode [ 'client/styles/nombo.css', 438, 420 ]
+526 silly gunzTarPerm extractEntry client/styles/qunit.css
+527 silly gunzTarPerm modified mode [ 'client/styles/qunit.css', 438, 420 ]
+528 silly gunzTarPerm extractEntry app/README.md
+529 silly gunzTarPerm modified mode [ 'app/README.md', 438, 420 ]
+530 silly gunzTarPerm extractEntry app/server.node.js
+531 silly gunzTarPerm modified mode [ 'app/server.node.js', 438, 420 ]
+532 silly gunzTarPerm extractEntry app/master.node.js
+533 silly gunzTarPerm modified mode [ 'app/master.node.js', 438, 420 ]
+534 silly gunzTarPerm extractEntry app/worker.node.js
+535 silly gunzTarPerm modified mode [ 'app/worker.node.js', 438, 420 ]
+536 silly gunzTarPerm extractEntry app/license_mit.txt
+537 silly gunzTarPerm modified mode [ 'app/license_mit.txt', 438, 420 ]
+538 silly gunzTarPerm extractEntry app/files/README
+539 silly gunzTarPerm modified mode [ 'app/files/README', 438, 420 ]
+540 silly gunzTarPerm extractEntry app/scripts/README
+541 silly gunzTarPerm modified mode [ 'app/scripts/README', 438, 420 ]
+542 silly gunzTarPerm extractEntry app/scripts/index.js
+543 silly gunzTarPerm modified mode [ 'app/scripts/index.js', 438, 420 ]
+544 silly gunzTarPerm extractEntry app/libs/README
+545 silly gunzTarPerm modified mode [ 'app/libs/README', 438, 420 ]
+546 silly gunzTarPerm extractEntry app/sims/README
+547 silly gunzTarPerm modified mode [ 'app/sims/README', 438, 420 ]
+548 silly gunzTarPerm extractEntry app/styles/README
+549 silly gunzTarPerm modified mode [ 'app/styles/README', 438, 420 ]
+550 silly gunzTarPerm extractEntry app/templates/README
+551 silly gunzTarPerm modified mode [ 'app/templates/README', 438, 420 ]
+552 silly gunzTarPerm extractEntry app/templates/index.html
+553 silly gunzTarPerm modified mode [ 'app/templates/index.html', 438, 420 ]
+554 silly gunzTarPerm extractEntry app/assets/README
+555 silly gunzTarPerm modified mode [ 'app/assets/README', 438, 420 ]
+556 silly gunzTarPerm extractEntry app/assets/favicon.gif
+557 silly gunzTarPerm modified mode [ 'app/assets/favicon.gif', 438, 420 ]
+558 silly gunzTarPerm extractEntry app/node_modules/README
+559 silly gunzTarPerm modified mode [ 'app/node_modules/README', 438, 420 ]
+560 silly gunzTarPerm extractEntry node_modules/fileuploader/index.js
+561 silly gunzTarPerm modified mode [ 'node_modules/fileuploader/index.js', 438, 420 ]
+562 silly gunzTarPerm extractEntry node_modules/fileuploader/tmp/README
+563 silly gunzTarPerm modified mode [ 'node_modules/fileuploader/tmp/README', 438, 420 ]
+564 silly gunzTarPerm extractEntry node_modules/iocluster/package.json
+565 silly gunzTarPerm modified mode [ 'node_modules/iocluster/package.json', 438, 420 ]
+566 silly gunzTarPerm extractEntry node_modules/iocluster/README.md
+567 silly gunzTarPerm modified mode [ 'node_modules/iocluster/README.md', 438, 420 ]
+568 silly gunzTarPerm extractEntry node_modules/iocluster/clientcluster.js
+569 silly gunzTarPerm modified mode [ 'node_modules/iocluster/clientcluster.js', 438, 420 ]
+570 silly gunzTarPerm extractEntry node_modules/iocluster/index.js
+571 silly gunzTarPerm modified mode [ 'node_modules/iocluster/index.js', 438, 420 ]
+572 silly gunzTarPerm extractEntry node_modules/json/cycle.js
+573 silly gunzTarPerm modified mode [ 'node_modules/json/cycle.js', 438, 420 ]
+574 silly gunzTarPerm extractEntry node_modules/json/index.js
+575 silly gunzTarPerm modified mode [ 'node_modules/json/index.js', 438, 420 ]
+576 silly gunzTarPerm extractEntry node_modules/nombo/index.js
+577 silly gunzTarPerm modified mode [ 'node_modules/nombo/index.js', 438, 420 ]
+578 silly gunzTarPerm extractEntry node_modules/nombo/pathmanager/index.js
+579 silly gunzTarPerm modified mode [ 'node_modules/nombo/pathmanager/index.js', 438, 420 ]
+580 silly gunzTarPerm extractEntry node_modules/nombo/pathmanager/pathmanager.node.js
+581 silly gunzTarPerm modified mode [ 'node_modules/nombo/pathmanager/pathmanager.node.js',
+581 silly gunzTarPerm   438,
+581 silly gunzTarPerm   420 ]
+582 silly gunzTarPerm extractEntry node_modules/nombo/css-bundler/css-bundler.node.js
+583 silly gunzTarPerm modified mode [ 'node_modules/nombo/css-bundler/css-bundler.node.js',
+583 silly gunzTarPerm   438,
+583 silly gunzTarPerm   420 ]
+584 silly gunzTarPerm extractEntry node_modules/nombo/css-bundler/index.js
+585 silly gunzTarPerm modified mode [ 'node_modules/nombo/css-bundler/index.js', 438, 420 ]
+586 silly gunzTarPerm extractEntry node_modules/nombo/fileuploader/fileuploader.node.js
+587 silly gunzTarPerm modified mode [ 'node_modules/nombo/fileuploader/fileuploader.node.js',
+587 silly gunzTarPerm   438,
+587 silly gunzTarPerm   420 ]
+588 silly gunzTarPerm extractEntry node_modules/nombo/fileuploader/index.js
+589 silly gunzTarPerm modified mode [ 'node_modules/nombo/fileuploader/index.js', 438, 420 ]
+590 silly gunzTarPerm extractEntry node_modules/nombo/gateway/gateway.node.js
+591 silly gunzTarPerm modified mode [ 'node_modules/nombo/gateway/gateway.node.js', 438, 420 ]
+592 silly gunzTarPerm extractEntry node_modules/nombo/gateway/index.js
+593 silly gunzTarPerm modified mode [ 'node_modules/nombo/gateway/index.js', 438, 420 ]
+594 silly gunzTarPerm extractEntry node_modules/nombo/cache/cache.node.js
+595 silly gunzTarPerm modified mode [ 'node_modules/nombo/cache/cache.node.js', 438, 420 ]
+596 silly gunzTarPerm extractEntry node_modules/nombo/cache/index.js
+597 silly gunzTarPerm modified mode [ 'node_modules/nombo/cache/index.js', 438, 420 ]
+598 silly gunzTarPerm extractEntry node_modules/nombo/configmanager/configmanager.node.js
+599 silly gunzTarPerm modified mode [ 'node_modules/nombo/configmanager/configmanager.node.js',
+599 silly gunzTarPerm   438,
+599 silly gunzTarPerm   420 ]
+600 silly gunzTarPerm extractEntry node_modules/nombo/configmanager/index.js
+601 silly gunzTarPerm modified mode [ 'node_modules/nombo/configmanager/index.js', 438, 420 ]
+602 silly gunzTarPerm extractEntry node_modules/nombo/router/cacheresponder.node.js
+603 silly gunzTarPerm modified mode [ 'node_modules/nombo/router/cacheresponder.node.js', 438, 420 ]
+604 silly gunzTarPerm extractEntry node_modules/nombo/router/compressor.node.js
+605 silly gunzTarPerm modified mode [ 'node_modules/nombo/router/compressor.node.js', 438, 420 ]
+606 silly gunzTarPerm extractEntry node_modules/nombo/router/headeradder.node.js
+607 silly gunzTarPerm modified mode [ 'node_modules/nombo/router/headeradder.node.js', 438, 420 ]
+608 silly gunzTarPerm extractEntry node_modules/nombo/router/preprocessor.node.js
+609 silly gunzTarPerm modified mode [ 'node_modules/nombo/router/preprocessor.node.js', 438, 420 ]
+610 silly gunzTarPerm extractEntry node_modules/nombo/router/prerouter.node.js
+611 silly gunzTarPerm modified mode [ 'node_modules/nombo/router/prerouter.node.js', 438, 420 ]
+612 silly gunzTarPerm extractEntry node_modules/nombo/router/responder.node.js
+613 silly gunzTarPerm modified mode [ 'node_modules/nombo/router/responder.node.js', 438, 420 ]
+614 silly gunzTarPerm extractEntry node_modules/nombo/router/router.node.js
+615 silly gunzTarPerm modified mode [ 'node_modules/nombo/router/router.node.js', 438, 420 ]
+616 silly gunzTarPerm extractEntry node_modules/nombo/scriptmanager/index.js
+617 silly gunzTarPerm modified mode [ 'node_modules/nombo/scriptmanager/index.js', 438, 420 ]
+618 silly gunzTarPerm extractEntry node_modules/nombo/scriptmanager/scriptmanager.node.js
+619 silly gunzTarPerm modified mode [ 'node_modules/nombo/scriptmanager/scriptmanager.node.js',
+619 silly gunzTarPerm   438,
+619 silly gunzTarPerm   420 ]
+620 silly gunzTarPerm extractEntry node_modules/nombo/serverservice/index.js
+621 silly gunzTarPerm modified mode [ 'node_modules/nombo/serverservice/index.js', 438, 420 ]
+622 silly gunzTarPerm extractEntry node_modules/nombo/serverservice/serverservice.node.js
+623 silly gunzTarPerm modified mode [ 'node_modules/nombo/serverservice/serverservice.node.js',
+623 silly gunzTarPerm   438,
+623 silly gunzTarPerm   420 ]
+624 silly gunzTarPerm extractEntry node_modules/nombo/smartcachemanager/index.js
+625 silly gunzTarPerm modified mode [ 'node_modules/nombo/smartcachemanager/index.js', 438, 420 ]
+626 silly gunzTarPerm extractEntry node_modules/nombo/template-bundler/index.js
+627 silly gunzTarPerm modified mode [ 'node_modules/nombo/template-bundler/index.js', 438, 420 ]
+628 silly gunzTarPerm extractEntry node_modules/nombo/template-bundler/template-bundler.node.js
+629 silly gunzTarPerm modified mode [ 'node_modules/nombo/template-bundler/template-bundler.node.js',
+629 silly gunzTarPerm   438,
+629 silly gunzTarPerm   420 ]
+630 silly gunzTarPerm extractEntry node_modules/nombo/webservice/index.js
+631 silly gunzTarPerm modified mode [ 'node_modules/nombo/webservice/index.js', 438, 420 ]
+632 silly gunzTarPerm extractEntry node_modules/nombo/webservice/webservice.node.js
+633 silly gunzTarPerm modified mode [ 'node_modules/nombo/webservice/webservice.node.js', 438, 420 ]
+634 silly gunzTarPerm extractEntry node_modules/stepper/index.js
+635 silly gunzTarPerm modified mode [ 'node_modules/stepper/index.js', 438, 420 ]
+636 silly gunzTarPerm extractEntry node_modules/stepper/stepper.node.js
+637 silly gunzTarPerm modified mode [ 'node_modules/stepper/stepper.node.js', 438, 420 ]
+638 silly lockFile 14fd296b-97550-0-9893183235544711-package tar://C:\Users\jonathan\AppData\Local\Temp\npm-5648-xT6ODAFE\1380017897550-0.9893183235544711\package
+639 silly lockFile 14fd296b-97550-0-9893183235544711-package tar://C:\Users\jonathan\AppData\Local\Temp\npm-5648-xT6ODAFE\1380017897550-0.9893183235544711\package
+640 silly lockFile 8304ac53-97550-0-9893183235544711-tmp-tgz tar://C:\Users\jonathan\AppData\Local\Temp\npm-5648-xT6ODAFE\1380017897550-0.9893183235544711\tmp.tgz
+641 silly lockFile 8304ac53-97550-0-9893183235544711-tmp-tgz tar://C:\Users\jonathan\AppData\Local\Temp\npm-5648-xT6ODAFE\1380017897550-0.9893183235544711\tmp.tgz
+642 verbose tar pack [ 'C:\\Users\\jonathan\\AppData\\Roaming\\npm-cache\\nombo\\0.9.106\\package.tgz',
+642 verbose tar pack   'C:\\Users\\jonathan\\AppData\\Local\\Temp\\npm-5648-xT6ODAFE\\1380017897550-0.9893183235544711\\package' ]
+643 verbose tarball C:\Users\jonathan\AppData\Roaming\npm-cache\nombo\0.9.106\package.tgz
+644 verbose folder C:\Users\jonathan\AppData\Local\Temp\npm-5648-xT6ODAFE\1380017897550-0.9893183235544711\package
+645 silly lockFile 14fd296b-97550-0-9893183235544711-package tar://C:\Users\jonathan\AppData\Local\Temp\npm-5648-xT6ODAFE\1380017897550-0.9893183235544711\package
+646 verbose lock tar://C:\Users\jonathan\AppData\Local\Temp\npm-5648-xT6ODAFE\1380017897550-0.9893183235544711\package C:\Users\jonathan\AppData\Roaming\npm-cache\14fd296b-97550-0-9893183235544711-package.lock
+647 silly lockFile 706d831a--cache-nombo-0-9-106-package-tgz tar://C:\Users\jonathan\AppData\Roaming\npm-cache\nombo\0.9.106\package.tgz
+648 verbose lock tar://C:\Users\jonathan\AppData\Roaming\npm-cache\nombo\0.9.106\package.tgz C:\Users\jonathan\AppData\Roaming\npm-cache\706d831a--cache-nombo-0-9-106-package-tgz.lock
+649 silly lockFile 14fd296b-97550-0-9893183235544711-package tar://C:\Users\jonathan\AppData\Local\Temp\npm-5648-xT6ODAFE\1380017897550-0.9893183235544711\package
+650 silly lockFile 14fd296b-97550-0-9893183235544711-package tar://C:\Users\jonathan\AppData\Local\Temp\npm-5648-xT6ODAFE\1380017897550-0.9893183235544711\package
+651 silly lockFile 706d831a--cache-nombo-0-9-106-package-tgz tar://C:\Users\jonathan\AppData\Roaming\npm-cache\nombo\0.9.106\package.tgz
+652 silly lockFile 706d831a--cache-nombo-0-9-106-package-tgz tar://C:\Users\jonathan\AppData\Roaming\npm-cache\nombo\0.9.106\package.tgz
+653 silly lockFile 036375d1--npm-cache-nombo-0-9-106-package C:\Users\jonathan\AppData\Roaming\npm-cache\nombo\0.9.106\package
+654 verbose lock C:\Users\jonathan\AppData\Roaming\npm-cache\nombo\0.9.106\package C:\Users\jonathan\AppData\Roaming\npm-cache\036375d1--npm-cache-nombo-0-9-106-package.lock
+655 silly lockFile 036375d1--npm-cache-nombo-0-9-106-package C:\Users\jonathan\AppData\Roaming\npm-cache\nombo\0.9.106\package
+656 silly lockFile 036375d1--npm-cache-nombo-0-9-106-package C:\Users\jonathan\AppData\Roaming\npm-cache\nombo\0.9.106\package
+657 verbose tar unpack C:\Users\jonathan\AppData\Roaming\npm-cache\nombo\0.9.106\package.tgz
+658 silly lockFile 08450a70--npm-cache-nombo-0-9-106-package tar://C:\Users\jonathan\AppData\Roaming\npm-cache\nombo\0.9.106\package
+659 verbose lock tar://C:\Users\jonathan\AppData\Roaming\npm-cache\nombo\0.9.106\package C:\Users\jonathan\AppData\Roaming\npm-cache\08450a70--npm-cache-nombo-0-9-106-package.lock
+660 silly lockFile 706d831a--cache-nombo-0-9-106-package-tgz tar://C:\Users\jonathan\AppData\Roaming\npm-cache\nombo\0.9.106\package.tgz
+661 verbose lock tar://C:\Users\jonathan\AppData\Roaming\npm-cache\nombo\0.9.106\package.tgz C:\Users\jonathan\AppData\Roaming\npm-cache\706d831a--cache-nombo-0-9-106-package-tgz.lock
+662 silly gunzTarPerm modes [ '755', '644' ]
+663 silly gunzTarPerm extractEntry package.json
+664 silly gunzTarPerm modified mode [ 'package.json', 438, 420 ]
+665 silly gunzTarPerm extractEntry README.md
+666 silly gunzTarPerm modified mode [ 'README.md', 438, 420 ]
+667 silly gunzTarPerm extractEntry smartcachemanager.js
+668 silly gunzTarPerm modified mode [ 'smartcachemanager.js', 438, 420 ]
+669 silly gunzTarPerm extractEntry session.js
+670 silly gunzTarPerm modified mode [ 'session.js', 438, 420 ]
+671 silly gunzTarPerm extractEntry index.js
+672 silly gunzTarPerm modified mode [ 'index.js', 438, 420 ]
+673 silly gunzTarPerm extractEntry loader.js
+674 silly gunzTarPerm modified mode [ 'loader.js', 438, 420 ]
+675 silly gunzTarPerm extractEntry nombo.node.js
+676 silly gunzTarPerm modified mode [ 'nombo.node.js', 438, 420 ]
+677 silly gunzTarPerm extractEntry nombo-balancer.node.js
+678 silly gunzTarPerm modified mode [ 'nombo-balancer.node.js', 438, 420 ]
+679 silly gunzTarPerm extractEntry nombo-worker.node.js
+680 silly gunzTarPerm modified mode [ 'nombo-worker.node.js', 438, 420 ]
+681 silly gunzTarPerm extractEntry nombo-worker-bootstrap.node.js
+682 silly gunzTarPerm modified mode [ 'nombo-worker-bootstrap.node.js', 438, 420 ]
+683 silly gunzTarPerm extractEntry nombo-client.js
+684 silly gunzTarPerm modified mode [ 'nombo-client.js', 438, 420 ]
+685 silly gunzTarPerm extractEntry bin/cli.js
+686 silly gunzTarPerm modified mode [ 'bin/cli.js', 438, 420 ]
+687 silly gunzTarPerm extractEntry license_mit.txt
+688 silly gunzTarPerm modified mode [ 'license_mit.txt', 438, 420 ]
+689 silly gunzTarPerm extractEntry config.node.json
+690 silly gunzTarPerm modified mode [ 'config.node.json', 438, 420 ]
+691 silly gunzTarPerm extractEntry samples/angular_projects/README.md
+692 silly gunzTarPerm modified mode [ 'samples/angular_projects/README.md', 438, 420 ]
+693 silly gunzTarPerm extractEntry samples/angular_projects/server.node.js
+694 silly gunzTarPerm modified mode [ 'samples/angular_projects/server.node.js', 438, 420 ]
+695 silly gunzTarPerm extractEntry samples/angular_projects/master.node.js
+696 silly gunzTarPerm modified mode [ 'samples/angular_projects/master.node.js', 438, 420 ]
+697 silly gunzTarPerm extractEntry samples/angular_projects/worker.node.js
+698 silly gunzTarPerm modified mode [ 'samples/angular_projects/worker.node.js', 438, 420 ]
+699 silly gunzTarPerm extractEntry samples/angular_projects/license_mit.txt
+700 silly gunzTarPerm modified mode [ 'samples/angular_projects/license_mit.txt', 438, 420 ]
+701 silly gunzTarPerm extractEntry samples/angular_projects/files/README
+702 silly gunzTarPerm modified mode [ 'samples/angular_projects/files/README', 438, 420 ]
+703 silly gunzTarPerm extractEntry samples/angular_projects/scripts/README
+704 silly gunzTarPerm modified mode [ 'samples/angular_projects/scripts/README', 438, 420 ]
+705 silly gunzTarPerm extractEntry samples/angular_projects/scripts/index.js
+706 silly gunzTarPerm modified mode [ 'samples/angular_projects/scripts/index.js', 438, 420 ]
+707 silly gunzTarPerm extractEntry samples/angular_projects/scripts/store.js
+708 silly gunzTarPerm modified mode [ 'samples/angular_projects/scripts/store.js', 438, 420 ]
+709 silly gunzTarPerm extractEntry samples/angular_projects/libs/README
+710 silly gunzTarPerm modified mode [ 'samples/angular_projects/libs/README', 438, 420 ]
+711 silly gunzTarPerm extractEntry samples/angular_projects/sims/README
+712 silly gunzTarPerm modified mode [ 'samples/angular_projects/sims/README', 438, 420 ]
+713 silly gunzTarPerm extractEntry samples/angular_projects/sims/projects.node.js
+714 silly gunzTarPerm modified mode [ 'samples/angular_projects/sims/projects.node.js', 438, 420 ]
+715 silly gunzTarPerm extractEntry samples/angular_projects/styles/README
+716 silly gunzTarPerm modified mode [ 'samples/angular_projects/styles/README', 438, 420 ]
+717 silly gunzTarPerm extractEntry samples/angular_projects/styles/main.css
+718 silly gunzTarPerm modified mode [ 'samples/angular_projects/styles/main.css', 438, 420 ]
+719 silly gunzTarPerm extractEntry samples/angular_projects/templates/README
+720 silly gunzTarPerm modified mode [ 'samples/angular_projects/templates/README', 438, 420 ]
+721 silly gunzTarPerm extractEntry samples/angular_projects/templates/detail.html
+722 silly gunzTarPerm modified mode [ 'samples/angular_projects/templates/detail.html', 438, 420 ]
+723 silly gunzTarPerm extractEntry samples/angular_projects/templates/index.html
+724 silly gunzTarPerm modified mode [ 'samples/angular_projects/templates/index.html', 438, 420 ]
+725 silly gunzTarPerm extractEntry samples/angular_projects/templates/list.html
+726 silly gunzTarPerm modified mode [ 'samples/angular_projects/templates/list.html', 438, 420 ]
+727 silly gunzTarPerm extractEntry samples/angular_projects/assets/README
+728 silly gunzTarPerm modified mode [ 'samples/angular_projects/assets/README', 438, 420 ]
+729 silly gunzTarPerm extractEntry samples/angular_projects/assets/favicon.gif
+730 silly gunzTarPerm modified mode [ 'samples/angular_projects/assets/favicon.gif', 438, 420 ]
+731 silly gunzTarPerm extractEntry samples/angular_projects/node_modules/README
+732 silly gunzTarPerm modified mode [ 'samples/angular_projects/node_modules/README', 438, 420 ]
+733 silly gunzTarPerm extractEntry samples/angular_todo/README.md
+734 silly gunzTarPerm modified mode [ 'samples/angular_todo/README.md', 438, 420 ]
+735 silly gunzTarPerm extractEntry samples/angular_todo/server.node.js
+736 silly gunzTarPerm modified mode [ 'samples/angular_todo/server.node.js', 438, 420 ]
+737 silly gunzTarPerm extractEntry samples/angular_todo/master.node.js
+738 silly gunzTarPerm modified mode [ 'samples/angular_todo/master.node.js', 438, 420 ]
+739 silly gunzTarPerm extractEntry samples/angular_todo/worker.node.js
+740 silly gunzTarPerm modified mode [ 'samples/angular_todo/worker.node.js', 438, 420 ]
+741 silly gunzTarPerm extractEntry samples/angular_todo/license_mit.txt
+742 silly gunzTarPerm modified mode [ 'samples/angular_todo/license_mit.txt', 438, 420 ]
+743 silly gunzTarPerm extractEntry samples/angular_todo/files/README
+744 silly gunzTarPerm modified mode [ 'samples/angular_todo/files/README', 438, 420 ]
+745 silly gunzTarPerm extractEntry samples/angular_todo/scripts/README
+746 silly gunzTarPerm modified mode [ 'samples/angular_todo/scripts/README', 438, 420 ]
+747 silly gunzTarPerm extractEntry samples/angular_todo/scripts/index.js
+748 silly gunzTarPerm modified mode [ 'samples/angular_todo/scripts/index.js', 438, 420 ]
+749 silly gunzTarPerm extractEntry samples/angular_todo/libs/README
+750 silly gunzTarPerm modified mode [ 'samples/angular_todo/libs/README', 438, 420 ]
+751 silly gunzTarPerm extractEntry samples/angular_todo/sims/README
+752 silly gunzTarPerm modified mode [ 'samples/angular_todo/sims/README', 438, 420 ]
+753 silly gunzTarPerm extractEntry samples/angular_todo/sims/projects.js
+754 silly gunzTarPerm modified mode [ 'samples/angular_todo/sims/projects.js', 438, 420 ]
+755 silly gunzTarPerm extractEntry samples/angular_todo/styles/README
+756 silly gunzTarPerm modified mode [ 'samples/angular_todo/styles/README', 438, 420 ]
+757 silly gunzTarPerm extractEntry samples/angular_todo/styles/main.css
+758 silly gunzTarPerm modified mode [ 'samples/angular_todo/styles/main.css', 438, 420 ]
+759 silly gunzTarPerm extractEntry samples/angular_todo/templates/README
+760 silly gunzTarPerm modified mode [ 'samples/angular_todo/templates/README', 438, 420 ]
+761 silly gunzTarPerm extractEntry samples/angular_todo/templates/index.html
+762 silly gunzTarPerm modified mode [ 'samples/angular_todo/templates/index.html', 438, 420 ]
+763 silly gunzTarPerm extractEntry samples/angular_todo/assets/README
+764 silly gunzTarPerm modified mode [ 'samples/angular_todo/assets/README', 438, 420 ]
+765 silly gunzTarPerm extractEntry samples/angular_todo/assets/favicon.gif
+766 silly gunzTarPerm modified mode [ 'samples/angular_todo/assets/favicon.gif', 438, 420 ]
+767 silly gunzTarPerm extractEntry samples/angular_todo/node_modules/README
+768 silly gunzTarPerm modified mode [ 'samples/angular_todo/node_modules/README', 438, 420 ]
+769 silly gunzTarPerm extractEntry samples/chat/README.md
+770 silly gunzTarPerm modified mode [ 'samples/chat/README.md', 438, 420 ]
+771 silly gunzTarPerm extractEntry samples/chat/server.node.js
+772 silly gunzTarPerm modified mode [ 'samples/chat/server.node.js', 438, 420 ]
+773 silly gunzTarPerm extractEntry samples/chat/master.node.js
+774 silly gunzTarPerm modified mode [ 'samples/chat/master.node.js', 438, 420 ]
+775 silly gunzTarPerm extractEntry samples/chat/worker.node.js
+776 silly gunzTarPerm modified mode [ 'samples/chat/worker.node.js', 438, 420 ]
+777 silly gunzTarPerm extractEntry samples/chat/license_mit.txt
+778 silly gunzTarPerm modified mode [ 'samples/chat/license_mit.txt', 438, 420 ]
+779 silly gunzTarPerm extractEntry samples/chat/files/README
+780 silly gunzTarPerm modified mode [ 'samples/chat/files/README', 438, 420 ]
+781 silly gunzTarPerm extractEntry samples/chat/scripts/README
+782 silly gunzTarPerm modified mode [ 'samples/chat/scripts/README', 438, 420 ]
+783 silly gunzTarPerm extractEntry samples/chat/scripts/index.js
+784 silly gunzTarPerm modified mode [ 'samples/chat/scripts/index.js', 438, 420 ]
+785 silly gunzTarPerm extractEntry samples/chat/libs/README
+786 silly gunzTarPerm modified mode [ 'samples/chat/libs/README', 438, 420 ]
+787 silly gunzTarPerm extractEntry samples/chat/sims/README
+788 silly gunzTarPerm modified mode [ 'samples/chat/sims/README', 438, 420 ]
+789 silly gunzTarPerm extractEntry samples/chat/sims/chat.node.js
+790 silly gunzTarPerm modified mode [ 'samples/chat/sims/chat.node.js', 438, 420 ]
+791 silly gunzTarPerm extractEntry samples/chat/styles/README
+792 silly gunzTarPerm modified mode [ 'samples/chat/styles/README', 438, 420 ]
+793 silly gunzTarPerm extractEntry samples/chat/templates/README
+794 silly gunzTarPerm modified mode [ 'samples/chat/templates/README', 438, 420 ]
+795 silly gunzTarPerm extractEntry samples/chat/templates/chatbox.html
+796 silly gunzTarPerm modified mode [ 'samples/chat/templates/chatbox.html', 438, 420 ]
+797 silly gunzTarPerm extractEntry samples/chat/templates/chatlist.html
+798 silly gunzTarPerm modified mode [ 'samples/chat/templates/chatlist.html', 438, 420 ]
+799 silly gunzTarPerm extractEntry samples/chat/assets/README
+800 silly gunzTarPerm modified mode [ 'samples/chat/assets/README', 438, 420 ]
+801 silly gunzTarPerm extractEntry samples/chat/assets/favicon.gif
+802 silly gunzTarPerm modified mode [ 'samples/chat/assets/favicon.gif', 438, 420 ]
+803 silly gunzTarPerm extractEntry samples/chat/node_modules/README
+804 silly gunzTarPerm modified mode [ 'samples/chat/node_modules/README', 438, 420 ]
+805 silly gunzTarPerm extractEntry samples/dynamic_linking/README.md
+806 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/README.md', 438, 420 ]
+807 silly gunzTarPerm extractEntry samples/dynamic_linking/server.node.js
+808 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/server.node.js', 438, 420 ]
+809 silly gunzTarPerm extractEntry samples/dynamic_linking/master.node.js
+810 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/master.node.js', 438, 420 ]
+811 silly gunzTarPerm extractEntry samples/dynamic_linking/worker.node.js
+812 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/worker.node.js', 438, 420 ]
+813 silly gunzTarPerm extractEntry samples/dynamic_linking/license_mit.txt
+814 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/license_mit.txt', 438, 420 ]
+815 silly gunzTarPerm extractEntry samples/dynamic_linking/files/README
+816 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/files/README', 438, 420 ]
+817 silly gunzTarPerm extractEntry samples/dynamic_linking/scripts/README
+818 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/scripts/README', 438, 420 ]
+819 silly gunzTarPerm extractEntry samples/dynamic_linking/scripts/a.js
+820 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/scripts/a.js', 438, 420 ]
+821 silly gunzTarPerm extractEntry samples/dynamic_linking/scripts/b.js
+822 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/scripts/b.js', 438, 420 ]
+823 silly gunzTarPerm extractEntry samples/dynamic_linking/scripts/c.js
+824 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/scripts/c.js', 438, 420 ]
+825 silly gunzTarPerm extractEntry samples/dynamic_linking/scripts/d.js
+826 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/scripts/d.js', 438, 420 ]
+827 silly gunzTarPerm extractEntry samples/dynamic_linking/scripts/index.js
+828 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/scripts/index.js', 438, 420 ]
+829 silly gunzTarPerm extractEntry samples/dynamic_linking/libs/README
+830 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/libs/README', 438, 420 ]
+831 silly gunzTarPerm extractEntry samples/dynamic_linking/sims/README
+832 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/sims/README', 438, 420 ]
+833 silly gunzTarPerm extractEntry samples/dynamic_linking/styles/README
+834 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/styles/README', 438, 420 ]
+835 silly gunzTarPerm extractEntry samples/dynamic_linking/templates/README
+836 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/templates/README', 438, 420 ]
+837 silly gunzTarPerm extractEntry samples/dynamic_linking/assets/README
+838 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/assets/README', 438, 420 ]
+839 silly gunzTarPerm extractEntry samples/dynamic_linking/assets/favicon.gif
+840 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/assets/favicon.gif', 438, 420 ]
+841 silly gunzTarPerm extractEntry samples/dynamic_linking/node_modules/README
+842 silly gunzTarPerm modified mode [ 'samples/dynamic_linking/node_modules/README', 438, 420 ]
+843 silly gunzTarPerm extractEntry samples/memo/README.md
+844 silly gunzTarPerm modified mode [ 'samples/memo/README.md', 438, 420 ]
+845 silly gunzTarPerm extractEntry samples/memo/server.node.js
+846 silly gunzTarPerm modified mode [ 'samples/memo/server.node.js', 438, 420 ]
+847 silly gunzTarPerm extractEntry samples/memo/master.node.js
+848 silly gunzTarPerm modified mode [ 'samples/memo/master.node.js', 438, 420 ]
+849 silly gunzTarPerm extractEntry samples/memo/worker.node.js
+850 silly gunzTarPerm modified mode [ 'samples/memo/worker.node.js', 438, 420 ]
+851 silly gunzTarPerm extractEntry samples/memo/license_mit.txt
+852 silly gunzTarPerm modified mode [ 'samples/memo/license_mit.txt', 438, 420 ]
+853 silly gunzTarPerm extractEntry samples/memo/files/README
+854 silly gunzTarPerm modified mode [ 'samples/memo/files/README', 438, 420 ]
+855 silly gunzTarPerm extractEntry samples/memo/scripts/README
+856 silly gunzTarPerm modified mode [ 'samples/memo/scripts/README', 438, 420 ]
+857 silly gunzTarPerm extractEntry samples/memo/scripts/index.js
+858 silly gunzTarPerm modified mode [ 'samples/memo/scripts/index.js', 438, 420 ]
+859 silly gunzTarPerm extractEntry samples/memo/libs/README
+860 silly gunzTarPerm modified mode [ 'samples/memo/libs/README', 438, 420 ]
+861 silly gunzTarPerm extractEntry samples/memo/sims/README
+862 silly gunzTarPerm modified mode [ 'samples/memo/sims/README', 438, 420 ]
+863 silly gunzTarPerm extractEntry samples/memo/sims/auth.node.js
+864 silly gunzTarPerm modified mode [ 'samples/memo/sims/auth.node.js', 438, 420 ]
+865 silly gunzTarPerm extractEntry samples/memo/sims/notes.node.js
+866 silly gunzTarPerm modified mode [ 'samples/memo/sims/notes.node.js', 438, 420 ]
+867 silly gunzTarPerm extractEntry samples/memo/styles/README
+868 silly gunzTarPerm modified mode [ 'samples/memo/styles/README', 438, 420 ]
+869 silly gunzTarPerm extractEntry samples/memo/styles/main.css
+870 silly gunzTarPerm modified mode [ 'samples/memo/styles/main.css', 438, 420 ]
+871 silly gunzTarPerm extractEntry samples/memo/templates/README
+872 silly gunzTarPerm modified mode [ 'samples/memo/templates/README', 438, 420 ]
+873 silly gunzTarPerm extractEntry samples/memo/templates/add_note_dialog.html
+874 silly gunzTarPerm modified mode [ 'samples/memo/templates/add_note_dialog.html', 438, 420 ]
+875 silly gunzTarPerm extractEntry samples/memo/templates/login.html
+876 silly gunzTarPerm modified mode [ 'samples/memo/templates/login.html', 438, 420 ]
+877 silly gunzTarPerm extractEntry samples/memo/templates/main.html
+878 silly gunzTarPerm modified mode [ 'samples/memo/templates/main.html', 438, 420 ]
+879 silly gunzTarPerm extractEntry samples/memo/templates/notes_table.html
+880 silly gunzTarPerm modified mode [ 'samples/memo/templates/notes_table.html', 438, 420 ]
+881 silly gunzTarPerm extractEntry samples/memo/assets/README
+882 silly gunzTarPerm modified mode [ 'samples/memo/assets/README', 438, 420 ]
+883 silly gunzTarPerm extractEntry samples/memo/assets/favicon.gif
+884 silly gunzTarPerm modified mode [ 'samples/memo/assets/favicon.gif', 438, 420 ]
+885 silly gunzTarPerm extractEntry samples/memo/node_modules/README
+886 silly gunzTarPerm modified mode [ 'samples/memo/node_modules/README', 438, 420 ]
+887 silly gunzTarPerm extractEntry samples/static_linking/README.md
+888 silly gunzTarPerm modified mode [ 'samples/static_linking/README.md', 438, 420 ]
+889 silly gunzTarPerm extractEntry samples/static_linking/server.node.js
+890 silly gunzTarPerm modified mode [ 'samples/static_linking/server.node.js', 438, 420 ]
+891 silly gunzTarPerm extractEntry samples/static_linking/master.node.js
+892 silly gunzTarPerm modified mode [ 'samples/static_linking/master.node.js', 438, 420 ]
+893 silly gunzTarPerm extractEntry samples/static_linking/worker.node.js
+894 silly gunzTarPerm modified mode [ 'samples/static_linking/worker.node.js', 438, 420 ]
+895 silly gunzTarPerm extractEntry samples/static_linking/license_mit.txt
+896 silly gunzTarPerm modified mode [ 'samples/static_linking/license_mit.txt', 438, 420 ]
+897 silly gunzTarPerm extractEntry samples/static_linking/files/README
+898 silly gunzTarPerm modified mode [ 'samples/static_linking/files/README', 438, 420 ]
+899 silly gunzTarPerm extractEntry samples/static_linking/scripts/README
+900 silly gunzTarPerm modified mode [ 'samples/static_linking/scripts/README', 438, 420 ]
+901 silly gunzTarPerm extractEntry samples/static_linking/scripts/a.js
+902 silly gunzTarPerm modified mode [ 'samples/static_linking/scripts/a.js', 438, 420 ]
+903 silly gunzTarPerm extractEntry samples/static_linking/scripts/b.js
+904 silly gunzTarPerm modified mode [ 'samples/static_linking/scripts/b.js', 438, 420 ]
+905 silly gunzTarPerm extractEntry samples/static_linking/scripts/c.js
+906 silly gunzTarPerm modified mode [ 'samples/static_linking/scripts/c.js', 438, 420 ]
+907 silly gunzTarPerm extractEntry samples/static_linking/scripts/d.js
+908 silly gunzTarPerm modified mode [ 'samples/static_linking/scripts/d.js', 438, 420 ]
+909 silly gunzTarPerm extractEntry samples/static_linking/scripts/index.js
+910 silly gunzTarPerm modified mode [ 'samples/static_linking/scripts/index.js', 438, 420 ]
+911 silly gunzTarPerm extractEntry samples/static_linking/libs/README
+912 silly gunzTarPerm modified mode [ 'samples/static_linking/libs/README', 438, 420 ]
+913 silly gunzTarPerm extractEntry samples/static_linking/sims/README
+914 silly gunzTarPerm modified mode [ 'samples/static_linking/sims/README', 438, 420 ]
+915 silly gunzTarPerm extractEntry samples/static_linking/styles/README
+916 silly gunzTarPerm modified mode [ 'samples/static_linking/styles/README', 438, 420 ]
+917 silly gunzTarPerm extractEntry samples/static_linking/templates/README
+918 silly gunzTarPerm modified mode [ 'samples/static_linking/templates/README', 438, 420 ]
+919 silly gunzTarPerm extractEntry samples/static_linking/assets/README
+920 silly gunzTarPerm modified mode [ 'samples/static_linking/assets/README', 438, 420 ]
+921 silly gunzTarPerm extractEntry samples/static_linking/assets/favicon.gif
+922 silly gunzTarPerm modified mode [ 'samples/static_linking/assets/favicon.gif', 438, 420 ]
+923 silly gunzTarPerm extractEntry samples/static_linking/node_modules/README
+924 silly gunzTarPerm modified mode [ 'samples/static_linking/node_modules/README', 438, 420 ]
+925 silly gunzTarPerm extractEntry samples/uploader/README.md
+926 silly gunzTarPerm modified mode [ 'samples/uploader/README.md', 438, 420 ]
+927 silly gunzTarPerm extractEntry samples/uploader/server.node.js
+928 silly gunzTarPerm modified mode [ 'samples/uploader/server.node.js', 438, 420 ]
+929 silly gunzTarPerm extractEntry samples/uploader/master.node.js
+930 silly gunzTarPerm modified mode [ 'samples/uploader/master.node.js', 438, 420 ]
+931 silly gunzTarPerm extractEntry samples/uploader/worker.node.js
+932 silly gunzTarPerm modified mode [ 'samples/uploader/worker.node.js', 438, 420 ]
+933 silly gunzTarPerm extractEntry samples/uploader/license_mit.txt
+934 silly gunzTarPerm modified mode [ 'samples/uploader/license_mit.txt', 438, 420 ]
+935 silly gunzTarPerm extractEntry samples/uploader/files/README
+936 silly gunzTarPerm modified mode [ 'samples/uploader/files/README', 438, 420 ]
+937 silly gunzTarPerm extractEntry samples/uploader/scripts/README
+938 silly gunzTarPerm modified mode [ 'samples/uploader/scripts/README', 438, 420 ]
+939 silly gunzTarPerm extractEntry samples/uploader/scripts/index.js
+940 silly gunzTarPerm modified mode [ 'samples/uploader/scripts/index.js', 438, 420 ]
+941 silly gunzTarPerm extractEntry samples/uploader/libs/README
+942 silly gunzTarPerm modified mode [ 'samples/uploader/libs/README', 438, 420 ]
+943 silly gunzTarPerm extractEntry samples/uploader/sims/README
+944 silly gunzTarPerm modified mode [ 'samples/uploader/sims/README', 438, 420 ]
+945 silly gunzTarPerm extractEntry samples/uploader/styles/README
+946 silly gunzTarPerm modified mode [ 'samples/uploader/styles/README', 438, 420 ]
+947 silly gunzTarPerm extractEntry samples/uploader/templates/README
+948 silly gunzTarPerm modified mode [ 'samples/uploader/templates/README', 438, 420 ]
+949 silly gunzTarPerm extractEntry samples/uploader/assets/README
+950 silly gunzTarPerm modified mode [ 'samples/uploader/assets/README', 438, 420 ]
+951 silly gunzTarPerm extractEntry samples/uploader/assets/favicon.gif
+952 silly gunzTarPerm modified mode [ 'samples/uploader/assets/favicon.gif', 438, 420 ]
+953 silly gunzTarPerm extractEntry samples/uploader/node_modules/README
+954 silly gunzTarPerm modified mode [ 'samples/uploader/node_modules/README', 438, 420 ]
+955 silly gunzTarPerm extractEntry client/assets/README
+956 silly gunzTarPerm modified mode [ 'client/assets/README', 438, 420 ]
+957 silly gunzTarPerm extractEntry client/assets/favicon.gif
+958 silly gunzTarPerm modified mode [ 'client/assets/favicon.gif', 438, 420 ]
+959 silly gunzTarPerm extractEntry client/assets/logo.png
+960 silly gunzTarPerm modified mode [ 'client/assets/logo.png', 438, 420 ]
+961 silly gunzTarPerm extractEntry client/index.html
+962 silly gunzTarPerm modified mode [ 'client/index.html', 438, 420 ]
+963 silly gunzTarPerm extractEntry client/libs/README
+964 silly gunzTarPerm modified mode [ 'client/libs/README', 438, 420 ]
+965 silly gunzTarPerm extractEntry client/libs/spin.js
+966 silly gunzTarPerm modified mode [ 'client/libs/spin.js', 438, 420 ]
+967 silly gunzTarPerm extractEntry client/libs/easeljs.js
+968 silly gunzTarPerm modified mode [ 'client/libs/easeljs.js', 438, 420 ]
+969 silly gunzTarPerm extractEntry client/libs/fileuploader.js
+970 silly gunzTarPerm modified mode [ 'client/libs/fileuploader.js', 438, 420 ]
+971 silly gunzTarPerm extractEntry client/libs/handlebars.js
+972 silly gunzTarPerm modified mode [ 'client/libs/handlebars.js', 438, 420 ]
+973 silly gunzTarPerm extractEntry client/libs/async.js
+974 silly gunzTarPerm modified mode [ 'client/libs/async.js', 438, 420 ]
+975 silly gunzTarPerm extractEntry client/libs/jquery.js
+976 silly gunzTarPerm modified mode [ 'client/libs/jquery.js', 438, 420 ]
+977 silly gunzTarPerm extractEntry client/libs/json2.js
+978 silly gunzTarPerm modified mode [ 'client/libs/json2.js', 438, 420 ]
+979 silly gunzTarPerm extractEntry client/libs/less.js
+980 silly gunzTarPerm modified mode [ 'client/libs/less.js', 438, 420 ]
+981 silly gunzTarPerm extractEntry client/libs/soundjs.js
+982 silly gunzTarPerm modified mode [ 'client/libs/soundjs.js', 438, 420 ]
+983 silly gunzTarPerm extractEntry client/libs/angular.js
+984 silly gunzTarPerm modified mode [ 'client/libs/angular.js', 438, 420 ]
+985 silly gunzTarPerm extractEntry client/libs/bootstrap/bootstrap-alerts.js
+986 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/bootstrap-alerts.js', 438, 420 ]
+987 silly gunzTarPerm extractEntry client/libs/bootstrap/bootstrap-buttons.js
+988 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/bootstrap-buttons.js', 438, 420 ]
+989 silly gunzTarPerm extractEntry client/libs/bootstrap/bootstrap-dropdown.js
+990 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/bootstrap-dropdown.js', 438, 420 ]
+991 silly gunzTarPerm extractEntry client/libs/bootstrap/bootstrap-modal.js
+992 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/bootstrap-modal.js', 438, 420 ]
+993 silly gunzTarPerm extractEntry client/libs/bootstrap/bootstrap-popover.js
+994 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/bootstrap-popover.js', 438, 420 ]
+995 silly gunzTarPerm extractEntry client/libs/bootstrap/bootstrap-scrollspy.js
+996 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/bootstrap-scrollspy.js', 438, 420 ]
+997 silly gunzTarPerm extractEntry client/libs/bootstrap/bootstrap-tabs.js
+998 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/bootstrap-tabs.js', 438, 420 ]
+999 silly gunzTarPerm extractEntry client/libs/bootstrap/bootstrap-twipsy.js
+1000 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/bootstrap-twipsy.js', 438, 420 ]
+1001 silly gunzTarPerm extractEntry client/libs/bootstrap/tests/index.html
+1002 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/tests/index.html', 438, 420 ]
+1003 silly gunzTarPerm extractEntry client/libs/bootstrap/tests/unit/bootstrap-alerts.js
+1004 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/tests/unit/bootstrap-alerts.js',
+1004 silly gunzTarPerm   438,
+1004 silly gunzTarPerm   420 ]
+1005 silly gunzTarPerm extractEntry client/libs/bootstrap/tests/unit/bootstrap-buttons.js
+1006 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/tests/unit/bootstrap-buttons.js',
+1006 silly gunzTarPerm   438,
+1006 silly gunzTarPerm   420 ]
+1007 silly gunzTarPerm extractEntry client/libs/bootstrap/tests/unit/bootstrap-dropdown.js
+1008 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/tests/unit/bootstrap-dropdown.js',
+1008 silly gunzTarPerm   438,
+1008 silly gunzTarPerm   420 ]
+1009 silly gunzTarPerm extractEntry client/libs/bootstrap/tests/unit/bootstrap-modal.js
+1010 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/tests/unit/bootstrap-modal.js',
+1010 silly gunzTarPerm   438,
+1010 silly gunzTarPerm   420 ]
+1011 silly gunzTarPerm extractEntry client/libs/bootstrap/tests/unit/bootstrap-popover.js
+1012 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/tests/unit/bootstrap-popover.js',
+1012 silly gunzTarPerm   438,
+1012 silly gunzTarPerm   420 ]
+1013 silly gunzTarPerm extractEntry client/libs/bootstrap/tests/unit/bootstrap-scrollspy.js
+1014 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/tests/unit/bootstrap-scrollspy.js',
+1014 silly gunzTarPerm   438,
+1014 silly gunzTarPerm   420 ]
+1015 silly gunzTarPerm extractEntry client/libs/bootstrap/tests/unit/bootstrap-tabs.js
+1016 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/tests/unit/bootstrap-tabs.js',
+1016 silly gunzTarPerm   438,
+1016 silly gunzTarPerm   420 ]
+1017 silly gunzTarPerm extractEntry client/libs/bootstrap/tests/unit/bootstrap-twipsy.js
+1018 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/tests/unit/bootstrap-twipsy.js',
+1018 silly gunzTarPerm   438,
+1018 silly gunzTarPerm   420 ]
+1019 silly gunzTarPerm extractEntry client/libs/bootstrap/tests/vendor/qunit.js
+1020 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/tests/vendor/qunit.js', 438, 420 ]
+1021 silly gunzTarPerm extractEntry client/libs/bootstrap/tests/vendor/qunit.css
+1022 silly gunzTarPerm modified mode [ 'client/libs/bootstrap/tests/vendor/qunit.css', 438, 420 ]
+1023 silly gunzTarPerm extractEntry client/libs/angular/resource.js
+1024 silly gunzTarPerm modified mode [ 'client/libs/angular/resource.js', 438, 420 ]
+1025 silly gunzTarPerm extractEntry client/libs/angular/ui-ieshiv.js
+1026 silly gunzTarPerm modified mode [ 'client/libs/angular/ui-ieshiv.js', 438, 420 ]
+1027 silly gunzTarPerm extractEntry client/libs/angular/ui.js
+1028 silly gunzTarPerm modified mode [ 'client/libs/angular/ui.js', 438, 420 ]
+1029 silly gunzTarPerm extractEntry client/libs/jquery/address.js
+1030 silly gunzTarPerm modified mode [ 'client/libs/jquery/address.js', 438, 420 ]
+1031 silly gunzTarPerm extractEntry client/libs/jquery/cookie.js
+1032 silly gunzTarPerm modified mode [ 'client/libs/jquery/cookie.js', 438, 420 ]
+1033 silly gunzTarPerm extractEntry client/libs/jquery/fileupload.js
+1034 silly gunzTarPerm modified mode [ 'client/libs/jquery/fileupload.js', 438, 420 ]
+1035 silly gunzTarPerm extractEntry client/libs/jquery/iframe-transport.js
+1036 silly gunzTarPerm modified mode [ 'client/libs/jquery/iframe-transport.js', 438, 420 ]
+1037 silly gunzTarPerm extractEntry client/libs/jquery/qunit.js
+1038 silly gunzTarPerm modified mode [ 'client/libs/jquery/qunit.js', 438, 420 ]
+1039 silly gunzTarPerm extractEntry client/libs/jquery/ui.js
+1040 silly gunzTarPerm modified mode [ 'client/libs/jquery/ui.js', 438, 420 ]
+1041 silly gunzTarPerm extractEntry client/libs/jquery/effects/blind.js
+1042 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/blind.js', 438, 420 ]
+1043 silly gunzTarPerm extractEntry client/libs/jquery/effects/core.js
+1044 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/core.js', 438, 420 ]
+1045 silly gunzTarPerm extractEntry client/libs/jquery/effects/drop.js
+1046 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/drop.js', 438, 420 ]
+1047 silly gunzTarPerm extractEntry client/libs/jquery/effects/explode.js
+1048 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/explode.js', 438, 420 ]
+1049 silly gunzTarPerm extractEntry client/libs/jquery/effects/fade.js
+1050 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/fade.js', 438, 420 ]
+1051 silly gunzTarPerm extractEntry client/libs/jquery/effects/clip.js
+1052 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/clip.js', 438, 420 ]
+1053 silly gunzTarPerm extractEntry client/libs/jquery/effects/highlight.js
+1054 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/highlight.js', 438, 420 ]
+1055 silly gunzTarPerm extractEntry client/libs/jquery/effects/pulsate.js
+1056 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/pulsate.js', 438, 420 ]
+1057 silly gunzTarPerm extractEntry client/libs/jquery/effects/scale.js
+1058 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/scale.js', 438, 420 ]
+1059 silly gunzTarPerm extractEntry client/libs/jquery/effects/shake.js
+1060 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/shake.js', 438, 420 ]
+1061 silly gunzTarPerm extractEntry client/libs/jquery/effects/slide.js
+1062 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/slide.js', 438, 420 ]
+1063 silly gunzTarPerm extractEntry client/libs/jquery/effects/bounce.js
+1064 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/bounce.js', 438, 420 ]
+1065 silly gunzTarPerm extractEntry client/libs/jquery/effects/transfer.js
+1066 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/transfer.js', 438, 420 ]
+1067 silly gunzTarPerm extractEntry client/libs/jquery/effects/fold.js
+1068 silly gunzTarPerm modified mode [ 'client/libs/jquery/effects/fold.js', 438, 420 ]
+1069 silly gunzTarPerm extractEntry client/plugins/README
+1070 silly gunzTarPerm modified mode [ 'client/plugins/README', 438, 420 ]
+1071 silly gunzTarPerm extractEntry client/scripts/README
+1072 silly gunzTarPerm modified mode [ 'client/scripts/README', 438, 420 ]
+1073 silly gunzTarPerm extractEntry client/scripts/cookiesdisabled.js
+1074 silly gunzTarPerm modified mode [ 'client/scripts/cookiesdisabled.js', 438, 420 ]
+1075 silly gunzTarPerm extractEntry client/scripts/failedconnection.js
+1076 silly gunzTarPerm modified mode [ 'client/scripts/failedconnection.js', 438, 420 ]
+1077 silly gunzTarPerm extractEntry client/scripts/load.js
+1078 silly gunzTarPerm modified mode [ 'client/scripts/load.js', 438, 420 ]
+1079 silly gunzTarPerm extractEntry client/scripts/notaccessible.js
+1080 silly gunzTarPerm modified mode [ 'client/scripts/notaccessible.js', 438, 420 ]
+1081 silly gunzTarPerm extractEntry client/scripts/notfound.js
+1082 silly gunzTarPerm modified mode [ 'client/scripts/notfound.js', 438, 420 ]
+1083 silly gunzTarPerm extractEntry client/styles/README
+1084 silly gunzTarPerm modified mode [ 'client/styles/README', 438, 420 ]
+1085 silly gunzTarPerm extractEntry client/styles/angular-ui.css
+1086 silly gunzTarPerm modified mode [ 'client/styles/angular-ui.css', 438, 420 ]
+1087 silly gunzTarPerm extractEntry client/styles/bootstrap/assets/glyphicons-halflings-white.png
+1088 silly gunzTarPerm modified mode [ 'client/styles/bootstrap/assets/glyphicons-halflings-white.png',
+1088 silly gunzTarPerm   438,
+1088 silly gunzTarPerm   420 ]
+1089 silly gunzTarPerm extractEntry client/styles/bootstrap/assets/glyphicons-halflings.png
+1090 silly gunzTarPerm modified mode [ 'client/styles/bootstrap/assets/glyphicons-halflings.png',
+1090 silly gunzTarPerm   438,
+1090 silly gunzTarPerm   420 ]
+1091 silly gunzTarPerm extractEntry client/styles/bootstrap.css
+1092 silly gunzTarPerm modified mode [ 'client/styles/bootstrap.css', 438, 420 ]
+1093 silly gunzTarPerm extractEntry client/styles/fileuploader/loading.gif
+1094 silly gunzTarPerm modified mode [ 'client/styles/fileuploader/loading.gif', 438, 420 ]
+1095 silly gunzTarPerm extractEntry client/styles/fileuploader.css
+1096 silly gunzTarPerm modified mode [ 'client/styles/fileuploader.css', 438, 420 ]
+1097 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-bg_glass_95_fef1ec_1x400.png
+1098 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-bg_glass_95_fef1ec_1x400.png',
+1098 silly gunzTarPerm   438,
+1098 silly gunzTarPerm   420 ]
+1099 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/animated-overlay.gif
+1100 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/animated-overlay.gif',
+1100 silly gunzTarPerm   438,
+1100 silly gunzTarPerm   420 ]
+1101 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-bg_flat_75_ffffff_40x100.png
+1102 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-bg_flat_75_ffffff_40x100.png',
+1102 silly gunzTarPerm   438,
+1102 silly gunzTarPerm   420 ]
+1103 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-bg_glass_55_fbf9ee_1x400.png
+1104 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-bg_glass_55_fbf9ee_1x400.png',
+1104 silly gunzTarPerm   438,
+1104 silly gunzTarPerm   420 ]
+1105 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-bg_glass_65_ffffff_1x400.png
+1106 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-bg_glass_65_ffffff_1x400.png',
+1106 silly gunzTarPerm   438,
+1106 silly gunzTarPerm   420 ]
+1107 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-bg_glass_75_dadada_1x400.png
+1108 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-bg_glass_75_dadada_1x400.png',
+1108 silly gunzTarPerm   438,
+1108 silly gunzTarPerm   420 ]
+1109 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-bg_glass_75_e6e6e6_1x400.png
+1110 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-bg_glass_75_e6e6e6_1x400.png',
+1110 silly gunzTarPerm   438,
+1110 silly gunzTarPerm   420 ]
+1111 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-bg_flat_0_aaaaaa_40x100.png
+1112 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-bg_flat_0_aaaaaa_40x100.png',
+1112 silly gunzTarPerm   438,
+1112 silly gunzTarPerm   420 ]
+1113 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-bg_highlight-soft_75_cccccc_1x100.png
+1114 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-bg_highlight-soft_75_cccccc_1x100.png',
+1114 silly gunzTarPerm   438,
+1114 silly gunzTarPerm   420 ]
+1115 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-icons_222222_256x240.png
+1116 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-icons_222222_256x240.png',
+1116 silly gunzTarPerm   438,
+1116 silly gunzTarPerm   420 ]
+1117 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-icons_2e83ff_256x240.png
+1118 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-icons_2e83ff_256x240.png',
+1118 silly gunzTarPerm   438,
+1118 silly gunzTarPerm   420 ]
+1119 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-icons_454545_256x240.png
+1120 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-icons_454545_256x240.png',
+1120 silly gunzTarPerm   438,
+1120 silly gunzTarPerm   420 ]
+1121 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-icons_888888_256x240.png
+1122 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-icons_888888_256x240.png',
+1122 silly gunzTarPerm   438,
+1122 silly gunzTarPerm   420 ]
+1123 silly gunzTarPerm extractEntry client/styles/jqueryui/base/images/ui-icons_cd0a0a_256x240.png
+1124 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/images/ui-icons_cd0a0a_256x240.png',
+1124 silly gunzTarPerm   438,
+1124 silly gunzTarPerm   420 ]
+1125 silly gunzTarPerm extractEntry client/styles/jqueryui/base/style.css
+1126 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/base/style.css', 438, 420 ]
+1127 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-bg_gloss-wave_35_f6a828_500x100.png
+1128 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-bg_gloss-wave_35_f6a828_500x100.png',
+1128 silly gunzTarPerm   438,
+1128 silly gunzTarPerm   420 ]
+1129 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/animated-overlay.gif
+1130 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/animated-overlay.gif',
+1130 silly gunzTarPerm   438,
+1130 silly gunzTarPerm   420 ]
+1131 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-bg_diagonals-thick_20_666666_40x40.png
+1132 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-bg_diagonals-thick_20_666666_40x40.png',
+1132 silly gunzTarPerm   438,
+1132 silly gunzTarPerm   420 ]
+1133 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-bg_flat_10_000000_40x100.png
+1134 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-bg_flat_10_000000_40x100.png',
+1134 silly gunzTarPerm   438,
+1134 silly gunzTarPerm   420 ]
+1135 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-bg_glass_100_f6f6f6_1x400.png
+1136 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-bg_glass_100_f6f6f6_1x400.png',
+1136 silly gunzTarPerm   438,
+1136 silly gunzTarPerm   420 ]
+1137 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-bg_glass_100_fdf5ce_1x400.png
+1138 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-bg_glass_100_fdf5ce_1x400.png',
+1138 silly gunzTarPerm   438,
+1138 silly gunzTarPerm   420 ]
+1139 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-bg_glass_65_ffffff_1x400.png
+1140 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-bg_glass_65_ffffff_1x400.png',
+1140 silly gunzTarPerm   438,
+1140 silly gunzTarPerm   420 ]
+1141 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-bg_diagonals-thick_18_b81900_40x40.png
+1142 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-bg_diagonals-thick_18_b81900_40x40.png',
+1142 silly gunzTarPerm   438,
+1142 silly gunzTarPerm   420 ]
+1143 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-bg_highlight-soft_100_eeeeee_1x100.png
+1144 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-bg_highlight-soft_100_eeeeee_1x100.png',
+1144 silly gunzTarPerm   438,
+1144 silly gunzTarPerm   420 ]
+1145 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-bg_highlight-soft_75_ffe45c_1x100.png
+1146 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-bg_highlight-soft_75_ffe45c_1x100.png',
+1146 silly gunzTarPerm   438,
+1146 silly gunzTarPerm   420 ]
+1147 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-icons_222222_256x240.png
+1148 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-icons_222222_256x240.png',
+1148 silly gunzTarPerm   438,
+1148 silly gunzTarPerm   420 ]
+1149 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-icons_228ef1_256x240.png
+1150 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-icons_228ef1_256x240.png',
+1150 silly gunzTarPerm   438,
+1150 silly gunzTarPerm   420 ]
+1151 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-icons_ef8c08_256x240.png
+1152 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-icons_ef8c08_256x240.png',
+1152 silly gunzTarPerm   438,
+1152 silly gunzTarPerm   420 ]
+1153 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-icons_ffd27a_256x240.png
+1154 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-icons_ffd27a_256x240.png',
+1154 silly gunzTarPerm   438,
+1154 silly gunzTarPerm   420 ]
+1155 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/images/ui-icons_ffffff_256x240.png
+1156 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/images/ui-icons_ffffff_256x240.png',
+1156 silly gunzTarPerm   438,
+1156 silly gunzTarPerm   420 ]
+1157 silly gunzTarPerm extractEntry client/styles/jqueryui/ui-lightness/style.css
+1158 silly gunzTarPerm modified mode [ 'client/styles/jqueryui/ui-lightness/style.css', 438, 420 ]
+1159 silly gunzTarPerm extractEntry client/styles/nombo.css
+1160 silly gunzTarPerm modified mode [ 'client/styles/nombo.css', 438, 420 ]
+1161 silly gunzTarPerm extractEntry client/styles/qunit.css
+1162 silly gunzTarPerm modified mode [ 'client/styles/qunit.css', 438, 420 ]
+1163 silly gunzTarPerm extractEntry app/README.md
+1164 silly gunzTarPerm modified mode [ 'app/README.md', 438, 420 ]
+1165 silly gunzTarPerm extractEntry app/server.node.js
+1166 silly gunzTarPerm modified mode [ 'app/server.node.js', 438, 420 ]
+1167 silly gunzTarPerm extractEntry app/master.node.js
+1168 silly gunzTarPerm modified mode [ 'app/master.node.js', 438, 420 ]
+1169 silly gunzTarPerm extractEntry app/worker.node.js
+1170 silly gunzTarPerm modified mode [ 'app/worker.node.js', 438, 420 ]
+1171 silly gunzTarPerm extractEntry app/license_mit.txt
+1172 silly gunzTarPerm modified mode [ 'app/license_mit.txt', 438, 420 ]
+1173 silly gunzTarPerm extractEntry app/files/README
+1174 silly gunzTarPerm modified mode [ 'app/files/README', 438, 420 ]
+1175 silly gunzTarPerm extractEntry app/scripts/README
+1176 silly gunzTarPerm modified mode [ 'app/scripts/README', 438, 420 ]
+1177 silly gunzTarPerm extractEntry app/scripts/index.js
+1178 silly gunzTarPerm modified mode [ 'app/scripts/index.js', 438, 420 ]
+1179 silly gunzTarPerm extractEntry app/libs/README
+1180 silly gunzTarPerm modified mode [ 'app/libs/README', 438, 420 ]
+1181 silly gunzTarPerm extractEntry app/sims/README
+1182 silly gunzTarPerm modified mode [ 'app/sims/README', 438, 420 ]
+1183 silly gunzTarPerm extractEntry app/styles/README
+1184 silly gunzTarPerm modified mode [ 'app/styles/README', 438, 420 ]
+1185 silly gunzTarPerm extractEntry app/templates/README
+1186 silly gunzTarPerm modified mode [ 'app/templates/README', 438, 420 ]
+1187 silly gunzTarPerm extractEntry app/templates/index.html
+1188 silly gunzTarPerm modified mode [ 'app/templates/index.html', 438, 420 ]
+1189 silly gunzTarPerm extractEntry app/assets/README
+1190 silly gunzTarPerm modified mode [ 'app/assets/README', 438, 420 ]
+1191 silly gunzTarPerm extractEntry app/assets/favicon.gif
+1192 silly gunzTarPerm modified mode [ 'app/assets/favicon.gif', 438, 420 ]
+1193 silly gunzTarPerm extractEntry app/node_modules/README
+1194 silly gunzTarPerm modified mode [ 'app/node_modules/README', 438, 420 ]
+1195 silly gunzTarPerm extractEntry node_modules/fileuploader/index.js
+1196 silly gunzTarPerm modified mode [ 'node_modules/fileuploader/index.js', 438, 420 ]
+1197 silly gunzTarPerm extractEntry node_modules/fileuploader/tmp/README
+1198 silly gunzTarPerm modified mode [ 'node_modules/fileuploader/tmp/README', 438, 420 ]
+1199 silly gunzTarPerm extractEntry node_modules/iocluster/package.json
+1200 silly gunzTarPerm modified mode [ 'node_modules/iocluster/package.json', 438, 420 ]
+1201 silly gunzTarPerm extractEntry node_modules/iocluster/README.md
+1202 silly gunzTarPerm modified mode [ 'node_modules/iocluster/README.md', 438, 420 ]
+1203 silly gunzTarPerm extractEntry node_modules/iocluster/clientcluster.js
+1204 silly gunzTarPerm modified mode [ 'node_modules/iocluster/clientcluster.js', 438, 420 ]
+1205 silly gunzTarPerm extractEntry node_modules/iocluster/index.js
+1206 silly gunzTarPerm modified mode [ 'node_modules/iocluster/index.js', 438, 420 ]
+1207 silly gunzTarPerm extractEntry node_modules/json/cycle.js
+1208 silly gunzTarPerm modified mode [ 'node_modules/json/cycle.js', 438, 420 ]
+1209 silly gunzTarPerm extractEntry node_modules/json/index.js
+1210 silly gunzTarPerm modified mode [ 'node_modules/json/index.js', 438, 420 ]
+1211 silly gunzTarPerm extractEntry node_modules/nombo/index.js
+1212 silly gunzTarPerm modified mode [ 'node_modules/nombo/index.js', 438, 420 ]
+1213 silly gunzTarPerm extractEntry node_modules/nombo/pathmanager/index.js
+1214 silly gunzTarPerm modified mode [ 'node_modules/nombo/pathmanager/index.js', 438, 420 ]
+1215 silly gunzTarPerm extractEntry node_modules/nombo/pathmanager/pathmanager.node.js
+1216 silly gunzTarPerm modified mode [ 'node_modules/nombo/pathmanager/pathmanager.node.js',
+1216 silly gunzTarPerm   438,
+1216 silly gunzTarPerm   420 ]
+1217 silly gunzTarPerm extractEntry node_modules/nombo/css-bundler/css-bundler.node.js
+1218 silly gunzTarPerm modified mode [ 'node_modules/nombo/css-bundler/css-bundler.node.js',
+1218 silly gunzTarPerm   438,
+1218 silly gunzTarPerm   420 ]
+1219 silly gunzTarPerm extractEntry node_modules/nombo/css-bundler/index.js
+1220 silly gunzTarPerm modified mode [ 'node_modules/nombo/css-bundler/index.js', 438, 420 ]
+1221 silly gunzTarPerm extractEntry node_modules/nombo/fileuploader/fileuploader.node.js
+1222 silly gunzTarPerm modified mode [ 'node_modules/nombo/fileuploader/fileuploader.node.js',
+1222 silly gunzTarPerm   438,
+1222 silly gunzTarPerm   420 ]
+1223 silly gunzTarPerm extractEntry node_modules/nombo/fileuploader/index.js
+1224 silly gunzTarPerm modified mode [ 'node_modules/nombo/fileuploader/index.js', 438, 420 ]
+1225 silly gunzTarPerm extractEntry node_modules/nombo/gateway/gateway.node.js
+1226 silly gunzTarPerm modified mode [ 'node_modules/nombo/gateway/gateway.node.js', 438, 420 ]
+1227 silly gunzTarPerm extractEntry node_modules/nombo/gateway/index.js
+1228 silly gunzTarPerm modified mode [ 'node_modules/nombo/gateway/index.js', 438, 420 ]
+1229 silly gunzTarPerm extractEntry node_modules/nombo/cache/cache.node.js
+1230 silly gunzTarPerm modified mode [ 'node_modules/nombo/cache/cache.node.js', 438, 420 ]
+1231 silly gunzTarPerm extractEntry node_modules/nombo/cache/index.js
+1232 silly gunzTarPerm modified mode [ 'node_modules/nombo/cache/index.js', 438, 420 ]
+1233 silly gunzTarPerm extractEntry node_modules/nombo/configmanager/configmanager.node.js
+1234 silly gunzTarPerm modified mode [ 'node_modules/nombo/configmanager/configmanager.node.js',
+1234 silly gunzTarPerm   438,
+1234 silly gunzTarPerm   420 ]
+1235 silly gunzTarPerm extractEntry node_modules/nombo/configmanager/index.js
+1236 silly gunzTarPerm modified mode [ 'node_modules/nombo/configmanager/index.js', 438, 420 ]
+1237 silly gunzTarPerm extractEntry node_modules/nombo/router/cacheresponder.node.js
+1238 silly gunzTarPerm modified mode [ 'node_modules/nombo/router/cacheresponder.node.js', 438, 420 ]
+1239 silly gunzTarPerm extractEntry node_modules/nombo/router/compressor.node.js
+1240 silly gunzTarPerm modified mode [ 'node_modules/nombo/router/compressor.node.js', 438, 420 ]
+1241 silly gunzTarPerm extractEntry node_modules/nombo/router/headeradder.node.js
+1242 silly gunzTarPerm modified mode [ 'node_modules/nombo/router/headeradder.node.js', 438, 420 ]
+1243 silly gunzTarPerm extractEntry node_modules/nombo/router/preprocessor.node.js
+1244 silly gunzTarPerm modified mode [ 'node_modules/nombo/router/preprocessor.node.js', 438, 420 ]
+1245 silly gunzTarPerm extractEntry node_modules/nombo/router/prerouter.node.js
+1246 silly gunzTarPerm modified mode [ 'node_modules/nombo/router/prerouter.node.js', 438, 420 ]
+1247 silly gunzTarPerm extractEntry node_modules/nombo/router/responder.node.js
+1248 silly gunzTarPerm modified mode [ 'node_modules/nombo/router/responder.node.js', 438, 420 ]
+1249 silly gunzTarPerm extractEntry node_modules/nombo/router/router.node.js
+1250 silly gunzTarPerm modified mode [ 'node_modules/nombo/router/router.node.js', 438, 420 ]
+1251 silly gunzTarPerm extractEntry node_modules/nombo/scriptmanager/index.js
+1252 silly gunzTarPerm modified mode [ 'node_modules/nombo/scriptmanager/index.js', 438, 420 ]
+1253 silly gunzTarPerm extractEntry node_modules/nombo/scriptmanager/scriptmanager.node.js
+1254 silly gunzTarPerm modified mode [ 'node_modules/nombo/scriptmanager/scriptmanager.node.js',
+1254 silly gunzTarPerm   438,
+1254 silly gunzTarPerm   420 ]
+1255 silly gunzTarPerm extractEntry node_modules/nombo/serverservice/index.js
+1256 silly gunzTarPerm modified mode [ 'node_modules/nombo/serverservice/index.js', 438, 420 ]
+1257 silly gunzTarPerm extractEntry node_modules/nombo/serverservice/serverservice.node.js
+1258 silly gunzTarPerm modified mode [ 'node_modules/nombo/serverservice/serverservice.node.js',
+1258 silly gunzTarPerm   438,
+1258 silly gunzTarPerm   420 ]
+1259 silly gunzTarPerm extractEntry node_modules/nombo/smartcachemanager/index.js
+1260 silly gunzTarPerm modified mode [ 'node_modules/nombo/smartcachemanager/index.js', 438, 420 ]
+1261 silly gunzTarPerm extractEntry node_modules/nombo/template-bundler/index.js
+1262 silly gunzTarPerm modified mode [ 'node_modules/nombo/template-bundler/index.js', 438, 420 ]
+1263 silly gunzTarPerm extractEntry node_modules/nombo/template-bundler/template-bundler.node.js
+1264 silly gunzTarPerm modified mode [ 'node_modules/nombo/template-bundler/template-bundler.node.js',
+1264 silly gunzTarPerm   438,
+1264 silly gunzTarPerm   420 ]
+1265 silly gunzTarPerm extractEntry node_modules/nombo/webservice/index.js
+1266 silly gunzTarPerm modified mode [ 'node_modules/nombo/webservice/index.js', 438, 420 ]
+1267 silly gunzTarPerm extractEntry node_modules/nombo/webservice/webservice.node.js
+1268 silly gunzTarPerm modified mode [ 'node_modules/nombo/webservice/webservice.node.js', 438, 420 ]
+1269 silly gunzTarPerm extractEntry node_modules/stepper/index.js
+1270 silly gunzTarPerm modified mode [ 'node_modules/stepper/index.js', 438, 420 ]
+1271 silly gunzTarPerm extractEntry node_modules/stepper/stepper.node.js
+1272 silly gunzTarPerm modified mode [ 'node_modules/stepper/stepper.node.js', 438, 420 ]
+1273 silly lockFile 08450a70--npm-cache-nombo-0-9-106-package tar://C:\Users\jonathan\AppData\Roaming\npm-cache\nombo\0.9.106\package
+1274 silly lockFile 08450a70--npm-cache-nombo-0-9-106-package tar://C:\Users\jonathan\AppData\Roaming\npm-cache\nombo\0.9.106\package
+1275 silly lockFile 706d831a--cache-nombo-0-9-106-package-tgz tar://C:\Users\jonathan\AppData\Roaming\npm-cache\nombo\0.9.106\package.tgz
+1276 silly lockFile 706d831a--cache-nombo-0-9-106-package-tgz tar://C:\Users\jonathan\AppData\Roaming\npm-cache\nombo\0.9.106\package.tgz
+1277 verbose chmod C:\Users\jonathan\AppData\Roaming\npm-cache\nombo\0.9.106\package.tgz 644
+1278 silly chown skipping for windows C:\Users\jonathan\AppData\Roaming\npm-cache\nombo\0.9.106\package.tgz
+1279 silly lockFile 3a52ce78- .
+1280 silly lockFile 3a52ce78- .
+1281 silly publish { name: 'nombo',
+1281 silly publish   description: 'Cloud application framework',
+1281 silly publish   version: '0.9.106',
+1281 silly publish   author: { name: 'JF Gros-Dubois', email: 'flashthink@gmail.com' },
+1281 silly publish   contributors: [ { name: 'JF Gros-Dubois', email: 'flashthink@gmail.com' } ],
+1281 silly publish   devDependencies: {},
+1281 silly publish   keywords:
+1281 silly publish    [ 'nombo',
+1281 silly publish      'framework',
+1281 silly publish      'cloud',
+1281 silly publish      'web',
+1281 silly publish      'websocket',
+1281 silly publish      'app',
+1281 silly publish      'application',
+1281 silly publish      'realtime' ],
+1281 silly publish   repository: { type: 'git', url: 'git://github.com/topcloud/nombo.git' },
+1281 silly publish   main: './nombo.node.js',
+1281 silly publish   bin: { nombo: 'bin/cli.js' },
+1281 silly publish   engines: { node: '>= 0.8.0' },
+1281 silly publish   dependencies:
+1281 silly publish    { 'active-x-obfuscator': '0.0.1',
+1281 silly publish      async: '0.1.22',
+1281 silly publish      base64id: '0.1.0',
+1281 silly publish      browserify: '1.17.3',
+1281 silly publish      'clean-css': '1.0.4',
+1281 silly publish      'coffee-script': '1.4.0',
+1281 silly publish      commander: '0.5.2',
+1281 silly publish      director: '1.1.8',
+1281 silly publish      eventemitter2: '0.4.9',
+1281 silly publish      eventvat: '0.2.0',
+1281 silly publish      expirymanager: '0.9.0',
+1281 silly publish      formidable: '1.0.11',
+1281 silly publish      handlebars: '1.0.12',
+1281 silly publish      'http-proxy': '0.10.3',
+1281 silly publish      iocluster: '',
+1281 silly publish      less: '1.3.0',
+1281 silly publish      linkedlist: '1.0.1',
+1281 silly publish      loadbalancer: '0.9.0',
+1281 silly publish      mime: '1.2.5',
+1281 silly publish      ncom: '>= 0.9.1',
+1281 silly publish      ndata: '>= 0.9.22',
+1281 silly publish      optimist: '0.3.5',
+1281 silly publish      options: '0.0.3',
+1281 silly publish      policyfile: '0.0.4',
+1281 silly publish      portscanner: '0.1.3',
+1281 silly publish      redis: '0.7.3',
+1281 silly publish      retry: '0.6.0',
+1281 silly publish      'socketcluster-server': '0.9.0',
+1281 silly publish      'socketcluster-client': '0.9.0',
+1281 silly publish      'uglify-js': '2.3.6',
+1281 silly publish      watchr: '2.3.9',
+1281 silly publish      wordwrap: '0.0.2',
+1281 silly publish      wrench: '1.4.4',
+1281 silly publish      xmlhttprequest: '1.2.2',
+1281 silly publish      zeparser: '0.0.7' },
+1281 silly publish   bundleDependencies:
+1281 silly publish    [ 'css-bundler',
+1281 silly publish      'fileuploader',
+1281 silly publish      'iocluster',
+1281 silly publish      'json',
+1281 silly publish      'nombo',
+1281 silly publish      'stepper',
+1281 silly publish      'socket.io',
+1281 silly publish      'socket.io-client' ],
+1281 silly publish   preferGlobal: 'true',
+1281 silly publish   readme: 'Nombo\n======\n\nNombo is an Open Source Node.js framework that allows you to easily build highly scalable, rich cloud applications.\nNombo is distributed under the MIT license. Please see license_mit.txt for details. Visit http://nombo.io for more information.\n\nTo install, run:\n\n```bash\nnpm install -g nombo\n```\n\nOnce installation is complete, to create a new app in the current directory run (replace myapp with your app\'s name):\n\n```bash\nnombo create myapp\n```\n\nTo create a \'nombo-samples/\' directory containing sample apps use:\n\n```bash\nnombo samples\n```\n\nThe key focus of Nombo is scalability. \nA Nombo server is made up of multiple processes which run in parallel to efficiently deliver your app to users.\nYou can specify the number of load balancers, workers and stores you want to use and Nombo will automatically spawn and manage everything.\nProcesses are highly parallel so they share very few resources - The more CPU cores you have have, the faster Nombo will run.\n\nSome other key features include:\n\n- Allows you to call server-side JavaScript functions from your client-side scripts.\n- Allows your client-side scripts to listen to server-side events. (You can also listen to events which occur on remote Nombo servers - If they authorize you).\n- Allows you to seamlessly interface with remote Nombo servers using the nombo/webservice module (a single function call is needed).\n- Makes efficient use of caching (in release mode) - Allows you to set a cache version so that clients will be forced to update the next time they refresh.\n- Session state is synchronized across all open tabs within a browser.\n- Comes with all the standard middleware for session management, routing and the like - Nombo lets you add custom middleware to do tasks such as user authorization.',
+1281 silly publish   readmeFilename: 'README.md',
+1281 silly publish   bugs: { url: 'https://github.com/topcloud/nombo/issues' },
+1281 silly publish   _id: 'nombo@0.9.106',
+1281 silly publish   dist: { shasum: '3bfc185b01cc596cc9fbe8b7474e4158a7ff3260' },
+1281 silly publish   _from: '.' }
+1282 verbose url raw nombo
+1283 verbose url resolving [ 'https://registry.npmjs.org/', './nombo' ]
+1284 verbose url resolved https://registry.npmjs.org/nombo
+1285 info trying registry request attempt 1 at 20:18:37
+1286 http PUT https://registry.npmjs.org/nombo
+1287 http 409 https://registry.npmjs.org/nombo
+1288 verbose url raw nombo
+1289 verbose url resolving [ 'https://registry.npmjs.org/', './nombo' ]
+1290 verbose url resolved https://registry.npmjs.org/nombo
+1291 info trying registry request attempt 1 at 20:19:01
+1292 http GET https://registry.npmjs.org/nombo
+1293 http 200 https://registry.npmjs.org/nombo
+1294 error publish fail Cannot publish over existing version.
+1294 error publish fail Update the 'version' field in package.json and try again.
+1294 error publish fail
+1294 error publish fail If the previous version was published in error, see:
+1294 error publish fail     npm help unpublish
+1294 error publish fail
+1294 error publish fail To automatically increment version numbers, see:
+1294 error publish fail     npm help version
+1295 error System Windows_NT 6.2.9200
+1296 error command "C:\\Program Files\\nodejs\\\\node.exe" "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js" "publish"
+1297 error cwd C:\node\nombo
+1298 error node -v v0.10.18
+1299 error npm -v 1.3.8
+1300 error code EPUBLISHCONFLICT
+1301 verbose exit [ 1, true ]

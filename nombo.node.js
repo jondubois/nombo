@@ -162,11 +162,11 @@ Master.prototype._init = function (options) {
 
 		if (!self._clientCoreLibMap[normalURL]) {
 			if (self._extRegex.test(url)) {
-				obj['url'] = normalURL;
-				obj['path'] = filePath;
+				obj.url = normalURL;
+				obj.path = filePath;
 			} else {
-				obj['url'] = url + '.js';
-				obj['path'] = filePath + '.js';
+				obj.url = url + '.js';
+				obj.path = filePath + '.js';
 			}
 			if (index == null) {
 				self._clientCoreLibs.push(obj);
@@ -184,11 +184,11 @@ Master.prototype._init = function (options) {
 
 		if (!self._clientScriptMap[normalURL]) {
 			if (self._extRegex.test(url)) {
-				obj['url'] = normalURL;
-				obj['path'] = filePath;
+				obj.url = normalURL;
+				obj.path = filePath;
 			} else {
-				obj['url'] = url + '.js';
-				obj['path'] = filePath + '.js';
+				obj.url = url + '.js';
+				obj.path = filePath + '.js';
 			}
 			if (index == null) {
 				self._clientScripts.push(obj);
@@ -204,11 +204,11 @@ Master.prototype._init = function (options) {
 		var filePath = pathManager.urlToPath(normalURL);
 		var obj = {};
 		if (self._extRegex.test(normalURL)) {
-			obj['url'] = normalURL;
-			obj['path'] = filePath;
+			obj.url = normalURL;
+			obj.path = filePath;
 		} else {
-			obj['url'] = url + '.css';
-			obj['path'] = filePath + '.css';
+			obj.url = url + '.css';
+			obj.path = filePath + '.css';
 		}
 		self._clientStyles.push(obj);
 	};
@@ -218,11 +218,11 @@ Master.prototype._init = function (options) {
 		var filePath = pathManager.urlToPath(normalURL);
 		var obj = {};
 		if (self._extRegex.test(normalURL)) {
-			obj['url'] = normalURL;
-			obj['path'] = filePath;
+			obj.url = normalURL;
+			obj.path = filePath;
 		} else {
-			obj['url'] = url + '.html';
-			obj['path'] = filePath + '.html';
+			obj.url = url + '.html';
+			obj.path = filePath + '.html';
 		}
 
 		self._clientTemplates.push(obj);

@@ -11,8 +11,8 @@
 		"email": "flashthink@gmail.com"
 	}],
 	"dependencies": {
-		"fleximap": "0.9.0",
-		"ncom": "0.9.0"		
+		"fleximap": "0.9.1",
+		"ncom": "0.9.1"		
 	},
 	"devDependencies": {},
 	"keywords": [

@@ -22,7 +22,7 @@
   "license": "MIT",
   "dependencies": {
     "through": "~2.2.7",
-    "innersource": "0.0.1",
+    "innersource": "0.0.2",
     "detective": "~2.2.0"
   },
   "devDependencies": {

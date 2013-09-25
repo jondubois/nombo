@@ -3,6 +3,8 @@
 var through = require('through');
 var innersource = require('innersource');
 var detective = require('detective');
+var prepend = innersource(addRequire);
+var postpend = innersource(addModule);
 
 module.exports = function() {
   var buffer = '';
@@ -11,8 +13,6 @@ module.exports = function() {
     buffer += chunk.toString();
   },
   function() {
-    var prepend = innersource(addRequire);
-    var postpend = innersource(addModule);
     var nodeModuleRequires = getNodeModuleRequires(buffer);
     this.queue(prepend + nodeModuleRequires+buffer +';' + postpend);
     this.queue(null);

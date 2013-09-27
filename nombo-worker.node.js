@@ -186,13 +186,6 @@ Worker.prototype._init = function (options) {
 		self._tailGetStepper.run(req, res);
 	}
 	
-	self._cacheEscapeHandler = function (req, res, next) {
-		if (req.params.ck && self._appScriptsURLRegex.test(req.url)) {
-			delete req.params.ck;
-		}
-		next();
-	}
-	
 	self._httpMethodJunction = function (req, res) {
 		if (req.method == 'POST') {
 			self._middleware[self.MIDDLEWARE_POST].run(req, res)
@@ -204,7 +197,6 @@ Worker.prototype._init = function (options) {
 	self._tailGetStepper.setValidator(self._responseNotSentValidator);
 	
 	self._middleware[self.MIDDLEWARE_GET] = stepper.create({context: self});
-	self._middleware[self.MIDDLEWARE_GET].addFunction(self._cacheEscapeHandler);
 	self._middleware[self.MIDDLEWARE_GET].setTail(self._tailGetStepper);
 	self._middleware[self.MIDDLEWARE_GET].setValidator(self._responseNotSentValidator);
 	

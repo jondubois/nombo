@@ -44,8 +44,10 @@ Master.prototype._init = function (options) {
 		release: false,
 		title: 'Nombo App',
 		angular: false,
-		angularMainModule: null,
-		angularMainTemplate: 'index.html',
+		angularOptions: {
+			mainModule: null,
+			mainTemplate: 'index.html'
+		},
 		protocol: 'http',
 		protocolOptions: {},
 		transports: ['polling', 'websocket'],
@@ -284,9 +286,9 @@ Master.prototype._init = function (options) {
 		self._bundledResources.push(url);
 	};
 	
-	if (self._options.angular) {
+	if (self._options.angular && self._options.angularOptions) {
 		self.bundle.framework.lib('angular.js', 0);
-		self._options.angularMainTemplate && self.bundle.app.template(self._options.angularMainTemplate);
+		self._options.angularOptions.mainTemplate && self.bundle.app.template(self._options.angularOptions.mainTemplate);
 	}
 	scriptManager.init(self._paths.frameworkURL, self._paths.appExternalURL, self._options.minifyMangle);
 
@@ -855,8 +857,8 @@ Master.prototype._getAppDef = function (useInternalURLs) {
 	appDef.timeout = this._options.connectTimeout * 1000;
 	appDef.resourceSizeMap = this._resourceSizes;
 	appDef.angular = this._options.angular;
-	appDef.angularMainTemplate = this._options.angularMainTemplate;
-	appDef.angularMainModule = this._options.angularMainModule;
+	appDef.angularMainTemplate = this._options.angularOptions.mainTemplate;
+	appDef.angularMainModule = this._options.angularOptions.mainModule;
 
 	return appDef;
 };

@@ -2,6 +2,8 @@
 
 Browserify v2 transform to allow access to all modules from browser console
 
+[![Build Status](https://travis-ci.org/johnkpaul/requireify.png)](https://travis-ci.org/johnkpaul/requireify)
+
 ## Usage
 
 Install requireify locally to your project:

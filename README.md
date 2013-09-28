@@ -31,3 +31,5 @@ Now, inside your browser console, you can look up every module on the global req
 
     >> var hello = require('/foo/dep').hello;
     >> console.log(hello); // world
+
+You can also include all libraries in the browser console that have been installed using npm and used in your browserify'd code. 

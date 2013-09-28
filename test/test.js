@@ -42,7 +42,13 @@ function getContext(){
 
 function tests(){
   var innersource = require('innersource');
-  window.test = require("/foo/dep").hello;
-  window.test2 = require("x");
+  window.test = require("x");
+  try{
+    var dne = require('does_not_exist');
+  }
+  catch(e){
+    dne = undefined;
+  }
+  window.test2 = require("/foo/dep").hello;
   window.test3 = innersource(function(){tests();});
 }

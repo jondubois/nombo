@@ -47,7 +47,13 @@ function addRequire(){
                 }else{
                   var temp = ret;
                   ret = newRequire;
-                  var module = newRequire(key);
+                  try {
+                    var module = newRequire(key);
+                  }
+                  catch(e){
+                    ret = temp;
+                    throw e;
+                  }
                   ret = temp;
                   return module;
                 }

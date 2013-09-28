@@ -126,6 +126,7 @@ var $loader = {
 		}
 		
 		$loader.grab.init(appDefinition);
+		
 		$loader._skipPreload = skipPreload;
 		if(skipPreload) {
 			$loader._waitForReadyInterval = setInterval($loader._waitForReady, 20);
@@ -1116,7 +1117,7 @@ var $loader = {
 			}
 			
 			var isolateURL = /(^url[(][ ]*["']?|["']?[)]$|^@import[ ]*["']|["']$)/g;
-			var absolute = /^https?:[/][/]/;
+			var absolute = /^(https?:[/][/]|[\/\\])/;
 			
 			var i, curURL;
 			var len = chuncks.length;

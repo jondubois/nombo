@@ -32,7 +32,6 @@ var jLoad = {
 		} else {
 			percentage = Math.round(status.loaded / status.total * 100);
 		}
-		
 		jLoad._loaderTextBox.innerHTML = jLoad._loaderText + ' (' + percentage + '%)';
 	},
 	

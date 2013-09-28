@@ -384,7 +384,7 @@ Master.prototype._start = function () {
 
 	var cssURLFilter = function (url, rootDir) {
 		rootDir = pathManager.toUnixSep(rootDir);
-		newURL = pathToRoot + pathManager.pathToURL(rootDir) + '/' + url;
+		newURL = pathManager.pathToURL(rootDir + '/' + url);
 		newURL = pathManager.toUnixSep(path.normalize(newURL));
 		if (self._options.release) {
 			newURL = self._smartCacheManager.setURLCacheVersion(newURL);
@@ -677,19 +677,6 @@ Master.prototype._start = function () {
 				};
 
 				var launchWorker = function (workerData, lead) {
-					var i;
-					var resourceSizes = {};
-					for (i in bundles) {
-						resourceSizes[i] = Buffer.byteLength(bundles[i], 'utf8');
-					}
-
-					var styleAssetSizeMap = styleBundle.getAssetSizeMap();
-					for (i in styleAssetSizeMap) {
-						// Prepend with the relative path to root from style bundle url 
-						// (styles will be inserted inside <style></style> tags in root document).
-						resourceSizes[externalAppDef.virtualURL + '../..' + i] = styleAssetSizeMap[i];
-					}
-					
 					var worker = fork(__dirname + '/nombo-worker-bootstrap.node');
 					self._errorDomain.add(worker);
 					worker.id = workerIdCounter++;
@@ -705,7 +692,7 @@ Master.prototype._start = function () {
 					workerOpts.minifiedScripts = minifiedScripts;
 					workerOpts.bundles = bundles;
 					workerOpts.bundledResources = self._bundledResources;
-					workerOpts.resourceSizes = resourceSizes;
+					workerOpts.resourceSizes = self._resourceSizes;
 					workerOpts.lead = lead ? 1 : 0;
 
 					worker.send({
@@ -766,12 +753,22 @@ Master.prototype._start = function () {
 					return worker;
 				};
 
-				var launchWorkers = function () {
+				var launchWorkers = function () {					
 					initBundles(function () {
 						var len = self._options.workers.length;
 						if (len > 0) {
+							var i;
+							for (i in bundles) {
+								self._resourceSizes[pathManager.expand(i)] = Buffer.byteLength(bundles[i], 'utf8');
+							}
+
+							var styleAssetSizeMap = styleBundle.getAssetSizeMap();
+							for (i in styleAssetSizeMap) {
+								self._resourceSizes[pathManager.expand(i)] = styleAssetSizeMap[i];
+							}
+					
 							launchWorker(self._options.workers[0], true);
-							for (var i = 1; i < len; i++) {
+							for (i = 1; i < len; i++) {
 								launchWorker(self._options.workers[i]);
 							}
 							!self._options.release && autoRebundle();

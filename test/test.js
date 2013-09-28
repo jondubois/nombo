@@ -6,6 +6,7 @@ var assert = require('assert');
 
 var browserify = require('browserify');
 var requireify = require('../index');
+var innersource = require('innersource');
 
 var modulePath = __dirname + '/module.js';
 var exported = __dirname + '/compiled.js';
@@ -18,7 +19,7 @@ b.require(__dirname + '/foo/dep2.js', {expose: 'x'});
 
 b.add(modulePath)
  .bundle(function(err, src){
-   var completeScript = src+';window.test = require("/foo/dep").hello;window.test2 = require("x");window.test3 = require("innersource")(function(){window;})';
+   var completeScript = src+innersource(tests);
    var script = vm.createScript(completeScript);
    fs.writeFileSync(__dirname+'/compiled.js', completeScript);
 
@@ -29,7 +30,7 @@ b.add(modulePath)
 
    assert.equal(context.window.test, 'world');
    assert.equal(context.window.test2, 'world');
-   assert.equal(context.window.test3, 'window;');
+   assert.equal(context.window.test3, 'tests();');
  });
 
 function getContext(){
@@ -37,4 +38,11 @@ function getContext(){
      console.log.apply(console, arguments);
    }},window:{}};
 
+}
+
+function tests(){
+  var innersource = require('innersource');
+  window.test = require("/foo/dep").hello;
+  window.test2 = require("x");
+  window.test3 = innersource(function(){tests();});
 }

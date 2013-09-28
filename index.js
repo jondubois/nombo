@@ -3,8 +3,8 @@
 var through = require('through');
 var innersource = require('innersource');
 var detective = require('detective');
-var prepend = innersource(addRequire);
-var postpend = innersource(addModule);
+var prepend = innersource(addRequire).replace('\n', ';');
+var postpend = innersource(addModule).replace('\n', ';');
 
 module.exports = function() {
   var buffer = '';

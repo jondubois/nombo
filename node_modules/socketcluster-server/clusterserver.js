@@ -102,6 +102,7 @@ ClusterServer.prototype.sendErrorMessage = function (res, code) {
 
 ClusterServer.prototype.handshake = function (transport, req) {
 	var self = this;
+	
 	var id = this.generateId(req);
 	try {
 		var transport = new transports[transport](req);
@@ -130,8 +131,6 @@ ClusterServer.prototype.handshake = function (transport, req) {
 	}
 	var ssid = this._parseSessionId(headers.cookie);
 	socket.ssid = ssid || socket.id;
-	socket.session = this._ioClusterClient.session(socket.ssid, socket.id);
-	socket.global = this._ioClusterClient.global(socket.id);
 	
 	this._ioClusterClient.bind(socket, function (err) {
 		socket.on('error', self._handleSocketError);
@@ -140,6 +139,8 @@ ClusterServer.prototype.handshake = function (transport, req) {
 			self.emit('error', new Error(errorMessage));
 			socket.emit('fail', errorMessage);
 		} else {
+			socket.session = self._ioClusterClient.session(socket.ssid, socket.id);
+			socket.global = self._ioClusterClient.global(socket.id);
 			self.emit('connection', socket);
 			socket.emit('connect', socket.id);
 		}

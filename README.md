@@ -23,9 +23,6 @@ nombo samples
 ```
 
 
----
-
-
 Nombo focuses on three key areas: Scalability, asset delivery and realtime IO.
 
 **Scalability**

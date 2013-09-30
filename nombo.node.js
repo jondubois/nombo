@@ -616,6 +616,7 @@ Master.prototype._start = function () {
 				if (self._balancer) {
 					self._errorDomain.remove(self._balancer);
 				}
+				
 				self._balancer = fork(__dirname + '/nombo-balancer.node.js');
 				self._errorDomain.add(self._balancer);
 
@@ -623,7 +624,6 @@ Master.prototype._start = function () {
 				self._balancer.on('message', balancerHandler = function (m) {
 					if (m.type == 'error') {
 						self.errorHandler(m.data);
-						self._balancer.kill();
 					}
 				});
 				
@@ -650,9 +650,14 @@ Master.prototype._start = function () {
 					}
 					
 					if (!firstTime) {
+						var workersData = [];
+						var i;
+						for (i in self._workers) {
+							workersData.push(self._workers[i].data);
+						}
 						self._balancer.send({
 							type: 'setWorkers',
-							data: self._workers
+							data: workersData
 						});
 					}
 					
@@ -679,7 +684,12 @@ Master.prototype._start = function () {
 				var launchWorker = function (workerData, lead) {
 					var worker = fork(__dirname + '/nombo-worker-bootstrap.node');
 					self._errorDomain.add(worker);
-					worker.id = workerIdCounter++;
+					if (!workerData.id) {
+						workerData.id = workerIdCounter++;
+					}
+					
+					worker.id = workerData.id;
+					worker.data = workerData;
 
 					var workerOpts = self._cloneObject(self._options);
 					workerOpts.appDef = self._getAppDef();
@@ -719,35 +729,28 @@ Master.prototype._start = function () {
 							message += ', signal: ' + signal;
 						}
 
+						var workersData = [];
 						var newWorkers = [];
 						var i;
 						for (i in self._workers) {
 							if (self._workers[i].id != worker.id) {
 								newWorkers.push(self._workers[i]);
+								workersData.push(self._workers[i].data);
 							}
-						}
+						}						
 
 						self._workers = newWorkers;
-						
 						self._balancer.send({
 							type: 'setWorkers',
-							data: self._workers
+							data: workersData
 						});
 
 						var lead = worker.id == leaderId;
 						leaderId = -1;
-
 						self.errorHandler(new Error(message));
 
-						if (self._options.release) {
-							console.log('   Respawning worker');
-							launchWorker(workerData, lead);
-						} else {
-							if (self._workers.length <= 0) {
-								console.log('   All workers are dead - Nombo is shutting down');
-								process.exit();
-							}
-						}
+						console.log('   Respawning worker');
+						launchWorker(workerData, lead);
 					});
 
 					return worker;

@@ -343,26 +343,32 @@ var IOClusterServer = module.exports.IOClusterServer = function (options) {
 	
 	var readyCount = 0;
 	var len = options.stores.length;
+	var firstTime = true;
 	
 	for (var i=0; i<len; i++) {
-		(function (i) {
+		var launchServer = function (i) {
 			dataServer = ndata.createServer(options.stores[i].port, options.dataKey, options.expiryAccuracy);
 			self._dataServers[i] = dataServer;
 			
-			dataServer.on('ready', function () {
-				if (++readyCount == options.stores.length) {
-					self.emit('ready');
-				}
-			});
+			if (firstTime) {
+				dataServer.on('ready', function () {
+					if (++readyCount >= options.stores.length) {
+						firstTime = false;
+						self.emit('ready');
+					}
+				});
+			}
 			
 			dataServer.on('error', function (err) {
 				self.emit('error', dataServer, err);
 			});
 			
-			dataServer.on('exit', function (code, signal) {
-				self._dataServers[i] = ndata.createServer(options.stores[i].port, options.dataKey, options.expiryAccuracy);
+			dataServer.on('exit', function () {
+				launchServer(i);
 			});
-		})(i);
+		};
+		
+		launchServer(i);
 	}
 };
 

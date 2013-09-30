@@ -22,16 +22,23 @@ To create a 'nombo-samples/' directory containing sample apps use:
 nombo samples
 ```
 
-The key focus of Nombo is scalability. 
-A Nombo server is made up of multiple processes which run in parallel to efficiently deliver your app to users.
-You can specify the number of load balancers, workers and stores you want to use and Nombo will automatically spawn and manage everything.
-Processes are highly parallel so they share very few resources - The more CPU cores you have have, the faster Nombo will run.
 
-Some other key features include:
+Nombo focuses on three key areas: Scalability, asset delivery and realtime IO.
 
-- Allows you to call server-side JavaScript functions from your client-side scripts.
-- Allows your client-side scripts to listen to server-side events. (You can also listen to events which occur on remote Nombo servers - If they authorize you).
-- Allows you to seamlessly interface with remote Nombo servers using the nombo/webservice module (a single function call is needed).
-- Makes efficient use of caching (in release mode) - Allows you to set a cache version so that clients will be forced to update the next time they refresh.
-- Session state is synchronized across all open tabs within a browser.
-- Comes with all the standard middleware for session management, routing and the like - Nombo lets you add custom middleware to do tasks such as user authorization.
+**Scalability**
+* Nombo is launched as multiple node processes - This is all automated; you just specify how many load balancers, workers and stores to use and Nombo takes care of deployment and management. This lets you use all CPU cores on your machine/instance.
+* Worker processes are highly parallelized (share no resources) - This offers almost infinite vertical scalability and provides more robust and consistent performance.
+* Nombo is built on a node module called SocketCluster (built on top of Engine.io) which allows you to swap out the low-level clustering logic to use any pub/sub system of your choice (default is a module called iocluster and uses a pub/sub module called nData) - You just need to provide an adapter which has the same interface as iocluster. The clustering core could simply be an adapter to a third-party cloud-based pub/sub system. This could give you unlimited horizontal scalability.
+
+**Asset Delivery**
+* All HTTP assets are automatically minified and gzipped to reduce file size.
+* Server side caching greatly minimizes disk IO operations.
+* Strong client side caching greatly decreases application load time on subsequent visits and reduces the stress on your server.
+* Nombo lets you bundle scripts, templates, stylesheets and images (images referenced in the CSS are also automatically loaded and cached).
+* Customizable preload screen which shows accurate loading percentage when your app is accessed for the first time.
+
+**Realtime IO**
+* From inside your client-side scripts you can call methods of server-side CommonJS modules called sims (Server Interface Modules). These let your clients easily interact with your backend.
+* From inside sims you can react to client input by emitting events to particular sockets or sessions (a session is associated with a group of sockets belonging to the same client) or broadcast to all connected sockets.
+* You can define middleware functions for various IO segments. For example there is a middleware segment for general HTTP requests one for HTTP GET requests, POST requests, one for general IO (socket) requests, for IO requests of type RPC, etc...
+* You can easily store volatile in-memory data through a session object. This data will automatically be mapped to one of possibly multiple data stores based on your session ID.

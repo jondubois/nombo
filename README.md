@@ -22,6 +22,7 @@ To create a 'nombo-samples/' directory containing sample apps use:
 nombo samples
 ```
 
+---
 
 Nombo focuses on three key areas: Scalability, asset delivery and realtime IO.
 

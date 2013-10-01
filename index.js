@@ -46,9 +46,10 @@ function addRequire(){
                   return require[key];
                 }else{
                   var temp = ret;
+                  var module;
                   ret = newRequire;
                   try {
-                    var module = newRequire(key);
+                    module = newRequire(key);
                   }
                   catch(e){
                     ret = temp;

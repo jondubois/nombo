@@ -24,6 +24,7 @@ nombo samples
 
 
 #### Key Features
+==================
 
 **Scalability**
 * Nombo is launched as multiple node processes - This is all automated; you just specify how many load balancers, workers and stores to use and Nombo takes care of deployment and management. This lets you use all CPU cores on your machine/instance.

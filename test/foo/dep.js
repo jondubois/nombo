@@ -1,3 +1,9 @@
+/*jshint debug: true*/
+'use strict';
+
 exports = module.exports = {
-  hello: 'world'
+  hello: 'world',
+  test: function(){
+    debugger;
+  }
 };

@@ -3,10 +3,11 @@
 var through = require('through');
 var innersource = require('innersource');
 var detective = require('detective');
+var generator = require('inline-source-map');
 var prepend = innersource(addRequire).replace(/\n/g, '');
 var postpend = innersource(addModule).replace(/\n/g, '');
 
-module.exports = function() {
+module.exports = function(filename) {
   var buffer = '';
 
   return through(function(chunk) {
@@ -14,7 +15,15 @@ module.exports = function() {
   },
   function() {
     var nodeModuleRequires = getNodeModuleRequires(buffer);
-    this.queue(prepend + nodeModuleRequires+buffer +';' + postpend);
+    var totalPrelude = prepend + nodeModuleRequires;
+    var offset = totalPrelude.split('\n').length - 1;
+    var complete = totalPrelude + buffer + postpend;
+
+    var gen = generator().addGeneratedMappings(filename, complete, {line: offset, column: 0 })
+                         .addSourceContent(filename, buffer);
+
+    this.queue( complete + '\n'+gen.inlineMappingUrl());
+
     this.queue(null);
   });
 
@@ -79,4 +88,3 @@ function getNodeModuleRequires(source){
     return ";var global = (function(){ return this; }).call(null);global.require['"+require+"'] = require('"+require+"');";
   }).join('');
 }
-

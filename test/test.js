@@ -33,6 +33,14 @@ b.add(modulePath)
    assert.equal(context.window.test3, 'tests();');
  });
 
+// test for sourcemaps
+b.add(modulePath)
+ .bundle({ debug: true }, function(err, src){
+   fs.writeFileSync(__dirname+'/compiled-for-source-maps.js', src);
+   console.log('open test/index.html and visually inspect sourcemaps');
+
+ });
+
 function getContext(){
   return {console:{log: function(){
      console.log.apply(console, arguments);

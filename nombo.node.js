@@ -8,7 +8,6 @@ var SmartCacheManager = require("./smartcachemanager").SmartCacheManager;
 var watchr = require('watchr');
 var path = require('path');
 var pathManager = require('nombo/pathmanager');
-var portScanner = require('portscanner');
 var crypto = require('crypto');
 var EventEmitter = require('events').EventEmitter;
 var domain = require('domain');
@@ -591,220 +590,213 @@ Master.prototype._start = function () {
 	var leaderId = -1;
 	var firstTime = true;
 
-	portScanner.checkPortStatus(self._options.port, 'localhost', function (err, status) {
-		if (err || status == 'open') {
-			console.log('   Nombo Error - Port ' + self._options.port + ' is already taken');
-			process.exit();
-		} else {
-			var balancerHandler;
-			var workersActive = false;
-			
-			var initLoadBalancer = function () {
-				self._balancer.send({
-					type: 'init',
-					data: {
-						dataKey: pass,
-						sourcePort: self._options.port,
-						workers: self._options.workers,
-						hostAddress: self._options.hostAddress,
-						balancerCount: self._options.balancerCount
-					}
+	var balancerHandler;
+	var workersActive = false;
+	
+	var initLoadBalancer = function () {
+		self._balancer.send({
+			type: 'init',
+			data: {
+				dataKey: pass,
+				sourcePort: self._options.port,
+				workers: self._options.workers,
+				hostAddress: self._options.hostAddress,
+				balancerCount: self._options.balancerCount
+			}
+		});
+	};
+	
+	var launchLoadBalancer = function () {
+		if (self._balancer) {
+			self._errorDomain.remove(self._balancer);
+		}
+		
+		self._balancer = fork(__dirname + '/nombo-balancer.node.js');
+		self._errorDomain.add(self._balancer);
+
+		self._balancer.on('exit', launchLoadBalancer);
+		self._balancer.on('message', balancerHandler = function (m) {
+			if (m.type == 'error') {
+				self.errorHandler(m.data);
+			}
+		});
+		
+		if (workersActive) {
+			initLoadBalancer();
+		}
+	};
+	
+	launchLoadBalancer();
+	
+	console.log('   ' + self.colorText('[Busy]', 'yellow') + ' Launching cluster engine');
+	
+	var workerIdCounter = 1;
+	
+	var ioClusterReady = function () {
+		var i;
+		var workerReadyHandler = function (data, worker) {
+			self._workers.push(worker);
+			if (worker.id == leaderId) {
+				worker.send({
+					type: 'emit',
+					event: self.EVENT_LEADER_START
 				});
-			};
-			
-			var launchLoadBalancer = function () {
-				if (self._balancer) {
-					self._errorDomain.remove(self._balancer);
-				}
-				
-				self._balancer = fork(__dirname + '/nombo-balancer.node.js');
-				self._errorDomain.add(self._balancer);
-
-				self._balancer.on('exit', launchLoadBalancer);
-				self._balancer.on('message', balancerHandler = function (m) {
-					if (m.type == 'error') {
-						self.errorHandler(m.data);
-					}
-				});
-				
-				if (workersActive) {
-					initLoadBalancer();
-				}
-			};
-			
-			launchLoadBalancer();
-			
-			console.log('   ' + self.colorText('[Busy]', 'yellow') + ' Launching cluster engine');
-			
-			var workerIdCounter = 1;
-			
-			var ioClusterReady = function () {
-				var i;
-				var workerReadyHandler = function (data, worker) {
-					self._workers.push(worker);
-					if (worker.id == leaderId) {
-						worker.send({
-							type: 'emit',
-							event: self.EVENT_LEADER_START
-						});
-					}
-					
-					if (!firstTime) {
-						var workersData = [];
-						var i;
-						for (i in self._workers) {
-							workersData.push(self._workers[i].data);
-						}
-						self._balancer.send({
-							type: 'setWorkers',
-							data: workersData
-						});
-					}
-					
-					if (self._workers.length >= self._options.workers.length && firstTime) {
-						console.log('   ' + self.colorText('[Active]', 'green') + ' Nombo server started');
-						console.log('            Port: ' + self._options.port);
-						console.log('            Mode: ' + (self._options.release ? 'Release' : 'Debug'));
-						if (self._options.release) {
-							console.log('            Version: ' + self._options.cacheVersion);
-						}
-						console.log('            Balancer count: ' + self._options.balancerCount);
-						console.log('            Worker count: ' + self._options.workers.length);
-						console.log('            Store count: ' + self._options.stores.length);
-						console.log();
-						firstTime = false;
-						
-						if (!workersActive) {
-							initLoadBalancer();
-							workersActive = true;
-						}
-					}
-				};
-
-				var launchWorker = function (workerData, lead) {
-					var worker = fork(__dirname + '/nombo-worker-bootstrap.node');
-					self._errorDomain.add(worker);
-					if (!workerData.id) {
-						workerData.id = workerIdCounter++;
-					}
-					
-					worker.id = workerData.id;
-					worker.data = workerData;
-
-					var workerOpts = self._cloneObject(self._options);
-					workerOpts.appDef = self._getAppDef();
-					workerOpts.paths = self._paths;
-					workerOpts.workerId = worker.id;
-					workerOpts.workerPort = workerData.port;
-					workerOpts.statusPort = workerData.statusPort;
-					workerOpts.stores = stores;
-					workerOpts.dataKey = pass;
-					workerOpts.minifiedScripts = minifiedScripts;
-					workerOpts.bundles = bundles;
-					workerOpts.bundledResources = self._bundledResources;
-					workerOpts.resourceSizes = self._resourceSizes;
-					workerOpts.lead = lead ? 1 : 0;
-
-					worker.send({
-						type: 'init',
-						data: workerOpts
-					});
-
-					worker.on('message', function workerHandler(m) {
-						if (m.type == 'ready') {
-							if (lead) {
-								leaderId = worker.id;
-							}
-							workerReadyHandler(m, worker);
-						} else if (m.type == 'error') {
-							self.errorHandler(m.data);
-						}
-					});
-
-					worker.on('exit', function (code, signal) {
-						self._errorDomain.remove(worker);
-						var message = '   Worker ' + worker.id + ' died - Exit code: ' + code;
-
-						if (signal) {
-							message += ', signal: ' + signal;
-						}
-
-						var workersData = [];
-						var newWorkers = [];
-						var i;
-						for (i in self._workers) {
-							if (self._workers[i].id != worker.id) {
-								newWorkers.push(self._workers[i]);
-								workersData.push(self._workers[i].data);
-							}
-						}						
-
-						self._workers = newWorkers;
-						self._balancer.send({
-							type: 'setWorkers',
-							data: workersData
-						});
-
-						var lead = worker.id == leaderId;
-						leaderId = -1;
-						self.errorHandler(new Error(message));
-
-						console.log('   Respawning worker');
-						launchWorker(workerData, lead);
-					});
-
-					return worker;
-				};
-
-				var launchWorkers = function () {					
-					initBundles(function () {
-						var len = self._options.workers.length;
-						if (len > 0) {
-							var i;
-							for (i in bundles) {
-								self._resourceSizes[pathManager.expand(i)] = Buffer.byteLength(bundles[i], 'utf8');
-							}
-
-							var styleAssetSizeMap = styleBundle.getAssetSizeMap();
-							for (i in styleAssetSizeMap) {
-								self._resourceSizes[pathManager.expand(i)] = styleAssetSizeMap[i];
-							}
-					
-							launchWorker(self._options.workers[0], true);
-							for (i = 1; i < len; i++) {
-								launchWorker(self._options.workers[i]);
-							}
-							!self._options.release && autoRebundle();
-						}
-					});
-				};
-
-				launchWorkers();
-			};
-
-			var stores = self._options.stores;
-			var pass = crypto.randomBytes(32).toString('hex');
-			
-			if (!self._options.clusterKey) {
-				self._options.clusterKey = crypto.randomBytes(32).toString('hex');
 			}
 			
-			var launchIOCluster = function () {
-				self._ioClusterServer = new self._clusterEngine.IOClusterServer({
-					stores: stores,
-					dataKey: pass,
-					clusterKey: self._options.clusterKey,
-					expiryAccuracy: self._dataExpiryAccuracy,
-					secure: self._options.protocol == 'https'
+			if (!firstTime) {
+				var workersData = [];
+				var i;
+				for (i in self._workers) {
+					workersData.push(self._workers[i].data);
+				}
+				self._balancer.send({
+					type: 'setWorkers',
+					data: workersData
 				});
-				
-				self._ioClusterServer.on('error', self.errorHandler);
-			};
+			}
 			
-			launchIOCluster();
-			self._ioClusterServer.on('ready', ioClusterReady);
-		}
-	});
+			if (self._workers.length >= self._options.workers.length && firstTime) {
+				console.log('   ' + self.colorText('[Active]', 'green') + ' Nombo server started');
+				console.log('            Port: ' + self._options.port);
+				console.log('            Mode: ' + (self._options.release ? 'Release' : 'Debug'));
+				if (self._options.release) {
+					console.log('            Version: ' + self._options.cacheVersion);
+				}
+				console.log('            Balancer count: ' + self._options.balancerCount);
+				console.log('            Worker count: ' + self._options.workers.length);
+				console.log('            Store count: ' + self._options.stores.length);
+				console.log();
+				firstTime = false;
+				
+				if (!workersActive) {
+					initLoadBalancer();
+					workersActive = true;
+				}
+			}
+		};
+
+		var launchWorker = function (workerData, lead) {
+			var worker = fork(__dirname + '/nombo-worker-bootstrap.node');
+			self._errorDomain.add(worker);
+			if (!workerData.id) {
+				workerData.id = workerIdCounter++;
+			}
+			
+			worker.id = workerData.id;
+			worker.data = workerData;
+
+			var workerOpts = self._cloneObject(self._options);
+			workerOpts.appDef = self._getAppDef();
+			workerOpts.paths = self._paths;
+			workerOpts.workerId = worker.id;
+			workerOpts.workerPort = workerData.port;
+			workerOpts.statusPort = workerData.statusPort;
+			workerOpts.stores = stores;
+			workerOpts.dataKey = pass;
+			workerOpts.minifiedScripts = minifiedScripts;
+			workerOpts.bundles = bundles;
+			workerOpts.bundledResources = self._bundledResources;
+			workerOpts.resourceSizes = self._resourceSizes;
+			workerOpts.lead = lead ? 1 : 0;
+
+			worker.send({
+				type: 'init',
+				data: workerOpts
+			});
+
+			worker.on('message', function workerHandler(m) {
+				if (m.type == 'ready') {
+					if (lead) {
+						leaderId = worker.id;
+					}
+					workerReadyHandler(m, worker);
+				} else if (m.type == 'error') {
+					self.errorHandler(m.data);
+				}
+			});
+
+			worker.on('exit', function (code, signal) {
+				self._errorDomain.remove(worker);
+				var message = '   Worker ' + worker.id + ' died - Exit code: ' + code;
+
+				if (signal) {
+					message += ', signal: ' + signal;
+				}
+
+				var workersData = [];
+				var newWorkers = [];
+				var i;
+				for (i in self._workers) {
+					if (self._workers[i].id != worker.id) {
+						newWorkers.push(self._workers[i]);
+						workersData.push(self._workers[i].data);
+					}
+				}						
+
+				self._workers = newWorkers;
+				self._balancer.send({
+					type: 'setWorkers',
+					data: workersData
+				});
+
+				var lead = worker.id == leaderId;
+				leaderId = -1;
+				self.errorHandler(new Error(message));
+
+				console.log('   Respawning worker');
+				launchWorker(workerData, lead);
+			});
+
+			return worker;
+		};
+
+		var launchWorkers = function () {					
+			initBundles(function () {
+				var len = self._options.workers.length;
+				if (len > 0) {
+					var i;
+					for (i in bundles) {
+						self._resourceSizes[pathManager.expand(i)] = Buffer.byteLength(bundles[i], 'utf8');
+					}
+
+					var styleAssetSizeMap = styleBundle.getAssetSizeMap();
+					for (i in styleAssetSizeMap) {
+						self._resourceSizes[pathManager.expand(i)] = styleAssetSizeMap[i];
+					}
+			
+					launchWorker(self._options.workers[0], true);
+					for (i = 1; i < len; i++) {
+						launchWorker(self._options.workers[i]);
+					}
+					!self._options.release && autoRebundle();
+				}
+			});
+		};
+
+		launchWorkers();
+	};
+
+	var stores = self._options.stores;
+	var pass = crypto.randomBytes(32).toString('hex');
+	
+	if (!self._options.clusterKey) {
+		self._options.clusterKey = crypto.randomBytes(32).toString('hex');
+	}
+	
+	var launchIOCluster = function () {
+		self._ioClusterServer = new self._clusterEngine.IOClusterServer({
+			stores: stores,
+			dataKey: pass,
+			clusterKey: self._options.clusterKey,
+			expiryAccuracy: self._dataExpiryAccuracy,
+			secure: self._options.protocol == 'https'
+		});
+		
+		self._ioClusterServer.on('error', self.errorHandler);
+	};
+	
+	launchIOCluster();
+		self._ioClusterServer.on('ready', ioClusterReady);
 };
 
 Master.prototype._cloneObject = function (object) {

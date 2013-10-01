@@ -23,7 +23,7 @@ nombo samples
 ```
 
 
-Nombo focuses on three key areas: Scalability, asset delivery and realtime IO.
+#### Key Features
 
 **Scalability**
 * Nombo is launched as multiple node processes - This is all automated; you just specify how many load balancers, workers and stores to use and Nombo takes care of deployment and management. This lets you use all CPU cores on your machine/instance.
@@ -42,3 +42,8 @@ Nombo focuses on three key areas: Scalability, asset delivery and realtime IO.
 * From inside sims you can react to client input by emitting events to particular sockets or sessions (a session is associated with a group of sockets belonging to the same client) or broadcast to all connected sockets.
 * You can define middleware functions for various IO segments. For example there is a middleware segment for general HTTP requests one for HTTP GET requests, POST requests, one for general IO (socket) requests, for IO requests of type RPC, etc...
 * You can easily store volatile in-memory data through a session object. This data will automatically be mapped to one of possibly multiple data stores based on your session ID.
+
+**Structure**
+* Client side scripts can be loaded statically (at compile time) or dynamically (at runtime).
+* Client scripts have the same structure as server-side Node.js modules and Nombo SIMs (CommonJS) - Like Node.js modules, each script operates in its own isolated scope.
+* Allows you to import scripts which have global scope (e.g. jQuery, jQuery UI, Backbone, AngularJS...) - In Nombo, these are referred to as libs (libraries).

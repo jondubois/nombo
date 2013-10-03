@@ -334,7 +334,7 @@ Socket.prototype.ns = function (namespace) {
 };
 
 
-var IOClusterServer = module.exports.IOClusterServer = function (options) {
+var IOCluster = module.exports.IOCluster = function (options) {
 	var self = this;
 	
 	var dataServer;
@@ -372,9 +372,9 @@ var IOClusterServer = module.exports.IOClusterServer = function (options) {
 	}
 };
 
-IOClusterServer.prototype = Object.create(EventEmitter.prototype);
+IOCluster.prototype = Object.create(EventEmitter.prototype);
 
-IOClusterServer.prototype.destroy = function () {
+IOCluster.prototype.destroy = function () {
 	for (var i in this._dataServers) {
 		this._dataServers[i].destroy();
 	}

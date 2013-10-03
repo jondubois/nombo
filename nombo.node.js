@@ -48,7 +48,7 @@ Master.prototype._init = function (options) {
 			mainTemplate: 'index.html'
 		},
 		protocol: 'http',
-		protocolOptions: {},
+		protocolOptions: null,
 		transports: ['polling', 'websocket'],
 		logLevel: 1,
 		connectTimeout: 10,
@@ -83,6 +83,19 @@ Master.prototype._init = function (options) {
 		process.env.DEBUG = 'engine*';
 	} else if (self._options.logLevel > 1) {
 		process.env.DEBUG = 'engine';
+	}
+	
+	if (self._options.protocolOptions) {
+		var protoOpts = self._options.protocolOptions;
+		if (protoOpts.key instanceof Buffer) {
+			protoOpts.key = protoOpts.key.toString();
+		}
+		if (protoOpts.cert instanceof Buffer) {
+			protoOpts.cert = protoOpts.cert.toString();
+		}
+		if (protoOpts.pfx instanceof Buffer) {
+			protoOpts.pfx = protoOpts.pfx.toString();
+		}
 	}
 	
 	if (!self._options.clusterPort) {
@@ -601,7 +614,9 @@ Master.prototype._start = function () {
 				sourcePort: self._options.port,
 				workers: self._options.workers,
 				hostAddress: self._options.hostAddress,
-				balancerCount: self._options.balancerCount
+				balancerCount: self._options.balancerCount,
+				protocol: self._options.protocol,
+				protocolOptions: self._options.protocolOptions
 			}
 		});
 	};
@@ -784,7 +799,7 @@ Master.prototype._start = function () {
 	}
 	
 	var launchIOCluster = function () {
-		self._ioClusterServer = new self._clusterEngine.IOClusterServer({
+		self._ioCluster = new self._clusterEngine.IOCluster({
 			stores: stores,
 			dataKey: pass,
 			clusterKey: self._options.clusterKey,
@@ -792,11 +807,11 @@ Master.prototype._start = function () {
 			secure: self._options.protocol == 'https'
 		});
 		
-		self._ioClusterServer.on('error', self.errorHandler);
+		self._ioCluster.on('error', self.errorHandler);
 	};
 	
 	launchIOCluster();
-		self._ioClusterServer.on('ready', ioClusterReady);
+	self._ioCluster.on('ready', ioClusterReady);
 };
 
 Master.prototype._cloneObject = function (object) {

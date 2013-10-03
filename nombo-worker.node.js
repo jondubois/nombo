@@ -302,17 +302,7 @@ Worker.prototype._start = function () {
 	self._includeString += self._createScriptTag(self._paths.frameworkSocketIOClientURL, 'text/javascript') + "\n\t";
 	self._includeString += self._createScriptTag(self._paths.appExternalURL + self._paths.frameworkURL + 'session.js', 'text/javascript');
 	
-	if (self._options.protocol == 'http') {
-		self._server = http.createServer(self._middleware[self.MIDDLEWARE_HTTP].run);
-	} else if (self._options.protocol == 'https') {
-		if (self._options.protocolOptions) {
-			self._server = https.createServer(self._options.protocolOptions, self._middleware[self.MIDDLEWARE_HTTP].run);
-		} else {
-			throw new Error("The protocolOptions option must be set when https is used");
-		}
-	} else {
-		throw new Error("The " + self._options.protocol + " protocol is not supported");
-	}
+	self._server = http.createServer(self._middleware[self.MIDDLEWARE_HTTP].run);
 	
 	self._addStatusWatcher = function (socket) {
 		if (socket.id) {

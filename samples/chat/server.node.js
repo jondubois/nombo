@@ -2,6 +2,7 @@ var argv = require('optimist').argv;
 var port = argv._[0] ? argv._[0] : 8000;
 var release = argv.hasOwnProperty('r');
 var Master = require('nombo').Master;
+var fs = require('fs');
 
 var options = {
 	port: port,

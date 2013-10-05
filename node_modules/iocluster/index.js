@@ -562,7 +562,7 @@ IOClusterClient.prototype._handshake = function (socket, callback) {
 					if (sockets.length < self._addressSocketLimit) {
 						acceptHandshake();
 					} else {
-						callback && callback("Reached connection limit for the address " + remoteAddr + "");
+						callback && callback("Reached connection limit for the address " + remoteAddr, 2);
 					}
 				}
 			});
@@ -581,9 +581,9 @@ IOClusterClient.prototype.bind = function (socket, callback) {
 	socket.sessionDataKey = this._keyManager.getSessionDataKey(socket.ssid);
 	socket.addressDataKey = this._keyManager.getGlobalDataKey(['__meta', 'addresses', socket.address]);
 	
-	this._handshake(socket, function (err) {
+	this._handshake(socket, function (err, logLevel) {
 		if (err) {
-			callback && callback(err);
+			callback && callback(err, logLevel);
 		} else {
 			self._sockets[socket.id] = socket;
 			if (self._sessions[socket.ssid] == null) {

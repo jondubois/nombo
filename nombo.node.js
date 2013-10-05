@@ -79,9 +79,9 @@ Master.prototype._init = function (options) {
 		self._options[i] = options[i];
 	}
 	
-	if (self._options.logLevel > 2) {
+	if (self._options.logLevel > 3) {
 		process.env.DEBUG = 'engine*';
-	} else if (self._options.logLevel > 1) {
+	} else if (self._options.logLevel > 2) {
 		process.env.DEBUG = 'engine';
 	}
 	

@@ -7,14 +7,14 @@ var fs = require('fs');
 var options = {
 	port: port,
 	release: release,
-	balancerCount: 3,
-	workers: [{port: 9100, statusPort: 9101}, {port: 9102, statusPort: 9103}, {port: 9104, statusPort: 9105}],
+	balancerCount: 2,
+	workers: [{port: 9100, statusPort: 9101}, {port: 9102, statusPort: 9103}],
 	stores: [{port: 9120}, {port: 9121}],
 	sessionTimeout: 10,
 	addressSocketLimit: 4,
 	connectTimeout: 10,
 	//hostAddress: '127.0.0.1',
-	logLevel: 1
+	logLevel: 2
 };
 
 var nombo = new Master(options);

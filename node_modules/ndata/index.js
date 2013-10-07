@@ -563,9 +563,16 @@ var Client = function (port, host, secretKey, timeout) {
 		run(query,[ options, callback])
 	*/
 	self.run = function () {
-		var data = {};
+		var data;
 		var baseKey = null;
 		var callback = null;
+		
+		if (arguments[0].data) {
+			data = arguments[0].data;
+		} else {
+			data = {};
+		}
+		
 		if (arguments[1] instanceof Function) {
 			callback = arguments[1];
 		} else if (arguments[1]) {

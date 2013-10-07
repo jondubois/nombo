@@ -45,12 +45,12 @@ var removeListener = function (socket, event) {
 	eventMap.remove(['sockets', socket.id].concat(event));
 };
 
-var getListeners = function (socket) {
-	return eventMap.get(['sockets', socket.id]);
-};
-
 var removeAllListeners = function (socket) {
 	eventMap.remove(['sockets', socket.id]);
+};
+
+var getListeners = function (socket) {
+	return eventMap.get(['sockets', socket.id]);
 };
 
 var escapeBackslashes = function (str) {
@@ -65,7 +65,7 @@ var run = function (query, baseKey) {
 		rebasedDataMap = dataMap;
 	}
 	
-	return Function('"use strict"; return (' + escapeBackslashes(query) + ')(arguments[0], arguments[1], arguments[2]);')(rebasedDataMap, eventMap, dataExpirer);
+	return Function('"use strict"; return (' + escapeBackslashes(query) + ')(arguments[0], arguments[1], arguments[2]);')(rebasedDataMap, dataExpirer, eventMap);
 };
 
 var actions = {
@@ -158,7 +158,9 @@ var actions = {
 		var ret = {id: command.id, type: 'response', action: 'run'};
 		try {
 			var result = run(command.value, command.baseKey);
-			ret.value = result;
+			if (result !== undefined) {
+				ret.value = result;
+			}
 		} catch(e) {
 			if (e.stack) {
 				e = e.stack;

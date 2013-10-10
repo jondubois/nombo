@@ -360,7 +360,7 @@ var IOCluster = module.exports.IOCluster = function (options) {
 			}
 			
 			dataServer.on('error', function (err) {
-				self.emit('error', dataServer, err);
+				self.emit('error', err);
 			});
 			
 			dataServer.on('exit', function () {

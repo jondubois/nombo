@@ -66,6 +66,7 @@ function main() {
 		$n.local.exec('notes', 'createNote', {title: title, message: message});
 		titleBox.val('');
 		messageBox.val('');
+		addNoteDialog.dialog('close');
 	});
 	
 	var addNoteButton = mainView.find('.add-note-btn');

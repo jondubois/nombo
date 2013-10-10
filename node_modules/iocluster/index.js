@@ -364,6 +364,7 @@ var IOCluster = module.exports.IOCluster = function (options) {
 			});
 			
 			dataServer.on('exit', function () {
+				self.emit('error', new Error('nData server at port ' + options.stores[i].port + ' exited'));
 				launchServer(i);
 			});
 		};

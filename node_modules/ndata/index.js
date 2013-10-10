@@ -155,7 +155,7 @@ var Client = function (port, host, secretKey, timeout) {
 				self._commandMap[command.id] = request;
 				
 				var timeout = setTimeout(function () {
-					var error = 'nData Error - ' + command.action + ' action timed out';
+					var error = 'nData Error - The ' + command.action + ' action timed out';
 					callback(error);
 					delete request.callback;
 					if (self._commandMap.hasOwnProperty(command.id)) {

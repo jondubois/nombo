@@ -8,7 +8,6 @@ var querystring = require('querystring');
 var cache = require('nombo/cache');
 var handlebars = require('handlebars');
 var stepper = require('stepper');
-var cache = require('nombo/cache');
 var ws = require('nombo/webservice');
 var gateway = require('nombo/gateway');
 var mime = require('mime');
@@ -84,6 +83,11 @@ Worker.prototype._init = function (options) {
 	self._preprocessor = require('nombo/router/preprocessor.node.js');
 	self._compressor = require('nombo/router/compressor.node.js');
 	self._responder = require('nombo/router/responder.node.js');
+	
+	cache.init({
+		maxEntrySize: self._options.cacheMaxEntrySize,
+		excludeRegex: self._options.cacheExcludeRegex
+	});
 	
 	if (self._options.release) {
 		for (j in self._minifiedScripts) {

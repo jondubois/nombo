@@ -55,6 +55,8 @@ Master.prototype._init = function (options) {
 		sessionTimeout: 1200,
 		cacheLife: 2592000,
 		cacheType: 'public',
+		cacheExcludeRegex: null,
+		cacheMaxEntrySize: 5000000,
 		cacheVersion: null,
 		origins: '*:*',
 		publicResources: true,

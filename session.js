@@ -20,10 +20,10 @@ var NOMBO_RESOURCES = {{{resources}}};
 var NOMBO_DEBUG = {{debug}};
 var NOMBO_ERROR = 'Unkown Error';
 
-(function() {
+(function () {
 	var freshnessURL = NOMBO_APP_DEF.freshnessURL;
 
-	var beginLoading = function() {
+	var beginLoading = function () {
 		$loader.init(NOMBO_APP_DEF, NOMBO_RESOURCES, NOMBO_DEBUG);
 	}
 
@@ -32,19 +32,19 @@ var NOMBO_ERROR = 'Unkown Error';
 		head = head[0];
 	}
 
-	var ncOnScriptLoad = function(scriptTag, callback) {
+	var ncOnScriptLoad = function (scriptTag, callback) {
 		if(!NOMBO_IE || NOMBO_IE_VERSION > 8) {
-			scriptTag.onload = function() {
+			scriptTag.onload = function () {
 				callback();
 			}
 		} else {
-			scriptTag.onreadystatechange = function() {
+			scriptTag.onreadystatechange = function () {
 				if(this.readyState == 'complete' || this.readyState == 'loaded') {
 					callback();
 				}
 			}
 		}
-	}
+	};
 
 	var ncScriptLoaded = false;
 
@@ -59,7 +59,7 @@ var NOMBO_ERROR = 'Unkown Error';
 	
 	loadScript.src = url;
 	
-	ncOnScriptLoad(loadScript, function() {
+	ncOnScriptLoad(loadScript, function () {
 		ncScriptLoaded = true;
 	});
 	
@@ -131,11 +131,11 @@ var NOMBO_ERROR = 'Unkown Error';
 		return cookiesEnabledResult;
 	}
 	
-	var appendSpinner = function() {
+	var appendSpinner = function () {
 		document.body.appendChild(spinnerDiv);
-	}
+	};
 
-	var readyInterval = setInterval(function() {
+	var readyInterval = setInterval(function () {
 		if(document.body) {
 			if(areCookiesEnabled()) {
 				clearInterval(readyInterval);
@@ -159,7 +159,7 @@ var NOMBO_ERROR = 'Unkown Error';
 		}
 	}, 20);
 
-	var _getHTTPReqObject = function() {
+	var _getHTTPReqObject = function () {
 		var xmlhttp = null;
 		if(NOMBO_IE) {
 			try {
@@ -185,7 +185,7 @@ var NOMBO_ERROR = 'Unkown Error';
 		return xmlhttp;
 	}
 	
-	NOMBO_SESSION_MANAGER = new (function() {
+	NOMBO_SESSION_MANAGER = new (function () {
 		var self = this;
 		var timeout = NOMBO_TIMEOUT;
 		var sessionID = null;
@@ -194,7 +194,7 @@ var NOMBO_ERROR = 'Unkown Error';
 		
 		var sessionDestRegex = /^([^_]*)_([^_]*)_([^_]*)_([^_]*)_/;
 	
-		self._setIDCookies = function(soid) {
+		self._setIDCookies = function (soid) {
 			var ssid = getCookie(sessionCookieName);
 			var ssidDest = null;
 			if (ssid) {
@@ -208,13 +208,13 @@ var NOMBO_ERROR = 'Unkown Error';
 				setCookie(sessionCookieName, ssid);
 			}
 			return ssid;
-		}
+		};
 		
-		self.getTimeout = function() {
+		self.getTimeout = function () {
 			return timeout;
-		}
+		};
 		
-		self.markAsCached = function() {
+		self.markAsCached = function () {
 			if (NOMBO_IS_FRESH) {
 				setCookie(cacheCookieName, 1);
 				var xmlhttp = _getHTTPReqObject();
@@ -223,9 +223,9 @@ var NOMBO_ERROR = 'Unkown Error';
 				xmlhttp.send(null);
 				setCookie(cacheCookieName, '', -100);
 			}
-		}
+		};
 		
-		self.startSession = function(callback) {
+		self.startSession = function (callback) {
 			var timeoutCallback = null;
 			
 			if(NOMBO_SOCKET && (NOMBO_SOCKET.readyState == 'open' || NOMBO_SOCKET.readyState == 'opening')) {
@@ -244,7 +244,7 @@ var NOMBO_ERROR = 'Unkown Error';
 			NOMBO_SOCKET = NOMBO_SOCKET_ENGINE.connect(options);
 		    
 			if(callback) {
-				var errorCallback = function(err) {
+				var errorCallback = function (err) {
 					if(err != 'client not handshaken') {
 						clearTimeout(timeoutCallback);
 						NOMBO_SOCKET.removeListener('connect', connectCallback);
@@ -253,7 +253,7 @@ var NOMBO_ERROR = 'Unkown Error';
 					}
 				}
 				
-				var connectCallback = function() {
+				var connectCallback = function () {
 					clearTimeout(timeoutCallback);
 					NOMBO_SOCKET.removeListener('connect', connectCallback);
 					NOMBO_SOCKET.removeListener('fail', errorCallback);
@@ -262,7 +262,7 @@ var NOMBO_ERROR = 'Unkown Error';
 				}
 				
 				if(timeout > 0) {
-					timeoutCallback = setTimeout(function() {
+					timeoutCallback = setTimeout(function () {
 						NOMBO_SOCKET.removeListener('connect', connectCallback);
 						NOMBO_SOCKET.removeListener('fail', errorCallback);
 						callback('Session initiation attempt timed out')
@@ -272,18 +272,18 @@ var NOMBO_ERROR = 'Unkown Error';
 				NOMBO_SOCKET.on('fail', errorCallback);
 				NOMBO_SOCKET.on('connect', connectCallback);
 			}
-		}
+		};
 		
-		self.endSession = function(callback) {
+		self.endSession = function (callback) {
 			var timeoutCallback = null;
 			if(callback) {
-				var disconnectCallback = function() {
+				var disconnectCallback = function () {
 					clearTimeout(timeoutCallback);
 					callback(null);
 				}
 			
 				if(timeout > 0) {
-					timeoutCallback = setTimeout(function() {
+					timeoutCallback = setTimeout(function () {
 						NOMBO_SOCKET.removeListener('close', disconnectCallback);
 						callback('Disconnection attempt timed out')
 					}, timeout);
@@ -292,12 +292,12 @@ var NOMBO_ERROR = 'Unkown Error';
 				NOMBO_SOCKET.on('close', disconnectCallback);
 			}
 			NOMBO_SOCKET.close();
-		}
+		};
 	})();
 	
-	var ncBegin = function() {
+	var ncBegin = function () {
 		if(areCookiesEnabled()) {
-			var startLoader = function() {
+			var startLoader = function () {
 				if(document.getElementById('ncspinner')) {
 					document.body.removeChild(spinnerDiv);
 					beginLoading();
@@ -309,14 +309,14 @@ var NOMBO_ERROR = 'Unkown Error';
 			if(ncScriptLoaded) {
 				startLoader();
 			} else {
-				ncOnScriptLoad(loadScript, function() {
+				ncOnScriptLoad(loadScript, function () {
 					startLoader();
 				});
 			}
 		}
-	}
+	};
 	
-	var handler = function(err, ssid) {
+	var handler = function (err, ssid) {
 		if(err) {
 			var head = document.getElementsByTagName('head');
 			if(head) {
@@ -332,7 +332,7 @@ var NOMBO_ERROR = 'Unkown Error';
 		} else {
 			ncBegin();
 		}
-	}
+	};
 	
 	NOMBO_SESSION_MANAGER.startSession(handler);
 })();

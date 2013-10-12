@@ -339,7 +339,6 @@ var IOCluster = module.exports.IOCluster = function (options) {
 	
 	var dataServer;
 	this._dataServers = [];
-	this._clusterKey = options.clusterKey;
 	
 	var readyCount = 0;
 	var len = options.stores.length;
@@ -396,7 +395,6 @@ var IOClusterClient = module.exports.IOClusterClient = function (options) {
 	
 	var dataClient;
 	var dataClients = [];
-	this._clusterKey = options.clusterKey;
 	
 	for (var i in options.stores) {
 		dataClient = ndata.createClient(options.stores[i].port, options.dataKey);

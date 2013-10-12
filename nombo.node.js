@@ -72,9 +72,7 @@ Master.prototype._init = function (options) {
 		baseURL: null,
 		hostAddress: null,
 		balancerCount: null,
-		clusterEngine: 'iocluster',
-		clusterKey: null,
-		clusterPort: null
+		clusterEngine: 'iocluster'
 	};
 
 	var i;
@@ -99,10 +97,6 @@ Master.prototype._init = function (options) {
 		if (protoOpts.pfx instanceof Buffer) {
 			protoOpts.pfx = protoOpts.pfx.toString();
 		}
-	}
-	
-	if (!self._options.clusterPort) {
-		self._options.clusterPort = self._options.port + 1;
 	}
 	
 	if (!self._options.stores || self._options.stores.length < 1) {
@@ -316,7 +310,7 @@ Master.prototype._init = function (options) {
 	self._dataExpiryAccuracy = 5000;
 
 	if (self._options.addressSocketLimit == null) {
-		var limit = self._options.sessionTimeout / 10;
+		var limit = self._options.sessionTimeout / 20;
 		if (limit < self._minAddressSocketLimit) {
 			limit = self._minAddressSocketLimit;
 		}
@@ -798,15 +792,10 @@ Master.prototype._start = function () {
 	var stores = self._options.stores;
 	var pass = crypto.randomBytes(32).toString('hex');
 	
-	if (!self._options.clusterKey) {
-		self._options.clusterKey = crypto.randomBytes(32).toString('hex');
-	}
-	
 	var launchIOCluster = function () {
 		self._ioCluster = new self._clusterEngine.IOCluster({
 			stores: stores,
 			dataKey: pass,
-			clusterKey: self._options.clusterKey,
 			expiryAccuracy: self._dataExpiryAccuracy,
 			secure: self._options.protocol == 'https'
 		});

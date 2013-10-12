@@ -163,11 +163,11 @@ Master.prototype._init = function (options) {
 
 	self._paths.appExternalURL = ('/' + (self._appName || self._options.baseURL) + '/').replace(self._slashSequenceRegex, '/');
 	self._paths.appInternalURL = '/';
-	self._paths.cachenessExternalURL = self._paths.appExternalURL + '~cacheness';
-	self._paths.cachenessInternalURL = self._paths.appInternalURL + '~cacheness';
 	
 	self._paths.freshnessExternalURL = self._paths.appExternalURL + '~freshness';
 	self._paths.freshnessInternalURL = self._paths.appInternalURL + '~freshness';
+	
+	self._cacheCookieName = '__' + self._paths.appExternalURL + 'cached';
 	
 	pathManager.init(self._paths.frameworkURL, self._paths.frameworkDirPath, self._paths.appDirPath, self._paths.appExternalURL);
 
@@ -843,12 +843,14 @@ Master.prototype._getAppDef = function (useInternalURLs) {
 	}
 
 	appDef.frameworkURL = this._paths.frameworkURL;
+	appDef.cacheCookieName = this._cacheCookieName;
 	appDef.virtualURL = appDef.appURL + '~virtual/';
 	appDef.appStyleBundleURL = appDef.virtualURL + 'styles.css';
 	appDef.appTemplateBundleURL = appDef.virtualURL + 'templates.js';
 	appDef.frameworkCoreBundleURL = appDef.frameworkURL + '~virtual/core.js';
 	appDef.appLibBundleURL = appDef.virtualURL + 'libs.js';
 	appDef.appScriptBundleURL = appDef.virtualURL + 'scripts.js';
+	appDef.freshnessURL = this._paths.freshnessExternalURL;
 	appDef.frameworkClientURL = this._paths.frameworkClientURL;
 	appDef.frameworkLibsURL = this._paths.frameworkClientURL + 'libs/';
 	appDef.frameworkAssetsURL = this._paths.frameworkClientURL + 'assets/';

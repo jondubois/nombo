@@ -10,7 +10,6 @@ var NOMBO_PORT = {{port}};
 var NOMBO_TIMEOUT = {{timeout}};
 var NOMBO_FRAMEWORK_URL = '{{frameworkURL}}';
 var NOMBO_FRAMEWORK_CLIENT_URL = '{{frameworkClientURL}}';
-var NOMBO_IS_FRESH = null;
 var NOMBO_SOCKET_ENGINE = socketCluster;
 var NOMBO_SOCKET = null;
 var NOMBO_SESSION_MANAGER = null;
@@ -22,6 +21,8 @@ var NOMBO_DEBUG = {{debug}};
 var NOMBO_ERROR = 'Unkown Error';
 
 (function() {
+	var freshnessURL = NOMBO_APP_DEF.freshnessURL;
+
 	var beginLoading = function() {
 		$loader.init(NOMBO_APP_DEF, NOMBO_RESOURCES, NOMBO_DEBUG);
 	}
@@ -179,22 +180,17 @@ var NOMBO_ERROR = 'Unkown Error';
 			}
 		}
 		if(!xmlhttp) {
-			throw "Could not instantiate XMLHttpRequest";
+			throw new Error("Could not instantiate XMLHttpRequest");
 		}
 		return xmlhttp;
 	}
-	
-	var cacheVersion = smartCacheManager.getCacheVersion();
-	var cacheCookieName = '__' + NOMBO_APP_DEF.appURL + 'cached';
-	var cacheCookie = getCookie(cacheCookieName);
-	
-	NOMBO_IS_FRESH = (cacheCookie && cacheVersion == cacheCookie) ? false : true;
 	
 	NOMBO_SESSION_MANAGER = new (function() {
 		var self = this;
 		var timeout = NOMBO_TIMEOUT;
 		var sessionID = null;
 		var sessionCookieName = '__' + NOMBO_APP_DEF.appURL + 'ssid';
+		var cacheCookieName = NOMBO_APP_DEF.cacheCookieName;
 		
 		var sessionDestRegex = /^([^_]*)_([^_]*)_([^_]*)_([^_]*)_/;
 	
@@ -219,11 +215,14 @@ var NOMBO_ERROR = 'Unkown Error';
 		}
 		
 		self.markAsCached = function() {
-			setCookie(cacheCookieName, cacheVersion, 31536000);
-		}
-		
-		self.markAsUncached = function() {
-			setCookie(cacheCookieName, cacheVersion, -100);
+			if (NOMBO_IS_FRESH) {
+				setCookie(cacheCookieName, 1);
+				var xmlhttp = _getHTTPReqObject();
+
+				xmlhttp.open('GET', freshnessURL, true);
+				xmlhttp.send(null);
+				setCookie(cacheCookieName, '', -100);
+			}
 		}
 		
 		self.startSession = function(callback) {

@@ -124,7 +124,7 @@ Worker.prototype._init = function (options) {
 	self._defaultStyleType = 'text/css';
 	self._defaultStyleRel = 'stylesheet';
 	
-	self._ssidRegex = new RegExp('(__' + self._paths.appExternalURL + 'ssid=)([^;]*)');
+	self._ssidRegex = new RegExp('(^|; *)(__' + self._paths.appExternalURL + 'ssid=)([^;]*)');
 	
 	self.allowFullAuthResource(self._paths.spinJSURL);
 	self.allowFullAuthResource(self._paths.frameworkSocketIOClientURL);
@@ -236,6 +236,8 @@ Worker.prototype._init = function (options) {
 	}
 	self._customSIMExtension =  self._config.customSIMExtension;
 	
+	self._cacheCookieRegex = new RegExp('(^|; *)' + self._options.appDef.cacheCookieName + '=1');
+	
 	self._prerouter.init(self._options);
 	self._router.init(self._privateExtensionRegex);
 	self._preprocessor.init(self._options);
@@ -299,9 +301,8 @@ Worker.prototype._handleConnection = function (socket) {
 Worker.prototype._start = function () {
 	var self = this;
 	
-	self._includeString = self._createScriptTag(self._paths.freshnessExternalURL, 'text/javascript') + "\n\t";
+	self._includeString = self._createScriptTag(self._paths.freshnessExternalURL, 'text/javascript', true) + "\n\t";
 	self._includeString += self._createScriptTag(self._paths.frameworkURL + 'smartcachemanager.js', 'text/javascript') + "\n\t";
-	self._includeString += self._createScriptTag(self._paths.cachenessExternalURL, 'text/javascript') + "\n\t";
 	self._includeString += self._createScriptTag(self._paths.spinJSURL, 'text/javascript') + "\n\t";
 	self._includeString += self._createScriptTag(self._paths.frameworkSocketIOClientURL, 'text/javascript') + "\n\t";
 	self._includeString += self._createScriptTag(self._paths.appExternalURL + self._paths.frameworkURL + 'session.js', 'text/javascript');
@@ -514,26 +515,31 @@ Worker.prototype._cacheHandler = function (req, res, next) {
 		if (this._options.release) {
 			cacheVersion = this._cacheVersion;
 		} else {
-			cacheVersion = (new Date()).getTime();
+			cacheVersion = Date.now();
 		}
 		res.setHeader('Content-Type', 'application/javascript');
 		res.setHeader('Cache-Control', 'no-cache');
 		res.setHeader('Pragma', 'no-cache');
+		
+		var script;
+		var cookie = req.headers.cookie;
+		
+		var ifNoneMatch = req.headers['if-none-match'];
+		if (ifNoneMatch == cacheVersion) {
+			res.setHeader('ETag', cacheVersion);
+			script = 'var NOMBO_CACHE_VERSION = "' + cacheVersion + '";\n';
+			script += 'var NOMBO_IS_FRESH = false;';
+		} else if (cookie && this._cacheCookieRegex.test(cookie)) {
+			script = '/* Cached app */';
+			res.setHeader('ETag', cacheVersion);
+		} else {
+			script = 'var NOMBO_CACHE_VERSION = "' + cacheVersion + '";\n';
+			script += 'var NOMBO_IS_FRESH = true;';
+		}
+		
 		res.writeHead(200);
-		var script = 'var NOMBO_CACHE_VERSION = "' + cacheVersion + '";';
 		res.end(script);
 		
-	} else if (req.url == this._paths.cachenessInternalURL) {
-		var now = (new Date()).getTime();
-		var expiry = new Date(now + this._options.cacheLife * 1000);
-		res.setHeader('Content-Type', 'application/javascript');
-		res.setHeader('Set-Cookie', '__' + this._paths.appExternalURL + 'cached=0; Path=/');		
-		res.setHeader('Cache-Control', this._options.cacheType);
-		res.setHeader('Pragma', this._options.cacheType);
-		res.setHeader('Expires', expiry.toUTCString());
-		res.writeHead(200);
-		var script = '/* Check if cached */';
-		res.end(script);
 	} else {
 		next();
 	}
@@ -680,7 +686,7 @@ Worker.prototype._parseSSID = function (cookieString) {
 	if (cookieString) {
 		var result = cookieString.match(this._ssidRegex);
 		if (result) {
-			return result[2];
+			return result[3];
 		}
 	}
 	return null;
@@ -692,8 +698,7 @@ Worker.prototype._applyFileResponseHeaders = function (res, filePath, mimeType, 
 	}
 	
 	if (this._options.release && !forceRefresh) {
-		var now = new Date();
-		var expiry = new Date(now.getTime() + this._options.cacheLife * 1000);
+		var expiry = new Date(Date.now() + this._options.cacheLife * 1000);
 		
 		res.setHeader('Cache-Control', this._options.cacheType);
 		res.setHeader('Pragma', this._options.cacheType);
@@ -718,9 +723,9 @@ Worker.prototype._createScriptCodeTag = function (code, type) {
 	return '<script type="' + type + '">' + code + '</script>';
 };
 
-Worker.prototype._createScriptTag = function (url, type) {
+Worker.prototype._createScriptTag = function (url, type, noCacheVersion) {
 	url = this._normalizeURL(url);
-	if (this._options.release) {
+	if (this._options.release && !noCacheVersion) {
 		url = this._smartCacheManager.setURLCacheVersion(url);
 	}
 	return '<script type="' + type + '" src="' + url + '"></script>';

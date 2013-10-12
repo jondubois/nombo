@@ -68,6 +68,7 @@ Master.prototype._init = function (options) {
 		heartbeatTimeout: 60,
 		workerStatusInterval: 10,
 		allowUploads: false,
+		killWorkerOnError: false,
 		baseURL: null,
 		hostAddress: null,
 		balancerCount: null,
@@ -703,6 +704,7 @@ Master.prototype._start = function () {
 			worker.data = workerData;
 
 			var workerOpts = self._cloneObject(self._options);
+			workerOpts.killWorkerOnError = self._options.killWorkerOnError;
 			workerOpts.appDef = self._getAppDef();
 			workerOpts.paths = self._paths;
 			workerOpts.workerId = worker.id;

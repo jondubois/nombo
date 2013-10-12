@@ -17,7 +17,14 @@ var handleError = function (err) {
 process.on('message', function (m) {
 	if (m.type == 'init') {
 		worker = new Worker(m.data);
-		worker.on('error', handleError);
+		if (m.data.killWorkerOnError) {
+			worker.on('error', function (err) {
+				handleError(err);
+				process.exit();
+			});
+		} else {
+			worker.on('error', handleError);
+		}
 		
 		var workerController = require(m.data.paths.appWorkerControllerPath);
 		workerController.run(worker);
@@ -30,5 +37,7 @@ process.on('message', function (m) {
 		} else {
 			worker.handleMasterEvent(m.event);
 		}
+	} else if (m.type == 'kill') {
+		worker.kill();
 	}
 });

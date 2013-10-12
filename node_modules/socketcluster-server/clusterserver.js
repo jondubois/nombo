@@ -28,6 +28,10 @@ var ClusterServer = function (options) {
 	opts.pingInterval = opts.pingInterval * 1000;
 	opts.upgradeTimeout = opts.upgradeTimeout * 1000;
 	
+	if (opts.appName) {
+		opts.cookie = '__/' + opts.appName + '/io';
+	}
+	
 	Server.call(this, opts);
 	
 	this.appName = opts.appName;

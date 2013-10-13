@@ -53,12 +53,12 @@ Master.prototype._init = function (options) {
 		logLevel: 1,
 		connectTimeout: 10,
 		sessionTimeout: 1200,
-		clientCacheLife: 2592000,
-		clientCacheType: 'public',
+		maxCacheLife: 2592000,
+		cacheType: 'public',
 		cacheExcludeRegex: null,
 		cacheMaxEntrySize: 5000000,
 		cacheVersion: null,
-		serverCacheLifeMillis: 1000,
+		minCacheLifeMillis: 1000,
 		origins: '*:*',
 		publicResources: true,
 		minifyMangle: false,
@@ -307,11 +307,11 @@ Master.prototype._init = function (options) {
 
 	self._paths.frameworkSocketIOClientURL = self._paths.frameworkModulesURL + 'socketcluster-client/socketcluster.js';
 
-	self._minAddressSocketLimit = 30;
+	self._minAddressSocketLimit = 20;
 	self._dataExpiryAccuracy = 5000;
 
 	if (self._options.addressSocketLimit == null) {
-		var limit = self._options.sessionTimeout / 20;
+		var limit = self._options.sessionTimeout / 40;
 		if (limit < self._minAddressSocketLimit) {
 			limit = self._minAddressSocketLimit;
 		}
@@ -319,8 +319,8 @@ Master.prototype._init = function (options) {
 	}
 
 	self._clusterEngine = require(self._options.clusterEngine);
-	if (!self._options.release && self._options.clientCacheLife == null) {
-		self._options.clientCacheLife = 86400;
+	if (!self._options.release && self._options.maxCacheLife == null) {
+		self._options.maxCacheLife = 86400;
 	}
 
 	self._colorCodes = {

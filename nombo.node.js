@@ -60,7 +60,7 @@ Master.prototype._init = function (options) {
 		cacheVersion: null,
 		minCacheLifeMillis: 1000,
 		origins: '*:*',
-		publicResources: true,
+		publicResources: false,
 		minifyMangle: false,
 		matchOriginProtocol: true,
 		addressSocketLimit: null,

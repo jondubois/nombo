@@ -128,11 +128,13 @@ Worker.prototype._init = function (options) {
 	self._ssidRegex = new RegExp('(^|; *)(__' + self._paths.appExternalURL + 'ssid=)([^;]*)');
 	
 	self.allowFullAuthResource(self._paths.spinJSURL);
+	self.allowFullAuthResource(self._paths.frameworkURL + 'smartcachemanager.js');
 	self.allowFullAuthResource(self._paths.frameworkSocketIOClientURL);
+	self.allowFullAuthResource(self._paths.frameworkURL + 'session.js');
+	self.allowFullAuthResource(self._paths.frameworkClientURL + 'scripts/cookiesdisabled.js');
 	self.allowFullAuthResource(self._paths.frameworkClientURL + 'assets/logo.png');
 	self.allowFullAuthResource(self._paths.frameworkClientURL + 'scripts/failedconnection.js');
 	self.allowFullAuthResource(self._paths.frameworkClientURL + 'scripts/cookiesdisabled.js');
-
 	self.allowFullAuthResource(self._paths.frameworkURL + 'loader.js');
 	
 	self._retryOptions = {
@@ -567,9 +569,7 @@ Worker.prototype._sessionHandler = function (req, res, next) {
 	} else {
 		var encoding = self._getReqEncoding(req);
 		
-		if (url == self._paths.frameworkURL + 'smartcachemanager.js' || url == self._paths.frameworkSocketIOClientURL || 
-				url == self._paths.frameworkURL + 'session.js' || self.isFullAuthResource(url)) {
-			
+		if (self.isFullAuthResource(url)) {
 			if (this._options.release && cache.has(encoding, url)) {
 				this._respond(req, res, cache.get(encoding, url), null);
 			} else {
@@ -616,7 +616,7 @@ Worker.prototype._sessionHandler = function (req, res, next) {
 			if (sid) {
 				req.session = this._ioClusterClient.session(sid);
 				next();
-			} else if (!this._options.publicResources) {
+			} else if (!this._options.publicResources && url != self._paths.freshnessInternalURL) {
 				res.writeHead(500);
 				res.end('File cannot be accessed outside of a session');
 			} else {

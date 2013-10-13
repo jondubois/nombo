@@ -353,6 +353,9 @@ var $loader = {
 	},
 	
 	grab: {
+		CACHE_LEVEL_HARD: 'hard',
+		CACHE_LEVEL_SOFT: 'soft',
+		CACHE_LEVEL_NONE: 'none',
 		_options: {},
 		_callbacks: {
 			ready: [],
@@ -461,28 +464,16 @@ var $loader = {
 				$loader.grab.lib(resourceName, callback);
 			},
 			
-			style: function () {
-				var name = arguments[0];
-				var callback = null;
-				var fresh = false;
-				if(arguments[1] instanceof Function) {
-					callback = arguments[1];
-				} else {
-					fresh = arguments[1];
-					if(arguments[2]) {
-						callback = arguments[2];
-					}
-				}
-				
+			style: function (name, callback) {				
 				if($loader.grab._extRegex.test(name)) {
 					var resourceName = $loader.grab._options.appStylesURL + name;
 				} else {
 					var resourceName = $loader.grab._options.appStylesURL + name + '.css';
 				}
-				$loader.grab.style(resourceName, fresh, callback);
+				$loader.grab.style(resourceName, callback);
 			},
 			
-			template: function (name, fresh) {
+			template: function (name, cacheLevel) {
 				var tmplDirURL = $loader._appDefinition.appTemplatesURL;
 				
 				if($loader.grab._extRegex.test(name)) {
@@ -491,29 +482,38 @@ var $loader = {
 					var resourceName = tmplDirURL + name + '.html';
 				}
 				
-				return $loader.grab.template(resourceName, fresh);
+				return $loader.grab.template(resourceName, cacheLevel);
 			},
 			
-			templateURL: function (name, fresh) {
+			templateURL: function (name, cacheLevel) {
 				name = $loader.grab._addFileExtension(name, 'html');
-				return $loader.grab.url($loader._appDefinition.appTemplatesURL + name, fresh);
+				return $loader.grab.url($loader._appDefinition.appTemplatesURL + name, cacheLevel);
 			},
 			
-			styleURL: function (name, fresh) {
+			styleURL: function (name) {
 				name = $loader.grab._addFileExtension(name, 'css');
-				return $loader.grab.url($loader.grab._options.appStylesURL + name, fresh);
+				return $loader.grab.url($loader.grab._options.appStylesURL + name);
 			},
 			
-			assetURL: function (nameWithExtension, fresh) {
-				return $loader.grab.url($loader.grab._options.appAssetsURL + nameWithExtension, fresh);
+			assetURL: function (nameWithExtension, cacheLevel) {
+				return $loader.grab.url($loader.grab._options.appAssetsURL + nameWithExtension, cacheLevel);
 			},
 			
-			fileURL: function (nameWithExtension, fresh) {
-				return $loader.grab.url($loader.grab._options.appFilesURL + nameWithExtension, fresh);
+			fileURL: function (nameWithExtension, cacheLevel) {
+				return $loader.grab.url($loader.grab._options.appFilesURL + nameWithExtension, cacheLevel);
 			}
 		},
 		
 		framework: {
+			script: function (name) {
+				if($loader.grab._extRegex.test(name)) {
+					var resourceName = $loader.grab._options.frameworkScriptsURL + name;
+				} else {
+					var resourceName = $loader.grab._options.frameworkScriptsURL + name + '.js';
+				}
+				return $loader.grab.script(resourceName);
+			},
+			
 			lib: function (name, callback) {				
 				if($loader.grab._extRegex.test(name)) {
 					var resourceName = $loader.grab._options.frameworkLibsURL + name;
@@ -523,25 +523,13 @@ var $loader = {
 				$loader.grab.lib(resourceName, callback);
 			},
 			
-			style: function () {
-				var name = arguments[0];
-				var callback = null;
-				var fresh = false;
-				if(arguments[1] instanceof Function) {
-					callback = arguments[1];
-				} else {
-					fresh = arguments[1];
-					if(arguments[2]) {
-						callback = arguments[2];
-					}
-				}
-				
+			style: function (name, callback) {				
 				if($loader.grab._extRegex.test(name)) {
 					var resourceName = $loader.grab._options.frameworkStylesURL + name;
 				} else {
 					var resourceName = $loader.grab._options.frameworkStylesURL + name + '.css';
 				}
-				$loader.grab.style(resourceName, fresh, callback);
+				$loader.grab.style(resourceName, callback);
 			},
 			
 			plugin: function (name, callback) {
@@ -553,22 +541,13 @@ var $loader = {
 				$loader.grab.lib(resourceName, callback);
 			},
 			
-			script: function (name) {
-				if($loader.grab._extRegex.test(name)) {
-					var resourceName = $loader.grab._options.frameworkScriptsURL + name;
-				} else {
-					var resourceName = $loader.grab._options.frameworkScriptsURL + name + '.js';
-				}
-				return $loader.grab.script(resourceName);
-			},
-			
-			styleURL: function (name, fresh) {
+			styleURL: function (name) {
 				name = $loader.grab._addFileExtension(name, 'css');
-				return $loader.grab.url($loader.grab._options.frameworkStylesURL + name, fresh);
+				return $loader.grab.url($loader.grab._options.frameworkStylesURL + name);
 			},
 			
-			assetURL: function (nameWithExtension, fresh) {
-				return $loader.grab.url($loader.grab._options.frameworkAssetsURL + nameWithExtension, fresh);
+			assetURL: function (nameWithExtension, cacheLevel) {
+				return $loader.grab.url($loader.grab._options.frameworkAssetsURL + nameWithExtension, cacheLevel);
 			}
 		},
 		
@@ -591,42 +570,32 @@ var $loader = {
 			}
 		},
 		
-		template: function (resourceName, fresh) {
-			if($loader.grab._loadableResourceMap.hasOwnProperty(resourceName) && !fresh) {
-				return $loader.grab._loadableResourceMap[resourceName];
-			}
-			var templ = new $loader.Template(resourceName);
-			templ.loader.grab(fresh);
-			$loader.grab._loadableResourceMap[resourceName] = templ;
-			return templ;
-		},
-		
-		style: function () {
-			var resourceName = arguments[0];
-			var callback = null;
-			var fresh = false;
-			if(arguments[1] instanceof Function) {
-				callback = arguments[1];
-			} else {
-				fresh = arguments[1];
-				if(arguments[2]) {
-					callback = arguments[2];
-				}
-			}
-			
-			if($loader.grab._activeCSS[resourceName] && !fresh) {
+		style: function (resourceName, callback) {			
+			if($loader.grab._activeCSS[resourceName]) {
 				callback(null, resourceName);
 			} else {
-				$loader.grab.loadAndEmbedCSS(resourceName, fresh, callback);
+				$loader.grab.loadAndEmbedCSS(resourceName, callback);
 				$loader.grab._activeCSS[resourceName] = true;
 			}
 		},
 		
-		url: function (url, fresh) {
-			if(fresh) {
-				return smartCacheManager.setCacheKiller(url);
-			} else {
+		template: function (resourceName, cacheLevel) {
+			if($loader.grab._loadableResourceMap.hasOwnProperty(resourceName) && !cacheLevel) {
+				return $loader.grab._loadableResourceMap[resourceName];
+			}
+			var templ = new $loader.Template(resourceName);
+			templ.loader.grab(cacheLevel);
+			$loader.grab._loadableResourceMap[resourceName] = templ;
+			return templ;
+		},
+		
+		url: function (url, cacheLevel) {
+			if(!cacheLevel || cacheLevel == $loader.grab.CACHE_LEVEL_HARD) {
 				return smartCacheManager.setURLCacheVersion(url);
+			} else if(cacheLevel == $loader.grab.CACHE_LEVEL_SOFT) {
+				return url;
+			} else {
+				return smartCacheManager.setCacheKiller(url);
 			}
 		},
 		
@@ -636,11 +605,11 @@ var $loader = {
 		image: function () {
 			var url = arguments[0];
 			var callback = null;
-			var fresh = false;
+			var cacheLevel = null;
 			if(arguments[1] instanceof Function) {
 				callback = arguments[1];
 			} else {
-				fresh = arguments[1];
+				cacheLevel = arguments[1];
 				if(arguments[2]) {
 					callback = arguments[2];
 				}
@@ -663,11 +632,7 @@ var $loader = {
 				}
 			}
 			
-			if(fresh) {
-				img.src = smartCacheManager.setCacheKiller(url);
-			} else {
-				img.src = smartCacheManager.setURLCacheVersion(url);
-			}
+			img.src = $loader.grab.url(url, cacheLevel);
 			return img;
 		},
 		
@@ -724,7 +689,7 @@ var $loader = {
 		_loadTag: function (tagData, callback) {
 			$loader.grab._embedQueue.push(tagData);
 			
-			$loader.grab._loadDeepResourceToCache(tagData.url, false, function (err, data) {
+			$loader.grab._loadDeepResourceToCache(tagData.url, function (err, data) {
 				tagData.ready = true;
 				tagData.error = err;
 				callback(err, data);
@@ -742,7 +707,7 @@ var $loader = {
 				tagData = {type: 'link', url: url, callback: function (){}, ready: false};
 				$loader.grab._loadTag(tagData, callback);
 			} else {
-				$loader.grab._loadDeepResourceToCache(url, false, function (err, data) {
+				$loader.grab._loadDeepResourceToCache(url, function (err, data) {
 					$loader.grab._resourcesGrabbed.push(url);
 					callback(err, data);
 				});
@@ -752,34 +717,17 @@ var $loader = {
 		loadAndEmbedScript: function (url, callback) {
 			var tagData = {type: 'script', url: url, callback: callback, error: null, ready: false};
 			$loader.grab._embedQueue.push(tagData);
-			$loader.grab._loadDeepResourceToCache(url, false, function (err) {
+			$loader.grab._loadDeepResourceToCache(url, function (err) {
 				tagData.ready = true;
 				tagData.error = err;
 				$loader.grab._processEmbedQueue();
 			});
 		},
 		
-		loadAndEmbedCSS: function () {
-			var url = arguments[0];
-			var callback = null;
-			var fresh = false;
-			if(arguments[1] instanceof Function) {
-				callback = arguments[1];
-			} else {
-				fresh = arguments[1];
-				if(arguments[2]) {
-					callback = arguments[2];
-				}
-			}
-			
-			var ck = null;
-			if(fresh) {
-				ck = smartCacheManager.getCacheKillerParam();
-			}
-			
-			var tagData = {type: 'link', url: url, callback: callback, error: null, ready: false, query: ck}
+		loadAndEmbedCSS: function (url, callback) {			
+			var tagData = {type: 'link', url: url, callback: callback, error: null, ready: false}
 			$loader.grab._embedQueue.push(tagData);
-			$loader.grab._loadDeepResourceToCache(url, ck, function (err) {
+			$loader.grab._loadDeepResourceToCache(url, function (err) {
 				tagData.ready = true;
 				tagData.error = err;
 				$loader.grab._processEmbedQueue();
@@ -979,7 +927,7 @@ var $loader = {
 			}
 		},
 		
-		_loadDeepResourceToCache: function (url, fresh, callback, rootURL) {
+		_loadDeepResourceToCache: function (url, callback, rootURL) {
 			url = url.replace(/[?].*/, '');
 			if(!$loader.grab._resourcesLoadedMap[url]) {
 				var resourceData = null;
@@ -1021,22 +969,10 @@ var $loader = {
 						}
 					};
 					
-					var tempURL;
-					
-					if(fresh) {
-						tempURL = smartCacheManager.setCacheKillerParam(url, fresh);
-					} else {
-						tempURL = smartCacheManager.setURLCacheVersion(url);
-					}
-					
+					var tempURL = $loader.grab.url(url);
 					img.src = tempURL;
 				} else {
-					var tempURL;
-					if(fresh) {
-						tempURL = smartCacheManager.setCacheKillerParam(url, fresh);
-					} else {
-						tempURL = smartCacheManager.setURLCacheVersion(url);
-					}
+					var tempURL = $loader.grab.url(url);
 					
 					var ajaxSettings = {
 						url: tempURL,
@@ -1068,7 +1004,7 @@ var $loader = {
 								len = nonLoadedURLs.length;
 								
 								for(i=0; i<len; i++) {
-									$loader.grab._loadDeepResourceToCache(nonLoadedURLs[i], fresh, callback, rootURL);
+									$loader.grab._loadDeepResourceToCache(nonLoadedURLs[i], callback, rootURL);
 								}
 								
 								$loader.grab._styleCodes[url] = data;
@@ -1246,8 +1182,8 @@ $loader.Template = function (resourceName) {
 		return self.loader.loaded;
 	}
 	
-	self.loader.grab = function (fresh) {
-		$loader.grab._loadDeepResourceToCache(self.loader.name, fresh, function (err, result) {
+	self.loader.grab = function (cacheLevel) {
+		$loader.grab._loadDeepResourceToCache(self.loader.name, function (err, result) {
 			if(err) {
 				self.loader.emit('error', self);
 			} else {

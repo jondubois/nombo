@@ -23,10 +23,10 @@ var chatListView = $n.grab.app.template("chatlist");
 
 var prevList = "";
 
-var chatHandler = function(messages) {
+var chatHandler = function (messages) {
 	var msgStr = '';
 	var i;
-	for(i in messages) {
+	for (i in messages) {
 		msgStr += '<li>' + messages[i].user + ': ' + messages[i].message + '</li>';
 	}
 	
@@ -39,8 +39,8 @@ var chatHandler = function(messages) {
 	The callback to the $n.local.exec function is in the form: callback(err, data) where err is an error string (or null if no error) and data is the
 	data received from the server.
 */
-var showChat = function(err, data) {
-	if(err) {
+var showChat = function (err, data) {
+	if (err) {
 		chatHandler([{user:"System", message: "Couldn't load chat: " + err}]);
 	} else {
 		chatHandler(data);
@@ -58,7 +58,7 @@ function sendMessage(e) {
 		Make sure that your server interface file have a .node.js extension - The .node.js extension keeps your code private
 	*/
 	$n.local.exec('chat', 'addMessage', {user: nameBox.val(), message: sendBox.val()}, function(err) {
-		if(err) {
+		if (err) {
 			throw new Error("Error - Couldn't post your message");
 			sendBox.val("");
 		} else {
@@ -71,7 +71,7 @@ function sendMessage(e) {
 	Functions passed to $n.ready will only be run when all scripts grabbed before the current $n.ready call have finished loading
 	Note that once inside $n.ready, you may choose to load other external scripts which can have their own $n.ready handlers
 */
-$n.ready(function() {
+$n.ready(function () {
 	/* 
 		This is a method of the $n.mvp.View class, it fills the {{chatArea}} handlebars segment with the given $n.mvp.View object (also accepts HTML strings)
 		See http://handlebarsjs.com/ for more info on handlebars templates
@@ -94,8 +94,8 @@ $n.ready(function() {
 	
 	$("#nameBox").val("Guest");
 	$("#sendButton").click(sendMessage);
-	$("#sendBox").keypress(function(e) {
-		if(e.keyCode == 13){
+	$("#sendBox").keypress(function (e) {
+		if (e.keyCode == 13) {
 			sendMessage(e);
 		}
 	});

@@ -86,7 +86,8 @@ Worker.prototype._init = function (options) {
 	
 	cache.init({
 		maxEntrySize: self._options.cacheMaxEntrySize,
-		excludeRegex: self._options.cacheExcludeRegex
+		excludeRegex: self._options.cacheExcludeRegex,
+		serverCacheLifeMillis: self._options.serverCacheLifeMillis
 	});
 	
 	if (self._options.release) {
@@ -698,10 +699,10 @@ Worker.prototype._applyFileResponseHeaders = function (res, filePath, mimeType, 
 	}
 	
 	if (this._options.release && !forceRefresh) {
-		var expiry = new Date(Date.now() + this._options.cacheLife * 1000);
+		var expiry = new Date(Date.now() + this._options.clientCacheLife * 1000);
 		
-		res.setHeader('Cache-Control', this._options.cacheType);
-		res.setHeader('Pragma', this._options.cacheType);
+		res.setHeader('Cache-Control', this._options.clientCacheType);
+		res.setHeader('Pragma', this._options.clientCacheType);
 		res.setHeader('Expires', expiry.toUTCString());
 	} else {
 		res.setHeader('Cache-Control', 'no-cache');

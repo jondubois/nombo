@@ -53,11 +53,12 @@ Master.prototype._init = function (options) {
 		logLevel: 1,
 		connectTimeout: 10,
 		sessionTimeout: 1200,
-		cacheLife: 2592000,
-		cacheType: 'public',
+		clientCacheLife: 2592000,
+		clientCacheType: 'public',
 		cacheExcludeRegex: null,
 		cacheMaxEntrySize: 5000000,
 		cacheVersion: null,
+		serverCacheLifeMillis: 1000,
 		origins: '*:*',
 		publicResources: true,
 		minifyMangle: false,
@@ -318,8 +319,8 @@ Master.prototype._init = function (options) {
 	}
 
 	self._clusterEngine = require(self._options.clusterEngine);
-	if (!self._options.release && self._options.cacheLife == null) {
-		self._options.cacheLife = 86400;
+	if (!self._options.release && self._options.clientCacheLife == null) {
+		self._options.clientCacheLife = 86400;
 	}
 
 	self._colorCodes = {

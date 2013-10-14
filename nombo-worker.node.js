@@ -85,6 +85,7 @@ Worker.prototype._init = function (options) {
 	self._responder = require('nombo/router/responder.node.js');
 	
 	cache.init({
+		maxSize: self._options.cacheMaxSize,
 		maxEntrySize: self._options.cacheMaxEntrySize,
 		excludeRegex: self._options.cacheExcludeRegex,
 		minCacheLifeMillis: self._options.minCacheLifeMillis
@@ -104,14 +105,14 @@ Worker.prototype._init = function (options) {
 	
 	self._paths = self._options.paths;
 	
-	pathManager.init(self._paths.frameworkURL, self._paths.frameworkDirPath, self._paths.appDirPath, self._paths.appExternalURL);
-	pathManager.setBaseURL(self._paths.appExternalURL);
-	scriptManager.init(self._paths.frameworkURL, self._paths.appExternalURL, self._options.minifyMangle);
-	scriptManager.setBaseURL(self._paths.appExternalURL);
+	pathManager.init(self._paths.frameworkURL, self._paths.frameworkDirPath, self._paths.appDirPath, self._paths.appURL);
+	pathManager.setBaseURL(self._paths.appURL);
+	scriptManager.init(self._paths.frameworkURL, self._paths.appURL, self._options.minifyMangle);
+	scriptManager.setBaseURL(self._paths.appURL);
 	
 	var i;
 	for (i in self._options.resourceSizes) {
-		self._resourceSizes[pathManager.expand(i)] = self._options.resourceSizes[i];
+		self._resourceSizes[i] = self._options.resourceSizes[i];
 	}
 	
 	self._rootTemplateBody = fs.readFileSync(self._paths.frameworkClientDirPath + '/index.html', 'utf8');
@@ -125,7 +126,7 @@ Worker.prototype._init = function (options) {
 	self._defaultStyleType = 'text/css';
 	self._defaultStyleRel = 'stylesheet';
 	
-	self._ssidRegex = new RegExp('(^|; *)(__' + self._paths.appExternalURL + 'ssid=)([^;]*)');
+	self._ssidRegex = new RegExp('(^|; *)(ssid=)([^;]*)');
 	
 	self.allowFullAuthResource(self._paths.spinJSURL);
 	self.allowFullAuthResource(self._paths.frameworkURL + 'smartcachemanager.js');
@@ -304,11 +305,11 @@ Worker.prototype._handleConnection = function (socket) {
 Worker.prototype._start = function () {
 	var self = this;
 	
-	self._includeString = self._createScriptTag(self._paths.freshnessExternalURL, 'text/javascript', true) + "\n\t";
+	self._includeString = self._createScriptTag(self._paths.freshnessURL, 'text/javascript', true) + "\n\t";
 	self._includeString += self._createScriptTag(self._paths.frameworkURL + 'smartcachemanager.js', 'text/javascript') + "\n\t";
 	self._includeString += self._createScriptTag(self._paths.spinJSURL, 'text/javascript') + "\n\t";
 	self._includeString += self._createScriptTag(self._paths.frameworkSocketIOClientURL, 'text/javascript') + "\n\t";
-	self._includeString += self._createScriptTag(self._paths.appExternalURL + self._paths.frameworkURL + 'session.js', 'text/javascript');
+	self._includeString += self._createScriptTag(self._paths.frameworkURL + 'session.js', 'text/javascript');
 	
 	self._server = http.createServer(self._middleware[self.MIDDLEWARE_HTTP].run);
 	
@@ -382,7 +383,6 @@ Worker.prototype._start = function () {
 	setInterval(self._emitStatus, self._options.workerStatusInterval * 1000);
 	
 	self._socketServer = socketCluster.attach(self._server, {
-		appName: self._options.appName,
 		sourcePort: self._options.port,
 		ioClusterClient: self._ioClusterClient,
 		transports: self._options.transports,
@@ -513,7 +513,7 @@ Worker.prototype._getReqEncoding = function (req) {
 };
 
 Worker.prototype._cacheHandler = function (req, res, next) {
-	if (req.url == this._paths.freshnessInternalURL) {
+	if (req.url == this._paths.freshnessURL) {
 		var cacheVersion;
 		if (this._options.release) {
 			cacheVersion = this._cacheVersion;
@@ -616,7 +616,7 @@ Worker.prototype._sessionHandler = function (req, res, next) {
 			if (sid) {
 				req.session = this._ioClusterClient.session(sid);
 				next();
-			} else if (!this._options.publicResources && url != self._paths.freshnessInternalURL) {
+			} else if (!this._options.publicResources && url != self._paths.freshnessURL) {
 				res.writeHead(500);
 				res.end('File cannot be accessed outside of a session');
 			} else {
@@ -628,7 +628,6 @@ Worker.prototype._sessionHandler = function (req, res, next) {
 
 Worker.prototype._rewriteHTTPRequest = function (req) {
 	this._httpRequestCount++;
-	req.url = pathManager.simplify(req.url);
 };
 
 Worker.prototype._prepareHTTPHandler = function (req, res, next) {

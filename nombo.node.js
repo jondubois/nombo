@@ -57,6 +57,7 @@ Master.prototype._init = function (options) {
 		cacheType: 'public',
 		cacheExcludeRegex: null,
 		cacheMaxEntrySize: 5000000,
+		cacheMaxSize: 1000000000,
 		cacheVersion: null,
 		minCacheLifeMillis: 1000,
 		origins: '*:*',
@@ -70,7 +71,6 @@ Master.prototype._init = function (options) {
 		workerStatusInterval: 10,
 		allowUploads: false,
 		killWorkerOnError: false,
-		baseURL: null,
 		hostAddress: null,
 		balancerCount: null,
 		clusterEngine: 'iocluster'
@@ -153,19 +153,12 @@ Master.prototype._init = function (options) {
 	self._paths.rootTemplateURL = self._paths.frameworkClientURL + 'index.html';
 
 	self._paths.spinJSURL = self._paths.frameworkClientURL + 'libs/spin.js';
-
-	self._appName = path.basename(self._paths.appDirPath);
-	self._options.appName = self._appName;
-
-	self._paths.appExternalURL = ('/' + (self._appName || self._options.baseURL) + '/').replace(self._slashSequenceRegex, '/');
-	self._paths.appInternalURL = '/';
+	self._paths.appURL = '/';
+	self._paths.freshnessURL = self._paths.appURL + '~freshness';
 	
-	self._paths.freshnessExternalURL = self._paths.appExternalURL + '~freshness';
-	self._paths.freshnessInternalURL = self._paths.appInternalURL + '~freshness';
+	self._cacheCookieName = '__cached';
 	
-	self._cacheCookieName = '__' + self._paths.appExternalURL + 'cached';
-	
-	pathManager.init(self._paths.frameworkURL, self._paths.frameworkDirPath, self._paths.appDirPath, self._paths.appExternalURL);
+	pathManager.init(self._paths.frameworkURL, self._paths.frameworkDirPath, self._paths.appDirPath, self._paths.appURL);
 
 	self._useCoreLib = function (url, index) {
 		var normalURL = self._normalizeURL(url);
@@ -249,26 +242,26 @@ Master.prototype._init = function (options) {
 
 	self.bundle.asset = function (path) {
 		var stats = fs.statSync(path);
-		var url = pathManager.expand(self._paths.appInternalURL + 'assets/' + name);
+		var url = self._paths.appURL + 'assets/' + name;
 		self._resourceSizes[url] = stats.size;
 		self._bundledResources.push(url);
 	};
 
 	self.bundle.app.lib = function (name, index) {
-		self.useScript(self._paths.appInternalURL + 'libs/' + name, index);
+		self.useScript(self._paths.appURL + 'libs/' + name, index);
 	};
 
 	self.bundle.app.template = function (name) {
-		self.useTemplate(self._paths.appInternalURL + 'templates/' + name);
+		self.useTemplate(self._paths.appURL + 'templates/' + name);
 	};
 
 	self.bundle.app.style = function (name) {
-		self.useStyle(self._paths.appInternalURL + 'styles/' + name);
+		self.useStyle(self._paths.appURL + 'styles/' + name);
 	};
 
 	self.bundle.app.asset = function (name) {
 		var stats = fs.statSync(self._paths.appDirPath + '/assets/' + name);
-		var url = pathManager.expand(self._paths.appInternalURL + 'assets/' + name);
+		var url = self._paths.appURL + 'assets/' + name;
 		self._resourceSizes[url] = stats.size;
 		self._bundledResources.push(url);
 	};
@@ -291,7 +284,7 @@ Master.prototype._init = function (options) {
 
 	self.bundle.framework.asset = function (name) {
 		var stats = fs.statSync(self._paths.frameworkClientDirPath + '/assets/' + name);
-		var url = pathManager.expand(self._paths.frameworkClientURL + 'assets/' + name);
+		var url = self._paths.frameworkClientURL + 'assets/' + name;
 		self._resourceSizes[url] = stats.size;
 		self._bundledResources.push(url);
 	};
@@ -300,10 +293,10 @@ Master.prototype._init = function (options) {
 		self.bundle.framework.lib('angular.js', 0);
 		self._options.angularOptions.mainTemplate && self.bundle.app.template(self._options.angularOptions.mainTemplate);
 	}
-	scriptManager.init(self._paths.frameworkURL, self._paths.appExternalURL, self._options.minifyMangle);
+	scriptManager.init(self._paths.frameworkURL, self._paths.appURL, self._options.minifyMangle);
 
-	pathManager.setBaseURL(self._paths.appExternalURL);
-	scriptManager.setBaseURL(self._paths.appExternalURL);
+	pathManager.setBaseURL(self._paths.appURL);
+	scriptManager.setBaseURL(self._paths.appURL);
 
 	self._paths.frameworkSocketIOClientURL = self._paths.frameworkModulesURL + 'socketcluster-client/socketcluster.js';
 
@@ -358,7 +351,7 @@ Master.prototype.errorHandler = function (err) {
 Master.prototype._start = function () {
 	var self = this;
 	
-	var appDef = self._getAppDef(true);
+	var appDef = self._getAppDef();
 	self._options.minifyURLs = [appDef.appScriptsURL, appDef.appLibsURL, appDef.frameworkClientURL + 'scripts/load.js',
 		self._paths.frameworkURL + 'nombo-client.js', self._paths.frameworkURL + 'loader.js',
 		self._paths.frameworkURL + 'smartcachemanager.js'
@@ -389,8 +382,6 @@ Master.prototype._start = function () {
 	}
 
 	var newURL;
-	var externalAppDef = self._getAppDef();
-	var pathToRoot = '../..';
 
 	var cssURLFilter = function (url, rootDir) {
 		rootDir = pathManager.toUnixSep(rootDir);
@@ -770,12 +761,12 @@ Master.prototype._start = function () {
 				if (len > 0) {
 					var i;
 					for (i in bundles) {
-						self._resourceSizes[pathManager.expand(i)] = Buffer.byteLength(bundles[i], 'utf8');
+						self._resourceSizes[i] = Buffer.byteLength(bundles[i], 'utf8');
 					}
 
 					var styleAssetSizeMap = styleBundle.getAssetSizeMap();
 					for (i in styleAssetSizeMap) {
-						self._resourceSizes[pathManager.expand(i)] = styleAssetSizeMap[i];
+						self._resourceSizes[i] = styleAssetSizeMap[i];
 					}
 			
 					launchWorker(self._options.workers[0], true);
@@ -825,15 +816,10 @@ Master.prototype.colorText = function (message, color) {
 	return message;
 };
 
-Master.prototype._getAppDef = function (useInternalURLs) {
+Master.prototype._getAppDef = function () {
 	var appDef = {};
 
-	if (useInternalURLs) {
-		appDef.appURL = this._paths.appInternalURL;
-	} else {
-		appDef.appURL = this._paths.appExternalURL;
-	}
-
+	appDef.appURL = this._paths.appURL;
 	appDef.frameworkURL = this._paths.frameworkURL;
 	appDef.cacheCookieName = this._cacheCookieName;
 	appDef.virtualURL = appDef.appURL + '~virtual/';
@@ -842,7 +828,7 @@ Master.prototype._getAppDef = function (useInternalURLs) {
 	appDef.frameworkCoreBundleURL = appDef.frameworkURL + '~virtual/core.js';
 	appDef.appLibBundleURL = appDef.virtualURL + 'libs.js';
 	appDef.appScriptBundleURL = appDef.virtualURL + 'scripts.js';
-	appDef.freshnessURL = this._paths.freshnessExternalURL;
+	appDef.freshnessURL = this._paths.freshnessURL;
 	appDef.frameworkClientURL = this._paths.frameworkClientURL;
 	appDef.frameworkLibsURL = this._paths.frameworkClientURL + 'libs/';
 	appDef.frameworkAssetsURL = this._paths.frameworkClientURL + 'assets/';

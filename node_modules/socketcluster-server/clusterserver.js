@@ -28,24 +28,15 @@ var ClusterServer = function (options) {
 	opts.pingInterval = opts.pingInterval * 1000;
 	opts.upgradeTimeout = opts.upgradeTimeout * 1000;
 	
-	if (opts.appName) {
-		opts.cookie = '__/' + opts.appName + '/io';
-	}
-	
 	Server.call(this, opts);
 	
-	this.appName = opts.appName;
 	this.sourcePort = opts.sourcePort;
 	this.hostAddress = opts.hostAddress;
 	this.secure = opts.secure ? 1 : 0;
 	this.logLevel = opts.logLevel;
 	
 	this._ioClusterClient = opts.ioClusterClient;
-	if (this.appName) {
-		this._sessionIdRegex = new RegExp('(__/' + this.appName + '/ssid=)([^;]*)');
-	} else {
-		this._sessionIdRegex = /(__.*\/ssid=)([^;]*)/;
-	}
+	this._sessionIdRegex = /(ssid=)([^;]*)/;
 	this._hostRegex = /^[^:]*/;
 	
 	this._handleSocketError = function (error) {

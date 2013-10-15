@@ -126,16 +126,17 @@ Worker.prototype._init = function (options) {
 	self._defaultStyleType = 'text/css';
 	self._defaultStyleRel = 'stylesheet';
 	
-	self._ssidRegex = new RegExp('(^|; *)(ssid=)([^;]*)');
+	self._ssidRegex = new RegExp('(^|; *)(' + self._options.appDef.sessionCookieName + '=)([^;]*)');
 	
 	self.allowFullAuthResource(self._paths.spinJSURL);
 	self.allowFullAuthResource(self._paths.frameworkURL + 'smartcachemanager.js');
 	self.allowFullAuthResource(self._paths.frameworkSocketIOClientURL);
 	self.allowFullAuthResource(self._paths.frameworkURL + 'session.js');
-	self.allowFullAuthResource(self._paths.frameworkClientURL + 'scripts/cookiesdisabled.js');
 	self.allowFullAuthResource(self._paths.frameworkClientURL + 'assets/logo.png');
 	self.allowFullAuthResource(self._paths.frameworkClientURL + 'scripts/failedconnection.js');
 	self.allowFullAuthResource(self._paths.frameworkClientURL + 'scripts/cookiesdisabled.js');
+	self.allowFullAuthResource(self._paths.frameworkClientURL + 'scripts/notaccessible.js');
+	self.allowFullAuthResource(self._paths.frameworkClientURL + 'scripts/notfound.js');
 	self.allowFullAuthResource(self._paths.frameworkURL + 'loader.js');
 	
 	self._retryOptions = {
@@ -383,6 +384,7 @@ Worker.prototype._start = function () {
 	setInterval(self._emitStatus, self._options.workerStatusInterval * 1000);
 	
 	self._socketServer = socketCluster.attach(self._server, {
+		appName: self._options.appName,
 		sourcePort: self._options.port,
 		ioClusterClient: self._ioClusterClient,
 		transports: self._options.transports,

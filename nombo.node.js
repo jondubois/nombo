@@ -156,7 +156,11 @@ Master.prototype._init = function (options) {
 	self._paths.appURL = '/';
 	self._paths.freshnessURL = self._paths.appURL + '~freshness';
 	
-	self._cacheCookieName = '__cached';
+	self._appName = path.basename(self._paths.appDirPath);
+	self._options.appName = self._appName;
+	
+	self._cacheCookieName = '__/' + self._appName + '/cached';
+	self._sessionCookieName = '__/' + this._appName + '/ssid';
 	
 	pathManager.init(self._paths.frameworkURL, self._paths.frameworkDirPath, self._paths.appDirPath, self._paths.appURL);
 
@@ -821,6 +825,7 @@ Master.prototype._getAppDef = function () {
 
 	appDef.appURL = this._paths.appURL;
 	appDef.frameworkURL = this._paths.frameworkURL;
+	appDef.sessionCookieName = this._sessionCookieName;
 	appDef.cacheCookieName = this._cacheCookieName;
 	appDef.virtualURL = appDef.appURL + '~virtual/';
 	appDef.appStyleBundleURL = appDef.virtualURL + 'styles.css';

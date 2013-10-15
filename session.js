@@ -189,7 +189,7 @@ var NOMBO_ERROR = 'Unkown Error';
 		var self = this;
 		var timeout = NOMBO_TIMEOUT;
 		var sessionID = null;
-		var sessionCookieName = 'ssid';
+		var sessionCookieName = NOMBO_APP_DEF.sessionCookieName;
 		var cacheCookieName = NOMBO_APP_DEF.cacheCookieName;
 		
 		var sessionDestRegex = /^([^_]*)_([^_]*)_([^_]*)_([^_]*)_/;

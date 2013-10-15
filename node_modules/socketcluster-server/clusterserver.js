@@ -123,7 +123,7 @@ ClusterServer.prototype.handshake = function (transport, req) {
 	var headers = req.headers || {};
 	
 	if (req.connection) {
-		socket.address = req.connection.remoteAddress || headers['x-forwarded-for'];
+		socket.address = headers['x-forwarded-for'] || req.connection.remoteAddress;
 	}
 	var ssid = this._parseSessionId(headers.cookie);
 	socket.ssid = ssid || socket.id;

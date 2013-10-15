@@ -87,7 +87,7 @@ Worker.prototype._init = function (options) {
 	cache.init({
 		maxSize: self._options.cacheMaxSize,
 		maxEntrySize: self._options.cacheMaxEntrySize,
-		excludeRegex: self._options.cacheExcludeRegex,
+		cacheFilter: self._options.cacheFilter,
 		minCacheLifeMillis: self._options.minCacheLifeMillis
 	});
 	
@@ -99,7 +99,7 @@ Worker.prototype._init = function (options) {
 	}
 	
 	for (j in self._bundles) {
-		cache.set(cache.ENCODING_PLAIN, j, self._bundles[j]);
+		cache.set(cache.ENCODING_PLAIN, j, self._bundles[j], true);
 		self._cacheResponder.setUnrefreshable(j);
 	}
 	
@@ -698,10 +698,10 @@ Worker.prototype._applyFileResponseHeaders = function (res, filePath, mimeType, 
 	}
 	
 	if (this._options.release && !forceRefresh) {
-		var expiry = new Date(Date.now() + this._options.maxCacheLife * 1000);
+		var expiry = new Date(Date.now() + this._options.clientCacheLife * 1000);
 		
-		res.setHeader('Cache-Control', this._options.cacheType);
-		res.setHeader('Pragma', this._options.cacheType);
+		res.setHeader('Cache-Control', this._options.clientCacheType);
+		res.setHeader('Pragma', this._options.clientCacheType);
 		res.setHeader('Expires', expiry.toUTCString());
 	} else {
 		res.setHeader('Cache-Control', 'no-cache');

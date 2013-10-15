@@ -53,10 +53,10 @@ Master.prototype._init = function (options) {
 		logLevel: 1,
 		connectTimeout: 10,
 		sessionTimeout: 1200,
-		maxCacheLife: 2592000,
-		cacheType: 'public',
-		cacheExcludeRegex: null,
-		cacheMaxEntrySize: 5000000,
+		clientCacheLife: 2592000,
+		clientCacheType: 'public',
+		cacheFilter: null,
+		cacheMaxEntrySize: 10000000,
 		cacheMaxSize: 1000000000,
 		cacheVersion: null,
 		minCacheLifeMillis: 1000,
@@ -312,8 +312,8 @@ Master.prototype._init = function (options) {
 	}
 
 	self._clusterEngine = require(self._options.clusterEngine);
-	if (!self._options.release && self._options.maxCacheLife == null) {
-		self._options.maxCacheLife = 86400;
+	if (!self._options.release && self._options.clientCacheLife == null) {
+		self._options.clientCacheLife = 86400;
 	}
 
 	self._colorCodes = {
@@ -825,7 +825,7 @@ Master.prototype._getAppDef = function () {
 	appDef.virtualURL = appDef.appURL + '~virtual/';
 	appDef.appStyleBundleURL = appDef.virtualURL + 'styles.css';
 	appDef.appTemplateBundleURL = appDef.virtualURL + 'templates.js';
-	appDef.frameworkCoreBundleURL = appDef.frameworkURL + '~virtual/core.js';
+	appDef.frameworkCoreBundleURL = appDef.virtualURL + 'core.js';
 	appDef.appLibBundleURL = appDef.virtualURL + 'libs.js';
 	appDef.appScriptBundleURL = appDef.virtualURL + 'scripts.js';
 	appDef.freshnessURL = this._paths.freshnessURL;

@@ -122,7 +122,7 @@ var NOMBO_ERROR = 'Unkown Error';
 		if(cookiesEnabledResult) {
 			return true;
 		}
-		var cookieName = '__nccookiecheck';
+		var cookieName = 'n/cookiecheck';
 		setCookie(cookieName, '1');
 		if(getCookie(cookieName) != null) {
 			cookiesEnabledResult = true;

@@ -6,15 +6,15 @@
 	Function.prototype.bind
 */
 
-if(!Array.prototype.indexOf) {
+if (!Array.prototype.indexOf) {
 	Array.prototype.indexOf = function (item, start) {
-		if(!start) {
+		if (!start) {
 			start = 0;
 		}
 		var len = this.length;
 		var i;
-		for(i=start; i<len; i++) {
-			if(this[i] === item) {
+		for (i=start; i<len; i++) {
+			if (this[i] === item) {
 				return i;
 			}
 		}
@@ -27,7 +27,7 @@ if (!Object.create) {
 		function F() {};
 
 		return function (o) {
-			if(arguments.length != 1) {
+			if (arguments.length != 1) {
 				throw new Error('Object.create implementation only accepts one parameter.');
 			}
 			F.prototype = o;
@@ -88,7 +88,7 @@ var $loader = {
 	ready: function (callback) {
 		$loader.on('ready', callback);
 		
-		if(!$loader._waitForReadyInterval) {
+		if (!$loader._waitForReadyInterval) {
 			$loader._waitForReadyInterval = setInterval($loader._waitForReady, 20);
 		}
 	},
@@ -100,27 +100,27 @@ var $loader = {
 	init: function (appDefinition, resources, skipPreload) {
 		$loader._resources = [];
 		$loader._appDefinition = appDefinition;
-		if($loader._appDefinition.appStyleBundleURL) {
+		if ($loader._appDefinition.appStyleBundleURL) {
 			$loader._resources.push($loader._appDefinition.appStyleBundleURL);
 		}
-		if($loader._appDefinition.frameworkCoreBundleURL) {
+		if ($loader._appDefinition.frameworkCoreBundleURL) {
 			$loader._resources.push($loader._appDefinition.frameworkCoreBundleURL);
 		}
-		if($loader._appDefinition.appLibBundleURL) {
+		if ($loader._appDefinition.appLibBundleURL) {
 			$loader._resources.push($loader._appDefinition.appLibBundleURL);
 		}
-		if($loader._appDefinition.appTemplateBundleURL) {
+		if ($loader._appDefinition.appTemplateBundleURL) {
 			$loader._resources.push($loader._appDefinition.appTemplateBundleURL);
 		}
-		if($loader._appDefinition.appScriptBundleURL) {
+		if ($loader._appDefinition.appScriptBundleURL) {
 			$loader._resources.push($loader._appDefinition.appScriptBundleURL);
 		}
 		
-		if(resources) {
+		if (resources) {
 			$loader._resources = $loader._resources.concat(resources);
 		}
 		
-		if(/MSIE (\d+\.\d+);/.test(navigator.userAgent)) {
+		if (/MSIE (\d+\.\d+);/.test(navigator.userAgent)) {
 			$loader._ie = true;
 			$loader._ieVersion = new Number(RegExp.$1);
 		}
@@ -128,7 +128,7 @@ var $loader = {
 		$loader.grab.init(appDefinition);
 		
 		$loader._skipPreload = skipPreload;
-		if(skipPreload) {
+		if (skipPreload) {
 			$loader._waitForReadyInterval = setInterval($loader._waitForReady, 20);
 		} else {
 			$loader.grab.scriptTag($loader._appDefinition.loadScriptURL, 'text/javascript');
@@ -143,7 +143,7 @@ var $loader = {
 			var event = arguments[0];
 			var handler = arguments[1];
 			
-			if(!self._eventMap.hasOwnProperty(event)) {
+			if (!self._eventMap.hasOwnProperty(event)) {
 				self._eventMap[event] = [];
 			}
 			self._eventMap[event].push(handler);
@@ -153,16 +153,16 @@ var $loader = {
 			var event = arguments[0];
 			var handler = arguments[1];
 			
-			if(self._eventMap[event]) {
-				if(handler) {
+			if (self._eventMap[event]) {
+				if (handler) {
 					var i;
 					var newArray = [];
-					for(i in self._eventMap[event]) {
-						if(self._eventMap[event][i] != handler) {
+					for (i in self._eventMap[event]) {
+						if (self._eventMap[event][i] != handler) {
 							newArray.push(self._eventMap[event][i]);
 						}
 					}
-					if(newArray.length > 0) {
+					if (newArray.length > 0) {
 						self._eventMap[event] = newArray;
 					} else {
 						delete self._eventMap[event];
@@ -189,21 +189,21 @@ var $loader = {
 			var event = arguments[0];
 			var data = arguments[1];
 			
-			if(self._eventMap[event]) {
+			if (self._eventMap[event]) {
 				var events = self._eventMap[event].slice();
 				var i;
 				var len = events.length;
-				for(i=0; i<len; i++) {
+				for (i=0; i<len; i++) {
 					events[i](data);
 				}
 			}
 		}
 		
 		self.numListeners = function (event) {
-			if(self._eventMap[event]) {
+			if (self._eventMap[event]) {
 				var count = 0;
 				var i;
-				for(i in self._eventMap[event]) {
+				for (i in self._eventMap[event]) {
 					count++;
 				}
 				return count;
@@ -223,9 +223,9 @@ var $loader = {
 	_waitForReady: function () {
 		var head = document.getElementsByTagName('head')[0];
 		
-		if(head && document.body) {
+		if (head && document.body) {
 			clearInterval($loader._waitForReadyInterval);
-			if($loader._skipPreload) {
+			if ($loader._skipPreload) {
 				$loader.loadAll(function () {
 					$loader._embedAllResources();
 				});
@@ -238,7 +238,7 @@ var $loader = {
 	_startLoading: function () {
 		var settings = {};
 		var i;
-		for(i in $loader._appDefinition) {
+		for (i in $loader._appDefinition) {
 			settings[i] = $loader._appDefinition[i];
 		}
 		settings.resources = $loader._resources;
@@ -246,10 +246,10 @@ var $loader = {
 	},
 	
 	_globalEval: function (src, sourceURL) {
-		if(sourceURL) {
+		if (sourceURL) {
 			src += '\n//@ sourceURL=' + sourceURL + '\n';
 		}
-		if(window.execScript) {
+		if (window.execScript) {
 			window.execScript(src);
 		} else {
 			window.eval.call(window, src);
@@ -262,15 +262,16 @@ var $loader = {
 		var i;
 		var numLoaded = 0;
 		var triggeredLoadAllFail = false;
-		for(i in $loader._resources) {
+		var len = $loader._resources.length;
+		for (i=0; i<len; i++) {
 			$loader.grab._loadResource($loader._resources[i], function (err) {
-				if(err) {
-					if(!triggeredLoadAllFail) {
+				if (err) {
+					if (!triggeredLoadAllFail) {
 						triggeredLoadAllFail = true;
 						$loader._loadAllFail();
 					}
 				} else {
-					if(++numLoaded >= $loader._resources.length) {
+					if (++numLoaded >= $loader._resources.length) {
 						$loader._booting = false;
 						callback && callback();
 						$loader.emit('loadall');
@@ -285,7 +286,7 @@ var $loader = {
 	},
 	
 	finish: function () {
-		if($loader.grab._options.releaseMode) {
+		if ($loader.grab._options.releaseMode) {
 			NOMBO_SESSION_MANAGER.markAsCached();
 		}
 		$loader._embedAllResources();
@@ -293,25 +294,25 @@ var $loader = {
 	
 	ajax: function (settings) {
 		var type;
-		if(settings.type) {
+		if (settings.type) {
 			type = settings.type;
 		} else {
 			type = "GET";
 		}
 	
 		var xmlhttp = $loader._getHTTPReqObject();
-		if(settings.progress && navigator.userAgent.indexOf("Opera") < 0) {
+		if (settings.progress && navigator.userAgent.indexOf("Opera") < 0) {
 			xmlhttp.onprogress = settings.progress;
 		}
 		xmlhttp.open(type, settings.url, true);
 		xmlhttp.onreadystatechange = function () {
-			if(xmlhttp.readyState == 4) {
-				if(xmlhttp.status == 200) {
-					if(settings.success) {
+			if (xmlhttp.readyState == 4) {
+				if (xmlhttp.status == 200) {
+					if (settings.success) {
 						settings.success(xmlhttp.responseText);
 					}
 				} else {
-					if(settings.error) {
+					if (settings.error) {
 						settings.error(xmlhttp.statusText);
 					} else {
 						throw "Failed to load resource: " + url;
@@ -325,7 +326,7 @@ var $loader = {
 	_getHTTPReqObject: function () {
 		var xmlhttp = null;
 		
-		if($loader._ie && $loader._ieVersion < 7) {
+		if ($loader._ie && $loader._ieVersion < 7) {
 			try {
 				xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
 			} catch (exceptionA) {
@@ -345,7 +346,7 @@ var $loader = {
 			}
 		}
 		
-		if(!xmlhttp) {
+		if (!xmlhttp) {
 			throw "Could not instantiate XMLHttpRequest";
 		}
 		
@@ -382,7 +383,7 @@ var $loader = {
 		init: function (options) {
 			$loader.grab._options = options;
 			var resourceSizeMap = options.resourceSizeMap;
-			for(i in resourceSizeMap) {
+			for (i in resourceSizeMap) {
 				$loader.grab._resourceSizeTotal += resourceSizeMap[i];
 			}
 		},
@@ -390,7 +391,7 @@ var $loader = {
 		_triggerReady: function () {
 			var callbacks = $loader.grab._callbacks['ready'];
 			$loader.grab._callbacks['ready'] = [];
-			if(callbacks.length > 0) {
+			if (callbacks.length > 0) {
 				$loader.grab._execReadyCallbacks(callbacks);
 			}
 		},
@@ -399,7 +400,7 @@ var $loader = {
 			var len = callbacks.length;
 			var i;
 		
-			for(i=len-1; i>=0; i--) {
+			for (i=len-1; i>=0; i--) {
 				callbacks[i]();
 			}
 		},
@@ -407,7 +408,7 @@ var $loader = {
 		_triggerFail: function (url) {
 			var len = $loader.grab._callbacks['fail'].length;
 			var i;
-			for(i=0; i<len; i++) {
+			for (i=0; i<len; i++) {
 				 $loader.grab._callbacks['fail'][i](url);
 			}
 		},
@@ -416,7 +417,7 @@ var $loader = {
 			Bind a callback function to Nombo's ready event. The specified function will be called when Nombo is ready to begin processing.
 		*/
 		ready: function (callback) {
-			if(!$loader.grab.isGrabbing()) {
+			if (!$loader.grab.isGrabbing()) {
 				callback();
 			} else {
 				$loader.grab._callbacks['ready'].push(callback);
@@ -432,7 +433,7 @@ var $loader = {
 		},
 		
 		_addFileExtension: function (url, defaultExtension) {
-			if($loader.grab._extRegex.test(url)) {
+			if ($loader.grab._extRegex.test(url)) {
 				return url;
 			}
 			return url + '.' + defaultExtension;
@@ -441,13 +442,13 @@ var $loader = {
 		app: {
 			script: function (name) {
 				var scriptName = name;
-				if(!$loader.grab._extRegex.test(name)) {
+				if (!$loader.grab._extRegex.test(name)) {
 					scriptName += '.js';
 				}
 				
 				var requireName = '/' + scriptName;
 				
-				if(require.modules.hasOwnProperty(requireName)) {
+				if (require.modules.hasOwnProperty(requireName)) {
 					return require(requireName);
 				} else {
 					var resourceName = $loader.grab._options.appScriptsURL + scriptName;
@@ -456,7 +457,7 @@ var $loader = {
 			},
 			
 			lib: function (name, callback) {				
-				if($loader.grab._extRegex.test(name)) {
+				if ($loader.grab._extRegex.test(name)) {
 					var resourceName = $loader.grab._options.appLibsURL + name;
 				} else {
 					var resourceName = $loader.grab._options.appLibsURL + name + '.js';
@@ -465,7 +466,7 @@ var $loader = {
 			},
 			
 			style: function (name, callback) {				
-				if($loader.grab._extRegex.test(name)) {
+				if ($loader.grab._extRegex.test(name)) {
 					var resourceName = $loader.grab._options.appStylesURL + name;
 				} else {
 					var resourceName = $loader.grab._options.appStylesURL + name + '.css';
@@ -476,7 +477,7 @@ var $loader = {
 			template: function (name, cacheLevel) {
 				var tmplDirURL = $loader._appDefinition.appTemplatesURL;
 				
-				if($loader.grab._extRegex.test(name)) {
+				if ($loader.grab._extRegex.test(name)) {
 					var resourceName = tmplDirURL + name;
 				} else {
 					var resourceName = tmplDirURL + name + '.html';
@@ -506,7 +507,7 @@ var $loader = {
 		
 		framework: {
 			script: function (name) {
-				if($loader.grab._extRegex.test(name)) {
+				if ($loader.grab._extRegex.test(name)) {
 					var resourceName = $loader.grab._options.frameworkScriptsURL + name;
 				} else {
 					var resourceName = $loader.grab._options.frameworkScriptsURL + name + '.js';
@@ -515,7 +516,7 @@ var $loader = {
 			},
 			
 			lib: function (name, callback) {				
-				if($loader.grab._extRegex.test(name)) {
+				if ($loader.grab._extRegex.test(name)) {
 					var resourceName = $loader.grab._options.frameworkLibsURL + name;
 				} else {
 					var resourceName = $loader.grab._options.frameworkLibsURL + name + '.js';
@@ -524,7 +525,7 @@ var $loader = {
 			},
 			
 			style: function (name, callback) {				
-				if($loader.grab._extRegex.test(name)) {
+				if ($loader.grab._extRegex.test(name)) {
 					var resourceName = $loader.grab._options.frameworkStylesURL + name;
 				} else {
 					var resourceName = $loader.grab._options.frameworkStylesURL + name + '.css';
@@ -533,7 +534,7 @@ var $loader = {
 			},
 			
 			plugin: function (name, callback) {
-				if($loader.grab._extRegex.test(name)) {
+				if ($loader.grab._extRegex.test(name)) {
 					var resourceName = $loader.grab._options.pluginsURL + name;
 				} else {
 					var resourceName = $loader.grab._options.pluginsURL + name + '.js';
@@ -552,7 +553,7 @@ var $loader = {
 		},
 		
 		script: function (resourceName) {
-			if($loader.grab._loadableResourceMap.hasOwnProperty(resourceName)) {
+			if ($loader.grab._loadableResourceMap.hasOwnProperty(resourceName)) {
 				return $loader.grab._loadableResourceMap[resourceName];
 			}
 			var scr = new $loader.Script(resourceName);
@@ -562,7 +563,7 @@ var $loader = {
 		},
 		
 		lib: function (resourceName, callback) {			
-			if($loader.grab._activeScripts[resourceName]) {
+			if ($loader.grab._activeScripts[resourceName]) {
 				callback(null, resourceName);
 			} else {
 				$loader.grab.loadAndEmbedScript(resourceName, callback);
@@ -571,7 +572,7 @@ var $loader = {
 		},
 		
 		style: function (resourceName, callback) {			
-			if($loader.grab._activeCSS[resourceName]) {
+			if ($loader.grab._activeCSS[resourceName]) {
 				callback(null, resourceName);
 			} else {
 				$loader.grab.loadAndEmbedCSS(resourceName, callback);
@@ -580,7 +581,7 @@ var $loader = {
 		},
 		
 		template: function (resourceName, cacheLevel) {
-			if($loader.grab._loadableResourceMap.hasOwnProperty(resourceName) && !cacheLevel) {
+			if ($loader.grab._loadableResourceMap.hasOwnProperty(resourceName) && !cacheLevel) {
 				return $loader.grab._loadableResourceMap[resourceName];
 			}
 			var templ = new $loader.Template(resourceName);
@@ -590,9 +591,9 @@ var $loader = {
 		},
 		
 		url: function (url, cacheLevel) {
-			if(!cacheLevel || cacheLevel == $loader.grab.CACHE_LEVEL_HARD) {
+			if (!cacheLevel || cacheLevel == $loader.grab.CACHE_LEVEL_HARD) {
 				return smartCacheManager.setURLCacheVersion(url);
-			} else if(cacheLevel == $loader.grab.CACHE_LEVEL_SOFT) {
+			} else if (cacheLevel == $loader.grab.CACHE_LEVEL_SOFT) {
 				return url;
 			} else {
 				return smartCacheManager.setCacheKiller(url);
@@ -606,18 +607,18 @@ var $loader = {
 			var url = arguments[0];
 			var callback = null;
 			var cacheLevel = null;
-			if(arguments[1] instanceof Function) {
+			if (arguments[1] instanceof Function) {
 				callback = arguments[1];
 			} else {
 				cacheLevel = arguments[1];
-				if(arguments[2]) {
+				if (arguments[2]) {
 					callback = arguments[2];
 				}
 			}
 			
 			var img = new Image();
 			
-			if(callback) {
+			if (callback) {
 				var timedOut = false;
 				var timeout = setTimeout(function () {
 					timedOut = true;
@@ -625,7 +626,7 @@ var $loader = {
 				}, $loader._timeout);
 				
 				img.onload = function () {
-					if(!timedOut) {
+					if (!timedOut) {
 						clearTimeout(timeout);
 						callback(null, url);
 					}
@@ -638,45 +639,45 @@ var $loader = {
 		
 		_processEmbedQueue: function () {
 			var curTag;
-			if($loader.grab._embedQueue.length > 0) {
+			if ($loader.grab._embedQueue.length > 0) {
 				curTag = $loader.grab._embedQueue[0];
-				if(curTag.ready) {
+				if (curTag.ready) {
 					$loader.grab._embedQueue.shift();
-					if(curTag.type == 'link') {
-						if(curTag.url == $loader._appDefinition.appStyleBundleURL && (!$loader._ie || $loader._ieVersion > 8)) {
+					if (curTag.type == 'link') {
+						if (curTag.url == $loader._appDefinition.appStyleBundleURL && (!$loader._ie || $loader._ieVersion > 8)) {
 							$loader.grab.styleTag($loader.grab._styleCodes[curTag.url], 'text/css');
 						} else {
 							$loader.grab.linkTag(curTag.url, 'text/css', 'stylesheet', curTag.query);
 						}
 						$loader.grab._resourcesGrabbed.push(curTag.url);
-						if(curTag.callback) {
+						if (curTag.callback) {
 							curTag.callback(curTag.error, curTag.url);
 						}
-						if(!$loader.grab.isGrabbing()) {
+						if (!$loader.grab.isGrabbing()) {
 							$loader.grab._triggerReady();
 						}
 						$loader.grab._processEmbedQueue();
-					} else if(curTag.type == 'script') {
-						if(curTag.error) {
+					} else if (curTag.type == 'script') {
+						if (curTag.error) {
 							$loader.grab._resourcesGrabbed.push(curTag.url);
-							if(curTag.callback) {
+							if (curTag.callback) {
 								curTag.callback(curTag.error, curTag.url);
 							}
-							if(!$loader.grab.isGrabbing()) {
+							if (!$loader.grab.isGrabbing()) {
 								$loader.grab._triggerReady();
 							}
 							$loader.grab._processEmbedQueue();
 						} else {
-							if(curTag.url == $loader._appDefinition.appScriptBundleURL) {
+							if (curTag.url == $loader._appDefinition.appScriptBundleURL) {
 								$loader._globalEval($loader.grab._scriptCodes[curTag.url]);
 							} else {
 								$loader._globalEval($loader.grab._scriptCodes[curTag.url], curTag.url);
 							}
 							$loader.grab._resourcesGrabbed.push(curTag.url);
-							if(curTag.callback) {
+							if (curTag.callback) {
 								curTag.callback(curTag.error, curTag.url);
 							}
-							if(!$loader.grab.isGrabbing()) {
+							if (!$loader.grab.isGrabbing()) {
 								$loader.grab._triggerReady();
 							}
 							$loader.grab._processEmbedQueue();
@@ -698,12 +699,12 @@ var $loader = {
 		
 		_loadResource: function (url, callback) {
 			var ext = url.match(/[.][^.]*$/);
-			var tagData;			
+			var tagData;
 			
-			if(ext[0] == '.js') {
+			if (ext[0] == '.js') {
 				tagData = {type: 'script', url: url, callback: function (){}, ready: false};
 				$loader.grab._loadTag(tagData, callback);
-			} else if(ext[0] == '.css' || ext[0] == '.less') {
+			} else if (ext[0] == '.css' || ext[0] == '.less') {
 				tagData = {type: 'link', url: url, callback: function (){}, ready: false};
 				$loader.grab._loadTag(tagData, callback);
 			} else {
@@ -745,18 +746,18 @@ var $loader = {
 			
 			var timedOut = false;
 			var timeout = null;
-			if(callback) {
+			if (callback) {
 				timeout = setTimeout(function () {
 					timedOut = true;
 					callback('Failed to embed script tag at URL: ' + url);
 				}, $loader._timeout);
 			}
 			
-			if(!$loader._ie || parseInt($loader._ieVersion) > 8) {
-				if(callback) {
+			if (!$loader._ie || parseInt($loader._ieVersion) > 8) {
+				if (callback) {
 					script.onload = function () {
-						if(!timedOut) {
-							if(timeout) {
+						if (!timedOut) {
+							if (timeout) {
 								clearTimeout(timeout);
 							}
 							callback(null, url);
@@ -764,11 +765,11 @@ var $loader = {
 					};
 				}
 			} else {
-				if(callback) {
+				if (callback) {
 					script.onreadystatechange = function () {
-						if(this.readyState == 'complete' || this.readyState == 'loaded') {
-							if(!timedOut) {
-								if(timeout) {
+						if (this.readyState == 'complete' || this.readyState == 'loaded') {
+							if (!timedOut) {
+								if (timeout) {
 									clearTimeout(timeout);
 								}
 								script.onreadystatechange = null;
@@ -779,12 +780,12 @@ var $loader = {
 				}
 			}
 			
-			if(id) {
+			if (id) {
 				script.id = id;
 			}
 			script.type = type;
 			
-			if(query) {
+			if (query) {
 				script.src = url + '?' + query;
 			} else {
 				script.src = smartCacheManager.setURLCacheVersion(url);
@@ -804,46 +805,46 @@ var $loader = {
 			var firstScript = null;
 			var firstIndex = 0;
 			
-			if(curScripts) {
+			if (curScripts) {
 				var len = curScripts.length;
 				while(firstIndex < len && curScripts[firstIndex].parentNode != head) {
 					firstIndex++;
 				}
-				if(firstIndex < len) {
+				if (firstIndex < len) {
 					firstScript = curScripts[firstIndex];
 				}
 			}
 			
 			var link = document.createElement('link');
 			
-			if(id) {
+			if (id) {
 				link.id = id;
 			}
 			link.rel = rel;
 			link.type = type;
-			if(query) {
+			if (query) {
 				link.href = url + '?' + query;
 			} else {
 				link.href = smartCacheManager.setURLCacheVersion(url);
 			}
 			
-			if(firstScript) {
+			if (firstScript) {
 				head.insertBefore(link, firstScript);
 			} else {
 				var curLinks = document.getElementsByTagName('link');
 				var lastLink = null;
 				var lastIndex = curLinks.length - 1;
-				if(curLinks) {
+				if (curLinks) {
 					while(lastIndex >= 0 && curLinks[lastIndex].parentNode != head) {
 						lastIndex--;
 					}
-					if(lastIndex >= 0) {
+					if (lastIndex >= 0) {
 						lastLink = curLinks[lastIndex];
 					}
 				}
 				
-				if(lastLink) {
-					if(lastLink.nextSibling) {
+				if (lastLink) {
+					if (lastLink.nextSibling) {
 						head.insertBefore(link, lastLink.nextSibling);
 					} else {
 						head.appendChild(link);
@@ -861,41 +862,41 @@ var $loader = {
 			var firstScript = null;
 			var firstIndex = 0;
 			
-			if(curScripts) {
+			if (curScripts) {
 				var len = curScripts.length;
 				while(firstIndex < len && curScripts[firstIndex].parentNode != head) {
 					firstIndex++;
 				}
-				if(firstIndex < len) {
+				if (firstIndex < len) {
 					firstScript = curScripts[firstIndex];
 				}
 			}
 			
 			var style = document.createElement('style');
 			
-			if(id) {
+			if (id) {
 				style.id = id;
 			}
 			style.type = type;
 			style.innerHTML = code;
 			
-			if(firstScript) {
+			if (firstScript) {
 				head.insertBefore(style, firstScript);
 			} else {
 				var curStyles = document.getElementsByTagName('style');
 				var lastStyle = null;
 				var lastIndex = curStyles.length - 1;
-				if(curStyles) {
+				if (curStyles) {
 					while(lastIndex >= 0 && curStyles[lastIndex].parentNode != head) {
 						lastIndex--;
 					}
-					if(lastIndex >= 0) {
+					if (lastIndex >= 0) {
 						lastStyle = curStyles[lastIndex];
 					}
 				}
 				
-				if(lastStyle) {
-					if(lastStyle.nextSibling) {
+				if (lastStyle) {
+					if (lastStyle.nextSibling) {
 						head.insertBefore(style, lastStyle.nextSibling);
 					} else {
 						head.appendChild(style);
@@ -912,14 +913,14 @@ var $loader = {
 		
 		_progressTracker: {},
 		_updateProgressStatus: function (url, loaded) {
-			if($loader.grab._options.resourceSizeMap.hasOwnProperty(url)) {
+			if ($loader.grab._options.resourceSizeMap.hasOwnProperty(url)) {
 				$loader.grab._progressTracker[url] = loaded;
 				
 				var i;
 				var progressMap = $loader.grab._progressTracker;
 				var status = {loaded: 0, total: $loader.grab._resourceSizeTotal};
 				
-				for(i in progressMap) {
+				for (i in progressMap) {
 					status.loaded += progressMap[i];
 				}
 				
@@ -929,10 +930,10 @@ var $loader = {
 		
 		_loadDeepResourceToCache: function (url, callback, rootURL) {
 			url = url.replace(/[?].*/, '');
-			if(!$loader.grab._resourcesLoadedMap[url]) {
+			if (!$loader.grab._resourcesLoadedMap[url]) {
 				var resourceData = null;
 				
-				if(!rootURL || url == rootURL) {
+				if (!rootURL || url == rootURL) {
 					rootURL = url;
 					$loader.grab._resources.push(url);
 					$loader.grab._deepResources[rootURL] = [];
@@ -941,22 +942,22 @@ var $loader = {
 					$loader.grab._deepResourcesLoaded[rootURL] = [];
 				}
 				
-				if(/[.](png|jpg|gif)$/.test(url)) {
+				if (/[.](png|jpg|gif)$/.test(url)) {
 					// images
 					var img = new Image();
 					img.onload = function () {
-						if(url == rootURL) {
+						if (url == rootURL) {
 							resourceData = img;
 						}
 						$loader.grab._resourcesLoadedMap[url] = true;
 						$loader.grab._deepResourcesLoaded[rootURL].push(url);
-						if($loader._booting) {
+						if ($loader._booting) {
 							$loader.grab._updateProgressStatus(url, $loader.grab._options.resourceSizeMap[url]);
 						}
 						
-						if($loader.grab._deepResourcesLoaded[rootURL].length >= $loader.grab._deepResources[rootURL].length) {
+						if ($loader.grab._deepResourcesLoaded[rootURL].length >= $loader.grab._deepResources[rootURL].length) {
 							$loader.grab._resourcesLoaded.push(rootURL);
-							if(callback) {
+							if (callback) {
 								callback(null, {url: rootURL, data: resourceData});
 							}
 						}
@@ -964,7 +965,7 @@ var $loader = {
 					
 					img.onerror = function () {
 						$loader.grab._triggerFail(url);
-						if(callback) {
+						if (callback) {
 							callback('Failed to load resource at url: ' + url);
 						}
 					};
@@ -979,23 +980,23 @@ var $loader = {
 						type: "GET",
 						success: function (data) {
 							$loader.grab._updateProgressStatus(url, $loader.grab._options.resourceSizeMap[url]);
-							if(url == rootURL) {
+							if (url == rootURL) {
 								resourceData = data;
 							}
 							
 							$loader.grab._resourcesLoadedMap[url] = true;
 							$loader.grab._deepResourcesLoaded[rootURL].push(url);
 							var urls, nonLoadedURLs;
-							if(/[.](css|less)$/.test(url)) {
+							if (/[.](css|less)$/.test(url)) {
 								nonLoadedURLs = [];
 								urls = $loader.grab._parseDeepCSSURLs(data, url);
 								
 								var i, curURL;
 								var len = urls.length;
-								for(i=0; i<len; i++) {
+								for (i=0; i<len; i++) {
 									curURL = urls[i];
 									
-									if(!$loader.grab._resourcesLoadedMap[curURL]) {
+									if (!$loader.grab._resourcesLoadedMap[curURL]) {
 										$loader.grab._deepResources[rootURL].push(curURL);
 										nonLoadedURLs.push(curURL);
 									}
@@ -1003,18 +1004,18 @@ var $loader = {
 								
 								len = nonLoadedURLs.length;
 								
-								for(i=0; i<len; i++) {
+								for (i=0; i<len; i++) {
 									$loader.grab._loadDeepResourceToCache(nonLoadedURLs[i], callback, rootURL);
 								}
 								
 								$loader.grab._styleCodes[url] = data;
-							} else if(/[.]js$/.test(url)) {
+							} else if (/[.]js$/.test(url)) {
 								$loader.grab._scriptCodes[url] = data;
 							}
 							
-							if($loader.grab._deepResourcesLoaded[rootURL].length >= $loader.grab._deepResources[rootURL].length) {
+							if ($loader.grab._deepResourcesLoaded[rootURL].length >= $loader.grab._deepResources[rootURL].length) {
 								$loader.grab._resourcesLoaded.push(rootURL);
-								if(callback) {
+								if (callback) {
 									callback(null, {url: rootURL, data: resourceData});
 								}
 							}
@@ -1022,13 +1023,13 @@ var $loader = {
 						
 						error: function () {
 							$loader.grab._triggerFail(url);
-							if(callback) {
+							if (callback) {
 								callback('Failed to load resource at url: ' + url);
 							}
 						}
 					};
 					
-					if($loader._booting) {
+					if ($loader._booting) {
 						ajaxSettings.progress = function (e) {
 							$loader.grab._updateProgressStatus(url, e.loaded);
 						}
@@ -1048,7 +1049,7 @@ var $loader = {
 			var chuncks = $loader.grab._parseFunctionCalls(fileContent, ['url']);
 			
 			var imports = fileContent.match(/@import +["'][^"']+["']/g);
-			if(imports) {
+			if (imports) {
 				chuncks = chuncks.concat(imports);
 			}
 			
@@ -1057,10 +1058,10 @@ var $loader = {
 			
 			var i, curURL;
 			var len = chuncks.length;
-			for(i=0; i<len; i++) {
+			for (i=0; i<len; i++) {
 				curURL = chuncks[i].replace(isolateURL, '');
-				if(curURL != "" && !urlMap.hasOwnProperty(curURL)) {
-					if(!absolute.test(curURL)) {
+				if (curURL != "" && !urlMap.hasOwnProperty(curURL)) {
+					if (!absolute.test(curURL)) {
 						urls.push(fileDirURL + curURL);
 					} else {
 						urls.push(curURL);
@@ -1079,25 +1080,25 @@ var $loader = {
 			var i, ch, len, curFunc, bt;
 			while(true) {
 				startPos = string.search(functionsRegex);
-				if(startPos < 0) {
+				if (startPos < 0) {
 					break;
 				}
 				
-				if(string.charAt(startPos) == '(') {
+				if (string.charAt(startPos) == '(') {
 					startPos++;
 				}
 				
 				curFunc = '';
 				len = string.length;
 				bt = 0;
-				for(i=startPos; i<len; i++) {
+				for (i=startPos; i<len; i++) {
 					ch = string.charAt(i);
 					curFunc += ch;
 					
-					if(ch == '(') {
+					if (ch == '(') {
 						bt++;
-					} else if(ch == ')') {
-						if(--bt == 0) {
+					} else if (ch == ')') {
+						if (--bt == 0) {
 							functionCalls.push(curFunc.replace(/^[^A-Za-z0-9]/, ''));
 							break;
 						}
@@ -1121,7 +1122,7 @@ $loader.ResourceLoader = function (resourceName, resourceWrapper) {
 	self.loaded = false;
 	
 	self.load = function (listener)	{
-		if(self.loaded) {
+		if (self.loaded) {
 			listener(self);
 		} else {
 			self.on('load', listener);
@@ -1141,23 +1142,23 @@ $loader.Script = function (resourceName) {
 	var self = this;
 	self.loader = new $loader.ResourceLoader(resourceName, self);
 	
-	if(!$loader._modules.hasOwnProperty(resourceName)) {
+	if (!$loader._modules.hasOwnProperty(resourceName)) {
 		$loader._modules[resourceName] = self;
 	}
 	
 	self.loader.grab = function () {
 		var moduleLoaded = function (err) {
-			if(err) {
+			if (err) {
 				self.loader.emit('error', self);
 			} else {				
-				if(!self.loader.loaded) {
+				if (!self.loader.loaded) {
 					self.loader.emit('load');
 					self.loader.loaded = true;
 				}
 			}
 		}
 		
-		if($loader.grab._activeScripts[self.loader.name]) {
+		if ($loader.grab._activeScripts[self.loader.name]) {
 			moduleLoaded();
 		} else {
 			$loader.grab.loadAndEmbedScript(self.loader.name, moduleLoaded);
@@ -1184,7 +1185,7 @@ $loader.Template = function (resourceName) {
 	
 	self.loader.grab = function (cacheLevel) {
 		$loader.grab._loadDeepResourceToCache(self.loader.name, function (err, result) {
-			if(err) {
+			if (err) {
 				self.loader.emit('error', self);
 			} else {
 				$loader.grab._resourcesGrabbed.push(self.loader.name);
@@ -1194,7 +1195,7 @@ $loader.Template = function (resourceName) {
 				
 				self.loader.emit('load', self);
 				
-				if(!$loader.grab.isGrabbing()) {
+				if (!$loader.grab.isGrabbing()) {
 					$loader.grab._triggerReady();
 				}
 			}
@@ -1214,14 +1215,14 @@ $loader.Template = function (resourceName) {
 	}
 	
 	self.render = function (data) {
-		if(!self.loader.loaded) {
+		if (!self.loader.loaded) {
 			throw 'The template has not been loaded';
 		}
 		return self.loader.renderer(data);
 	}
 	
 	self.toString = function () {
-		if(!self.loader.loaded) {
+		if (!self.loader.loaded) {
 			throw 'The template has not been loaded';
 		}
 		return self.loader.text;

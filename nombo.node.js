@@ -159,8 +159,8 @@ Master.prototype._init = function (options) {
 	self._appName = path.basename(self._paths.appDirPath);
 	self._options.appName = self._appName;
 	
-	self._cacheCookieName = '__/' + self._appName + '/cached';
-	self._sessionCookieName = '__/' + this._appName + '/ssid';
+	self._cacheCookieName = 'n/' + self._appName + '/cached';
+	self._sessionCookieName = 'n/' + this._appName + '/ssid';
 	
 	pathManager.init(self._paths.frameworkURL, self._paths.frameworkDirPath, self._paths.appDirPath, self._paths.appURL);
 

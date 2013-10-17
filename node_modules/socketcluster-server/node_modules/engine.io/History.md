@@ -1,4 +1,62 @@
 
+0.7.9 / 2013-08-30
+==================
+
+ * package: bump `engine.io-client`
+
+0.7.8 / 2013-08-30
+==================
+
+ * package: bump `engine.io-client`
+ * package: bump ws
+
+0.7.7 / 2013-08-30
+==================
+
+ * package: bump `engine.io-client`
+
+0.7.6 / 2013-08-30
+==================
+
+ * package: bump engine.io-client
+
+0.7.5 / 2013-08-30
+==================
+
+ * package: bump engine.io-client
+
+0.7.4 / 2013-08-25
+==================
+
+ * package: bump `engine.io-client`
+
+0.7.3 / 2013-08-23
+==================
+
+ * package: bump engine.io-client (noop)
+ * package: fix regresison in upgrade cause by ws update
+
+0.7.2 / 2013-08-23
+==================
+
+ * package: bump `engine.io-client` for `WebSocket` browser fix
+
+0.7.1 / 2013-08-23
+==================
+
+ * package: bump engine.io-client for ws fix
+
+0.7.0 / 2013-08-23
+==================
+
+ * package: bump engine.io-client
+ * updated example
+ * inline merge
+ * added support node version 0.10 to .travis.yml
+ * fixed respond to flash policy request test. Closes #184
+ * fixed upgrade with timeout test. Closes #185
+ * engine.io: don't use __proto__, closes #170
+
 0.6.3 / 2013-06-21
 ==================
 

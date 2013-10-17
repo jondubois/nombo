@@ -233,11 +233,9 @@ var NOMBO_ERROR = 'Unkown Error';
 				NOMBO_SOCKET.close();
 			}
 			
-			var matches = location.href.match(/^([^\/]*):\/\/([^\/:]+)/);
-			
 			var options = {
-				protocol: matches[1],
-				hostname: matches[2],
+				protocol: location.protocol.replace(/:$/, ''),
+				hostname: location.hostname,
 				port: NOMBO_PORT
 			};
 			

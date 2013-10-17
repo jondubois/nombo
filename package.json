@@ -1,7 +1,7 @@
 {
 	"name": "nombo",
 	"description": "Cloud application framework",
-	"version": "0.9.123",
+	"version": "0.9.124",
 	"author": {
 		"name": "JF Gros-Dubois",
 		"email": "flashthink@gmail.com"
@@ -61,8 +61,8 @@
 		"policyfile": "0.0.4",
 		"redis": "0.7.3",
 		"retry": "0.6.0",
-		"socketcluster-server": ">= 0.9.5",
-		"socketcluster-client": ">= 0.9.0",
+		"socketcluster-server": ">= 0.9.6",
+		"socketcluster-client": ">= 0.9.3",
 		"uglify-js": "2.3.6",
 		"watchr": "2.3.9",
 		"wordwrap": "0.0.2",

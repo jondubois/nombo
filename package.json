@@ -29,7 +29,8 @@
   },
   "devDependencies": {
     "browserify": "~2.29.1",
-    "jshint": "~2.1.11"
+    "jshint": "~2.1.11",
+    "convert-source-map": "~0.2.6"
   },
   "peerDependencies": {
     "browserify": "2.x"

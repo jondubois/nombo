@@ -14,18 +14,15 @@ var handleError = function (err) {
 	process.send({type: 'error', data: error});
 };
 
+var handleNotice = function (notice) {
+	process.send({type: 'notice', data: notice});
+};
+
 process.on('message', function (m) {
 	if (m.type == 'init') {
 		worker = new Worker(m.data);
-		if (m.data.killWorkerOnError) {
-			worker.on('error', function (err) {
-				handleError(err);
-				process.exit();
-			});
-		} else {
-			worker.on('error', handleError);
-		}
-		
+		worker.on('error', handleError);
+		worker.on('notice', handleNotice);
 		var workerController = require(m.data.paths.appWorkerControllerPath);
 		workerController.run(worker);
 		worker.start();

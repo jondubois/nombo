@@ -130,17 +130,20 @@ ClusterServer.prototype.handshake = function (transport, req) {
 	var ssid = this._parseSessionId(headers.cookie);
 	socket.ssid = ssid || socket.id;
 	
-	this._ioClusterClient.bind(socket, function (err, logLevel) {
-		socket.on('error', self._handleSocketError);
+	this._ioClusterClient.bind(socket, function (err, notice) {
+		socket.on('error', function (err) {
+			socket.close();
+			self._handleSocketError(err);
+		});
 		if (err) {
-			if (logLevel == null) {
-				logLevel = 0;
-			}
 			var errorMessage = 'Failed to bind socket to io cluster - ' + err;
-			if (self.logLevel >= logLevel) {
+			socket.emit('fail', errorMessage);
+			socket.close();
+			if (notice) {
+				self.emit('notice', errorMessage);
+			} else {
 				self.emit('error', new Error(errorMessage));
 			}
-			socket.emit('fail', errorMessage);
 		} else {
 			socket.session = self._ioClusterClient.session(socket.ssid, socket.id);
 			socket.global = self._ioClusterClient.global(socket.id);
@@ -154,7 +157,6 @@ ClusterServer.prototype.handshake = function (transport, req) {
 			if (err) {
 				self.emit('error', new Error('Failed to unbind socket from io cluster - ' + err));
 			} else {
-				socket.removeListener('error', self._handleSocketError);
 				delete self.clients[id];
 				self.clientsCount--;
 				self.emit('close', 'Socket was disconnected');

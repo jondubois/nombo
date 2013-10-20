@@ -564,7 +564,7 @@ IOClusterClient.prototype._handshake = function (socket, callback) {
 					if (sockets.length < self._addressSocketLimit) {
 						acceptHandshake();
 					} else {
-						callback && callback("Reached connection limit for the address " + remoteAddr, 2);
+						callback && callback("Reached connection limit for the address " + remoteAddr, true);
 					}
 				}
 			});

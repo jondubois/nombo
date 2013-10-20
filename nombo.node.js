@@ -17,6 +17,7 @@ var Master = function (options) {
 	var self = this;
 
 	self.EVENT_FAIL = 'fail';
+	self.EVENT_NOTICE = 'notice';
 	self.EVENT_LEADER_START = 'leaderstart';
 	
 	self._errorDomain = domain.create();
@@ -26,7 +27,7 @@ var Master = function (options) {
 	self._errorDomain.add(self);
 
 	self.start = self._errorDomain.bind(self._start);
-	this.init = self._errorDomain.run(function() {
+	this.init = self._errorDomain.run(function () {
 		self._init(options);
 	});
 };
@@ -70,7 +71,6 @@ Master.prototype._init = function (options) {
 		heartbeatTimeout: 60,
 		workerStatusInterval: 10,
 		allowUploads: false,
-		killWorkerOnError: false,
 		hostAddress: null,
 		balancerCount: null,
 		clusterEngine: 'iocluster'
@@ -352,6 +352,11 @@ Master.prototype.errorHandler = function (err) {
 	}
 };
 
+Master.prototype.noticeHandler = function (notice) {
+	this.emit(this.EVENT_NOTICE, notice);
+	console.log(notice.message);
+};
+
 Master.prototype._start = function () {
 	var self = this;
 	
@@ -596,7 +601,6 @@ Master.prototype._start = function () {
 	var leaderId = -1;
 	var firstTime = true;
 
-	var balancerHandler;
 	var workersActive = false;
 	
 	var initLoadBalancer = function () {
@@ -619,13 +623,22 @@ Master.prototype._start = function () {
 			self._errorDomain.remove(self._balancer);
 		}
 		
+		var balancerErrorHandler = function (err) {
+			if (err.stack) {
+				err.origin = {
+					type: 'balancer'
+				};
+			}
+			self.errorHandler(err);
+		};
+		
 		self._balancer = fork(__dirname + '/nombo-balancer.node.js');
-		self._errorDomain.add(self._balancer);
+		self._balancer.on('error', balancerErrorHandler);
 
 		self._balancer.on('exit', launchLoadBalancer);
-		self._balancer.on('message', balancerHandler = function (m) {
+		self._balancer.on('message', function (m) {
 			if (m.type == 'error') {
-				self.errorHandler(m.data);
+				balancerErrorHandler(m.data);
 			}
 		});
 		
@@ -684,8 +697,30 @@ Master.prototype._start = function () {
 		};
 
 		var launchWorker = function (workerData, lead) {
+			var workerErrorHandler = function (err) {
+				if (err.stack) {
+					err.origin = {
+						type: 'worker',
+						pid: worker.pid
+					};
+				}
+				self.errorHandler(err);
+			};
+			
+			var workerNoticeHandler = function (noticeMessage) {
+				var notice = {
+					message: noticeMessage,
+					origin: {
+						type: 'worker',
+						pid: worker.pid
+					}
+				};
+				self.noticeHandler(notice);
+			};
+		
 			var worker = fork(__dirname + '/nombo-worker-bootstrap.node');
-			self._errorDomain.add(worker);
+			worker.on('error', workerErrorHandler);
+			
 			if (!workerData.id) {
 				workerData.id = workerIdCounter++;
 			}
@@ -694,7 +729,6 @@ Master.prototype._start = function () {
 			worker.data = workerData;
 
 			var workerOpts = self._cloneObject(self._options);
-			workerOpts.killWorkerOnError = self._options.killWorkerOnError;
 			workerOpts.appDef = self._getAppDef();
 			workerOpts.paths = self._paths;
 			workerOpts.workerId = worker.id;
@@ -720,7 +754,9 @@ Master.prototype._start = function () {
 					}
 					workerReadyHandler(m, worker);
 				} else if (m.type == 'error') {
-					self.errorHandler(m.data);
+					workerErrorHandler(m.data);
+				} else if (m.type == 'notice') {
+					workerNoticeHandler(m.data);
 				}
 			});
 
@@ -777,7 +813,7 @@ Master.prototype._start = function () {
 					for (i = 1; i < len; i++) {
 						launchWorker(self._options.workers[i]);
 					}
-					!self._options.release && autoRebundle();
+					autoRebundle();
 				}
 			});
 		};
@@ -796,7 +832,14 @@ Master.prototype._start = function () {
 			secure: self._options.protocol == 'https'
 		});
 		
-		self._ioCluster.on('error', self.errorHandler);
+		self._ioCluster.on('error', function (err) {
+			if (err.stack) {
+				err.origin = {
+					type: 'store'
+				}
+			}
+			self.errorHandler(err);
+		});
 	};
 	
 	launchIOCluster();

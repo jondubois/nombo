@@ -5,5 +5,10 @@
 */
 
 module.exports.run = function(nombo) {
-
+	nombo.on('fail', function (err) {
+		console.log('FAIL:', err.origin, err.message);
+	});
+	nombo.on('notice', function (err) {
+		console.log('NOTICE:', err.origin, err.message);
+	});
 }

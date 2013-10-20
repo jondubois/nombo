@@ -31,7 +31,7 @@ var Worker = function (options) {
 	self._errorDomain.add(self);
 	
 	self.start = self._errorDomain.bind(self._start);
-	self.init = self._errorDomain.run(function() {
+	self.init = self._errorDomain.run(function () {
 		self._init(options);
 	});
 };
@@ -41,11 +41,11 @@ Worker.prototype = Object.create(EventEmitter.prototype);
 Worker.prototype._init = function (options) {
 	var self = this;
 	
-	// low level middleware
+	// Low level middleware
 	self.MIDDLEWARE_HTTP = 'http';
 	self.MIDDLEWARE_IO = 'io';
 	
-	// core middleware
+	// Core middleware
 	self.MIDDLEWARE_GET = 'get';
 	self.MIDDLEWARE_POST = 'post';
 	
@@ -160,9 +160,11 @@ Worker.prototype._init = function (options) {
 	
 	self._middleware[self.MIDDLEWARE_IO] = stepper.create({context: self});
 	
+	self._errorDomain.add(self._middleware[self.MIDDLEWARE_IO]);
+	
 	self._responseNotSentValidator = function (req, res) {
 		return req && res && !res.finished;
-	}
+	};
 	
 	self._tailGetStepper = stepper.create({context: self});
 	self._tailGetStepper.addFunction(self._prerouter.run);
@@ -193,7 +195,7 @@ Worker.prototype._init = function (options) {
 		}
 		
 		self._tailGetStepper.run(req, res);
-	}
+	};
 	
 	self._httpMethodJunction = function (req, res) {
 		if (req.method == 'POST') {
@@ -201,7 +203,7 @@ Worker.prototype._init = function (options) {
 		} else {
 			self._middleware[self.MIDDLEWARE_GET].run(req, res)
 		}
-	}
+	};
 	
 	self._tailGetStepper.setValidator(self._responseNotSentValidator);
 	
@@ -217,7 +219,7 @@ Worker.prototype._init = function (options) {
 	self._routStepper.setTail(self._httpMethodJunction);
 	
 	self._middleware[self.MIDDLEWARE_POST] = stepper.create({context: self});
-	self._middleware[self.MIDDLEWARE_POST].setTail(function() {
+	self._middleware[self.MIDDLEWARE_POST].setTail(function () {
 		if (self._options.allowUploads) {
 			self._fileUploader.upload.apply(self._fileUploader, arguments);
 		}
@@ -286,16 +288,17 @@ Worker.prototype._handleConnection = function (socket) {
 	var remoteAddress = socket.address;
 	var nSocket = socket.ns('__nc');
 	
-	// handle local server interface call
-	nSocket.on('rpc', function(request, response) {
+	// Handle local server interface call
+	nSocket.on('rpc', function (request, response) {
 		self._ioRequestCount++;
 		var req = new IORequest(request, nSocket, socket.session, socket.global, remoteAddress, self._options.secure);
 		var res = new IOResponse(request, response);
+
 		self._middleware[self.MIDDLEWARE_IO].setTail(self._middleware[self.MIDDLEWARE_RPC]);
 		self._middleware[self.MIDDLEWARE_IO].run(req, res);
 	});
 	
-	socket.on('close', function() {
+	socket.on('close', function () {
 		self.emit(self.EVENT_SOCKET_DISCONNECT, socket);
 		self._errorDomain.remove(socket);
 	});
@@ -396,6 +399,7 @@ Worker.prototype._start = function () {
 		secure: self._options.protocol == 'https'
 	});
 	
+	self._socketServer.on('notice', self.noticeHandler.bind(self));
 	self._errorDomain.add(self._socketServer);
 	
 	var oldRequestListeners = self._server.listeners('request').splice(0);
@@ -435,11 +439,10 @@ Worker.prototype.getIORate = function () {
 
 Worker.prototype.errorHandler = function (err) {
 	this.emit('error', err);
-	if (err.stack) {
-		console.log(err.stack);
-	} else {
-		console.log(err);
-	}
+};
+
+Worker.prototype.noticeHandler = function (notice) {
+	this.emit('notice', notice);
 };
 
 Worker.prototype.addMiddleware = function (type, callback) {
@@ -575,7 +578,7 @@ Worker.prototype._sessionHandler = function (req, res, next) {
 			if (this._options.release && cache.has(encoding, url)) {
 				this._respond(req, res, cache.get(encoding, url), null);
 			} else {
-				fs.readFile(filePath, function(err, data) {
+				fs.readFile(filePath, function (err, data) {
 					if (err) {
 						res.writeHead(500);
 						res.end('Failed to start session');
@@ -633,8 +636,24 @@ Worker.prototype._rewriteHTTPRequest = function (req) {
 };
 
 Worker.prototype._prepareHTTPHandler = function (req, res, next) {
-	res.connection && res.connection.setNoDelay(true);
-	next();
+	var self = this;
+	
+	var errorDomain = domain.create();
+	errorDomain.on('error', function (err) {
+		res.writeHead(500, {
+			'Content-Type': 'text/plain'
+		});
+		if (err.stack) {
+			res.end(err.message);
+		} else {
+			res.end(err);
+		}
+		self._errorDomain.emit('error', err);
+	});
+	errorDomain.run(function () {
+		res.connection && res.connection.setNoDelay(true);
+		next();
+	});
 };
 
 Worker.prototype._faviconHandler = function (req, res, next) {
@@ -642,11 +661,11 @@ Worker.prototype._faviconHandler = function (req, res, next) {
 	var iconPath = self._paths.appDirPath + '/assets/favicon.gif';
 	
 	if (req.url == '/favicon.ico') {
-		fs.readFile(iconPath, function(err, data) {
+		fs.readFile(iconPath, function (err, data) {
 			if (err) {
 				if (err.code == 'ENOENT') {
 					iconPath = self._paths.frameworkClientDirPath + '/assets/favicon.gif';
-					fs.readFile(iconPath, function(err, data) {
+					fs.readFile(iconPath, function (err, data) {
 						if (err) {
 							if (err.code == 'ENOENT') {
 								res.writeHead(404);

@@ -4,6 +4,8 @@ var through = require('through');
 var innersource = require('innersource');
 var detective = require('detective');
 var generator = require('inline-source-map');
+var combine = require('combine-source-map');
+
 var prepend = innersource(addRequire).replace(/\n/g, '');
 var postpend = innersource(addModule).replace(/\n/g, '');
 
@@ -17,12 +19,12 @@ module.exports = function(filename) {
     var nodeModuleRequires = getNodeModuleRequires(buffer);
     var totalPrelude = prepend + nodeModuleRequires;
     var offset = totalPrelude.split('\n').length - 1;
-    var complete = totalPrelude + buffer + postpend;
+    
+    var complete = totalPrelude + combine.removeComments(buffer) + postpend;
+    
+    var map = combine.create().addFile({ sourceFile: filename, source: buffer}, {line: offset});
 
-    var gen = generator().addGeneratedMappings(filename, complete, {line: offset, column: 0 })
-                         .addSourceContent(filename, buffer);
-
-    this.queue( complete + '\n'+gen.inlineMappingUrl());
+    this.queue( complete + '\n'+map.comment());
 
     this.queue(null);
   });

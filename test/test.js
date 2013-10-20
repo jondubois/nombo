@@ -6,6 +6,7 @@ var assert = require('assert');
 var util = require('util');
 
 var browserify = require('browserify');
+var coffeeify = require('coffeeify');
 var requireify = require('../index');
 var innersource = require('innersource');
 var convert = require('convert-source-map');
@@ -46,6 +47,26 @@ b.add(modulePath)
    var expected = JSON.parse(require('./expected-sourcemap')).mappings;
 
   assert.equal(json.sourcemap.mappings, expected);
+ });
+ 
+var b = browserify();
+
+
+// test for coffescript with sourcemaps
+b.transform(coffeeify).transform(requireify)
+ .add(__dirname+'/coffee/foo.coffee')
+ .bundle({ debug: true }, function(err, src){
+   fs.writeFileSync(__dirname+'/compiled-for-coffee-source-maps.js', src);
+
+   var sourceMapComment = src.split('\n').slice(-2)[0];
+   var json = convert.fromComment(sourceMapComment);
+   //fs.writeFileSync('./expected-coffeescript-sourcemap', JSON.stringify(json));
+
+
+   //expected was found by first checking by hand and then saving those mappings
+   var expected = JSON.parse(require('./expected-coffescript-sourcemap')).mappings;
+
+   assert.equal(json.sourcemap.mappings, expected);
  });
 
 function getContext(){

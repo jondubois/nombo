@@ -147,6 +147,8 @@ var $n = {
 };
 
 $n.LocalInterface = function (wsSocket, namespace) {
+	$n.EventEmitter.call(this);
+
 	var self = this;
 	var mainNamespace = '__';
 	var simNamespace = '__nc';
@@ -155,6 +157,17 @@ $n.LocalInterface = function (wsSocket, namespace) {
 	var simSocket = wsSocket.ns(simNamespace);
 	
 	self.namespace = namespace || mainNamespace;
+	self.connected = wsSocket.connected;
+	
+	wsSocket.on('close', function () {
+		self.connected = false;
+		self.emit('close');
+	});
+	
+	wsSocket.on('open', function () {
+		self.connected = true;
+		self.emit('open');
+	});
 	
 	self.ns = function (namespace) {
 		return new $n.LocalInterface(wsSocket, namespace);
@@ -205,16 +218,32 @@ $n.LocalInterface = function (wsSocket, namespace) {
 	}
 }
 
+$n.LocalInterface.prototype = Object.create($n.EventEmitter.prototype);
+
 $n.RemoteInterface = function (url, namespace, wsSocket) {
+	$n.EventEmitter.call(this);
+
 	var self = this;
 	var mainNamespace = '__';
 	var simNamespace = '__nc';
 	
-	if (!wsSocket) {
+	if (!wsSocket) {		
 		wsSocket = NOMBO_SOCKET_ENGINE.connect(url, {
 			forceJSONP: true
 		});
 	}
+	
+	self.connected = wsSocket.connected;
+	
+	wsSocket.on('close', function () {
+		self.connected = false;
+		self.emit('close');
+	});
+	
+	wsSocket.on('open', function () {
+		self.connected = true;
+		self.emit('open');
+	});
 	
 	var mainSocket = wsSocket.ns(mainNamespace);
 	var simSocket = wsSocket.ns(simNamespace);
@@ -269,6 +298,8 @@ $n.RemoteInterface = function (url, namespace, wsSocket) {
 		mainSocket.listeners(event);
 	}
 }
+
+$n.RemoteInterface.prototype = Object.create($n.EventEmitter.prototype);
 
 $n.remote = function (host, port, secure) {
 	secure = secure || false;

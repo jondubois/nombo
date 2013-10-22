@@ -8,7 +8,7 @@ var options = {
 	port: port,
 	release: release,
 	balancerCount: 2,
-	workers: [{port: 9100, statusPort: 9101}, {port: 9102, statusPort: 9103}],
+	workers: [{port: 9100}, {port: 9101}],
 	stores: [{port: 9120}, {port: 9121}],
 	sessionTimeout: 10,
 	addressSocketLimit: 4,

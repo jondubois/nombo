@@ -109,12 +109,9 @@ Master.prototype._init = function (options) {
 			if (self._options.workers[i].port == null) {
 				throw new Error('One or more worker object is missing a port property');
 			}
-			if (self._options.workers[i].statusPort == null) {
-				throw new Error('One or more worker object is missing a statusPort property');
-			}
 		}
 	} else {
-		self._options.workers = [{port: self._options.port + 3, statusPort: self._options.port + 4}];
+		self._options.workers = [{port: self._options.port + 3}];
 	}
 	
 	if (!self._options.balancerCount) {
@@ -155,6 +152,7 @@ Master.prototype._init = function (options) {
 	self._paths.spinJSURL = self._paths.frameworkClientURL + 'libs/spin.js';
 	self._paths.appURL = '/';
 	self._paths.freshnessURL = self._paths.appURL + '~freshness';
+	self._paths.statusURL = self._paths.appURL + '~status';
 	
 	self._appName = path.basename(self._paths.appDirPath);
 	self._options.appName = self._appName;
@@ -613,7 +611,10 @@ Master.prototype._start = function () {
 				hostAddress: self._options.hostAddress,
 				balancerCount: self._options.balancerCount,
 				protocol: self._options.protocol,
-				protocolOptions: self._options.protocolOptions
+				protocolOptions: self._options.protocolOptions,
+				checkStatusTimeout: self._options.connectTimeout * 1000,
+				statusURL: self._paths.statusURL,
+				statusCheckInterval: self._options.workerStatusInterval * 1000
 			}
 		});
 	};
@@ -733,7 +734,6 @@ Master.prototype._start = function () {
 			workerOpts.paths = self._paths;
 			workerOpts.workerId = worker.id;
 			workerOpts.workerPort = workerData.port;
-			workerOpts.statusPort = workerData.statusPort;
 			workerOpts.stores = stores;
 			workerOpts.dataKey = pass;
 			workerOpts.minifiedScripts = minifiedScripts;

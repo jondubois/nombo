@@ -64,7 +64,6 @@ Worker.prototype._init = function (options) {
 	self.id = self._options.workerId;
 	self.isLeader = self._options.lead;
 	
-	self._statusWatchers = {};
 	self._httpRequestCount = 0;
 	self._ioRequestCount = 0;
 	self._httpRPM = 0;
@@ -138,6 +137,7 @@ Worker.prototype._init = function (options) {
 	self.allowFullAuthResource(self._paths.frameworkClientURL + 'scripts/notaccessible.js');
 	self.allowFullAuthResource(self._paths.frameworkClientURL + 'scripts/notfound.js');
 	self.allowFullAuthResource(self._paths.frameworkURL + 'loader.js');
+	self.allowFullAuthResource(self._paths.statusURL);
 	
 	self._retryOptions = {
 		retries: 10,
@@ -212,6 +212,7 @@ Worker.prototype._init = function (options) {
 	self._middleware[self.MIDDLEWARE_GET].setValidator(self._responseNotSentValidator);
 	
 	self._routStepper = stepper.create({context: self});
+	self._routStepper.addFunction(self._statusRequestHandler);
 	self._routStepper.addFunction(self._faviconHandler);
 	self._routStepper.addFunction(self._getParamsHandler);
 	self._routStepper.addFunction(self._sessionHandler);
@@ -306,6 +307,22 @@ Worker.prototype._handleConnection = function (socket) {
 	self.emit(self.EVENT_SOCKET_CONNECT, socket);
 };
 
+Worker.prototype._calculateStatus = function () {
+	var perMinuteFactor = 60 / this._options.workerStatusInterval;
+	this._httpRPM = this._httpRequestCount * perMinuteFactor;
+	this._ioRPM = this._ioRequestCount * perMinuteFactor;
+	this._httpRequestCount = 0;
+	this._ioRequestCount = 0;
+};
+
+Worker.prototype.getStatus = function () {	
+	return {
+		clientCount: this._socketServer.clientsCount,
+		httpRPM: this._httpRPM,
+		ioRPM: this._ioRPM
+	};
+};
+
 Worker.prototype._start = function () {
 	var self = this;
 	
@@ -317,74 +334,12 @@ Worker.prototype._start = function () {
 	
 	self._server = http.createServer(self._middleware[self.MIDDLEWARE_HTTP].run);
 	
-	self._addStatusWatcher = function (socket) {
-		if (socket.id) {
-			self._errorDomain.add(socket);
-			
-			var endStatusSocket = function () {
-				socket.end();
-				self._errorDomain.remove(socket);
-			};
-			
-			var authTimeout = setTimeout(endStatusSocket, self._options.connectTimeout * 1000);
-			
-			socket.on('message', function (message) {
-				var m = JSON.parse(message);
-				if (m.type == 'auth') {
-					clearTimeout(authTimeout);
-					if (m.data == self._options.dataKey) {
-						self._statusWatchers[socket.id] = socket;
-					} else {
-						endStatusSocket();
-					}
-				}
-			});
-		} else {
-			throw new Error('Failed to add status watcher');
-		}
-	};
-
-	self._removeStatusWatcher = function (socket) {
-		self._errorDomain.remove(socket);
-		if (socket.id) {
-			delete self._statusWatchers[socket.id];
-		} else {
-			throw new Error('Failed to remove status watcher');
-		}
-	};
-	
-	var perMinuteFactor = 60 / self._options.workerStatusInterval;
 	self._httpRequestCount = 0;
 	self._ioRequestCount = 0;
 	self._httpRPM = 0;
 	self._ioRPM = 0;
 	
-	self._emitStatus = function () {
-		self._ioRPM = self._ioRequestCount * perMinuteFactor;
-		self._httpRPM = self._httpRequestCount * perMinuteFactor;
-		self._httpRequestCount = 0;
-		self._ioRequestCount = 0;
-		
-		for (var i in self._statusWatchers) {
-			if (self._statusWatchers[i].connected) {
-				var message = JSON.stringify({
-					clientCount: self._socketServer.clientsCount,
-					httpRPM: self._httpRPM,
-					ioRPM: self._ioRPM
-				});
-				self._statusWatchers[i].write(message);
-			}
-		}
-	};
-	
-	self._statusPort = self._options.statusPort;
-	
-	var statusServer = ncom.createServer(self._addStatusWatcher);
-	statusServer.on('close', self._removeStatusWatcher);
-	self._errorDomain.add(statusServer);
-	statusServer.listen(self._statusPort);
-	
-	setInterval(self._emitStatus, self._options.workerStatusInterval * 1000);
+	setInterval(this._calculateStatus.bind(this), this._options.workerStatusInterval * 1000);
 	
 	self._socketServer = socketCluster.attach(self._server, {
 		appName: self._options.appName,
@@ -407,9 +362,9 @@ Worker.prototype._start = function () {
 	var oldUpgradeListeners = self._server.listeners('upgrade').splice(0);
 	self._server.removeAllListeners('upgrade');
 	
-	var boundRewriteHTTPRequest = self._rewriteHTTPRequest.bind(self);
-	self._server.on('request', boundRewriteHTTPRequest);
-	self._server.on('upgrade', boundRewriteHTTPRequest);
+	var boundCountHTTPRequest = self._countHTTPRequest.bind(self);
+	self._server.on('request', boundCountHTTPRequest);
+	self._server.on('upgrade', boundCountHTTPRequest);
 	
 	var i;
 	for (i in oldRequestListeners) {
@@ -515,6 +470,34 @@ Worker.prototype._getReqEncoding = function (req) {
 		encoding = '';
 	}
 	return encoding;
+};
+
+Worker.prototype._statusRequestHandler = function (req, res, next) {
+	if (req.url == this._paths.statusURL) {
+		var self = this;
+		
+		var buffers = [];
+		req.on('data', function (chunk) {
+			buffers.push(chunk);
+		});
+		req.on('end', function () {
+			var statusReq = JSON.parse(Buffer.concat(buffers).toString());
+			if (statusReq.dataKey == self._options.dataKey) {
+				var status = JSON.stringify(self.getStatus());
+				res.writeHead(200, {
+					'Content-Type': 'application/json'
+				});
+				res.end(status);
+			} else {
+				res.writeHead(401, {
+					'Content-Type': 'application/json'
+				});
+				res.end();
+			}
+		});
+	} else {
+		next();
+	}
 };
 
 Worker.prototype._cacheHandler = function (req, res, next) {
@@ -631,7 +614,7 @@ Worker.prototype._sessionHandler = function (req, res, next) {
 	}
 };
 
-Worker.prototype._rewriteHTTPRequest = function (req) {
+Worker.prototype._countHTTPRequest = function (req) {
 	this._httpRequestCount++;
 };
 

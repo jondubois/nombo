@@ -9,7 +9,9 @@ var options = {
 	sessionTimeout: 5000,
 	title: 'Projects App',
 	angular: true,
-	angularMainModule: 'project'
+	angularOptions: {
+		mainModule: 'project'
+	}
 };
 
 var nombo = new Master(options);

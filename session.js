@@ -24,7 +24,7 @@ var NOMBO_ERROR = 'Unkown Error';
 	var freshnessURL = NOMBO_APP_DEF.freshnessURL;
 
 	var beginLoading = function () {
-		$loader.init(NOMBO_APP_DEF, NOMBO_RESOURCES, NOMBO_DEBUG);
+		$loader.init(NOMBO_APP_DEF, NOMBO_RESOURCES);
 	}
 
 	var head = document.getElementsByTagName('head');

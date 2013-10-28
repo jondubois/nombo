@@ -81,15 +81,18 @@ var $loader = {
 	_waitForReadyInterval: null,
 	_attempts: null,
 	
-	_skipPreload: null,
-	_timeout: 10000,
 	_booting: true,
+	_domReady: false,
 
 	ready: function (callback) {
-		$loader.on('ready', callback);
-		
-		if (!$loader._waitForReadyInterval) {
-			$loader._waitForReadyInterval = setInterval($loader._waitForReady, 20);
+		if ($loader._domReady) {
+			callback($loader._appDefinition);
+		} else {
+			$loader.on('ready', callback);
+			
+			if (!$loader._waitForReadyInterval) {
+				$loader._waitForReadyInterval = setInterval($loader._waitForReady, 20);
+			}
 		}
 	},
 	
@@ -100,6 +103,7 @@ var $loader = {
 	init: function (appDefinition, resources, skipPreload) {
 		$loader._resources = [];
 		$loader._appDefinition = appDefinition;
+		
 		if ($loader._appDefinition.appStyleBundleURL) {
 			$loader._resources.push($loader._appDefinition.appStyleBundleURL);
 		}
@@ -119,6 +123,7 @@ var $loader = {
 		if (resources) {
 			$loader._resources = $loader._resources.concat(resources);
 		}
+		$loader._appDefinition.resources = $loader._resources;
 		
 		if (/MSIE (\d+\.\d+);/.test(navigator.userAgent)) {
 			$loader._ie = true;
@@ -126,13 +131,7 @@ var $loader = {
 		}
 		
 		$loader.grab.init(appDefinition);
-		
-		$loader._skipPreload = skipPreload;
-		if (skipPreload) {
-			$loader._waitForReadyInterval = setInterval($loader._waitForReady, 20);
-		} else {
-			$loader.grab.scriptTag($loader._appDefinition.loadScriptURL, 'text/javascript');
-		}
+		$loader.grab.scriptTag($loader._appDefinition.loadScriptURL, 'text/javascript');
 	},
 	
 	EventEmitter: function () {
@@ -224,30 +223,15 @@ var $loader = {
 		var head = document.getElementsByTagName('head')[0];
 		
 		if (head && document.body) {
+			$loader._domReady = true;
 			clearInterval($loader._waitForReadyInterval);
-			if ($loader._skipPreload) {
-				$loader.loadAll(function () {
-					$loader._embedAllResources();
-				});
-			} else {
-				$loader._startLoading();
-			}
+			$loader.emit('ready', $loader._appDefinition);
 		}
-	},
-	
-	_startLoading: function () {
-		var settings = {};
-		var i;
-		for (i in $loader._appDefinition) {
-			settings[i] = $loader._appDefinition[i];
-		}
-		settings.resources = $loader._resources;
-		$loader.emit('ready', settings);
 	},
 	
 	_globalEval: function (src, sourceURL) {
 		if (sourceURL) {
-			src += '\n//@ sourceURL=' + sourceURL + '\n';
+			src += '\n//# sourceURL=' + sourceURL + '\n';
 		}
 		if (window.execScript) {
 			window.execScript(src);
@@ -620,18 +604,9 @@ var $loader = {
 			
 			var img = new Image();
 			
-			if (callback) {
-				var timedOut = false;
-				var timeout = setTimeout(function () {
-					timedOut = true;
-					callback('Failed to load resource at URL: ' + url);
-				}, $loader._timeout);
-				
+			if (callback) {				
 				img.onload = function () {
-					if (!timedOut) {
-						clearTimeout(timeout);
-						callback(null, url);
-					}
+					callback(null, url);
 				}
 			}
 			
@@ -670,11 +645,8 @@ var $loader = {
 							}
 							self._processEmbedQueue();
 						} else {
-							if (curTag.url == $loader._appDefinition.appScriptBundleURL) {
-								$loader._globalEval(self._scriptCodes[curTag.url]);
-							} else {
-								$loader._globalEval(self._scriptCodes[curTag.url], curTag.url);
-							}
+							$loader._globalEval(self._scriptCodes[curTag.url], curTag.url);
+							
 							self._resourcesGrabbed.push(curTag.url);
 							if (curTag.callback) {
 								curTag.callback(curTag.error, curTag.url);
@@ -689,32 +661,31 @@ var $loader = {
 			}
 		};
 		
-		this._loadTag = function (tagData, callback) {
-			self._embedQueue.push(tagData);
-			
-			self._loadDeepResourceToCache(tagData.url, function (err, data) {
-				tagData.ready = true;
-				tagData.error = err;
-				callback(err, data);
-			});
-		};
-		
 		this._loadResource = function (url, callback) {
 			var ext = url.match(/[.][^.]*$/);
 			var tagData;
 			
 			if (ext[0] == '.js') {
-				tagData = {type: 'script', url: url, callback: function (){}, ready: false};
-				self._loadTag(tagData, callback);
+				tagData = {type: 'script', url: url, ready: false};
+				self._loadTagResource(tagData, callback);
 			} else if (ext[0] == '.css' || ext[0] == '.less') {
-				tagData = {type: 'link', url: url, callback: function (){}, ready: false};
-				self._loadTag(tagData, callback);
+				tagData = {type: 'link', url: url, ready: false};
+				self._loadTagResource(tagData, callback);
 			} else {
 				self._loadDeepResourceToCache(url, function (err, data) {
 					self._resourcesGrabbed.push(url);
 					callback(err, data);
 				});
 			}
+		};
+		
+		this._loadTagResource = function (tagData, callback) {
+			self._embedQueue.push(tagData);
+			self._loadDeepResourceToCache(tagData.url, function (err, data) {
+				tagData.ready = true;
+				tagData.error = err;
+				callback(err, data);
+			});
 		};
 		
 		this.loadAndEmbedScript = function (url, callback) {
@@ -741,42 +712,23 @@ var $loader = {
 			Insert a script tag into the current document as it is being constructed.
 			The id & callback parameters are optional.
 		*/
-		this.scriptTag = function (url, type, id, callback, query) {		
+		this.scriptTag = function (url, type, id, callback, query) {	
 			var head = document.getElementsByTagName('head')[0];
 			
 			var script = document.createElement('script');
 			
-			var timedOut = false;
-			var timeout = null;
-			if (callback) {
-				timeout = setTimeout(function () {
-					timedOut = true;
-					callback('Failed to embed script tag at URL: ' + url);
-				}, $loader._timeout);
-			}
-			
 			if (!$loader._ie || parseInt($loader._ieVersion) > 8) {
 				if (callback) {
 					script.onload = function () {
-						if (!timedOut) {
-							if (timeout) {
-								clearTimeout(timeout);
-							}
-							callback(null, url);
-						}
+						callback(null, url);
 					};
 				}
 			} else {
 				if (callback) {
 					script.onreadystatechange = function () {
 						if (this.readyState == 'complete' || this.readyState == 'loaded') {
-							if (!timedOut) {
-								if (timeout) {
-									clearTimeout(timeout);
-								}
-								script.onreadystatechange = null;
-								callback(null, url);
-							}
+							script.onreadystatechange = null;
+							callback(null, url);
 						}
 					};
 				}

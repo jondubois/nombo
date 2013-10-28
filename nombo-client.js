@@ -171,7 +171,7 @@ $n.LocalInterface = function (wsSocket, namespace) {
 	
 	self.ns = function (namespace) {
 		return new $n.LocalInterface(wsSocket, namespace);
-	}
+	};
 	
 	self.exec = function () {
 		var serverInterface = arguments[0];
@@ -195,15 +195,15 @@ $n.LocalInterface = function (wsSocket, namespace) {
 		}
 		
 		simSocket.emit('rpc', request, callback);
-	}
+	};
 	
 	self.watch = function (event, handler) {
 		mainSocket.on(event, handler);
-	}
+	};
 	
 	self.watchOnce = function (event, handler) {
 		mainSocket.once(event, handler);
-	}
+	};
 	
 	self.unwatch = function (event, handler) {
 		if (event && handler) {
@@ -211,12 +211,12 @@ $n.LocalInterface = function (wsSocket, namespace) {
 		} else {
 			mainSocket.removeAllListeners(event);
 		}
-	}
+	};
 	
 	self.watchers = function (event) {
 		mainSocket.listeners(event);
-	}
-}
+	};
+};
 
 $n.LocalInterface.prototype = Object.create($n.EventEmitter.prototype);
 
@@ -252,7 +252,7 @@ $n.RemoteInterface = function (url, namespace, wsSocket) {
 	
 	self.ns = function (namespace) {
 		return new $n.RemoteInterface(url, namespace, wsSocket);
-	}
+	};
 	
 	self.exec = function () {
 		var serverInterface = arguments[0];
@@ -276,15 +276,15 @@ $n.RemoteInterface = function (url, namespace, wsSocket) {
 		}
 		
 		simSocket.emit('rpc', request, callback);
-	}
+	};
 	
 	self.watch = function (event, handler) {
 		mainSocket.on(event, handler);
-	}
+	};
 	
 	self.watchOnce = function (event, handler) {
 		mainSocket.once(event, handler);
-	}
+	};
 	
 	self.unwatch = function (event, handler) {
 		if (event && handler) {
@@ -292,12 +292,12 @@ $n.RemoteInterface = function (url, namespace, wsSocket) {
 		} else {
 			mainSocket.removeAllListeners(event);
 		}
-	}
+	};
 	
 	self.watchers = function (event) {
 		mainSocket.listeners(event);
-	}
-}
+	};
+};
 
 $n.RemoteInterface.prototype = Object.create($n.EventEmitter.prototype);
 
@@ -311,12 +311,12 @@ $n.remote = function (host, port, secure) {
 	}
 	
 	return $n._remoteClientMap[url];
-}
+};
 
 $n.destroyRemote = function (host, port, secure) {
 	var url = $n._asRemoteClientURL(host, port, secure);
 	delete $n._remoteClientMap[url];
-}
+};
 
 /*
 	registerPlugin(name, plugin)
@@ -331,7 +331,7 @@ $n.registerPlugin = function (name, plugin) {
 	} else {
 		throw new Error('A plugin with the name "' + name + '" already exists.');
 	}
-}
+};
 
 /*
 	plugin(name)
@@ -344,6 +344,6 @@ $n.plugin = function (name) {
 		throw new Error('The requested "' + name + '" plugin could not be found.');
 	}
 	return $n._plugins[name];
-}
+};
 
 $n.init();

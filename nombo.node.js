@@ -1,6 +1,6 @@
 var fs = require('fs');
 var url = require('url');
-var browserify = require('browserify');
+var watchify = require('watchify');
 var scriptManager = require('nombo/scriptmanager');
 var cssBundler = require('nombo/css-bundler');
 var templateBundler = require('nombo/template-bundler');
@@ -45,8 +45,7 @@ Master.prototype._init = function (options) {
 		title: 'Nombo App',
 		angular: false,
 		angularOptions: {
-			mainModule: null,
-			mainTemplate: 'index.html'
+			mainModule: null
 		},
 		protocol: 'http',
 		protocolOptions: null,
@@ -293,7 +292,10 @@ Master.prototype._init = function (options) {
 	
 	if (self._options.angular && self._options.angularOptions) {
 		self.bundle.framework.lib('angular.js', 0);
-		self._options.angularOptions.mainTemplate && self.bundle.app.template(self._options.angularOptions.mainTemplate);
+		if (!self._options.angularOptions.mainTemplate) {
+			self._options.angularOptions.mainTemplate = 'index.html';
+		}
+		self.bundle.app.template(self._options.angularOptions.mainTemplate);
 	}
 	scriptManager.init(self._paths.frameworkURL, self._paths.appURL, self._options.minifyMangle);
 
@@ -496,70 +498,85 @@ Master.prototype._start = function () {
 		}
 		makeCoreBundle();
 	};
-
-	var firstBundleOptions = {
-		debug: !self._options.release,
-		watch: !self._options.release,
-		exports: 'require'
-	};
 	
-	var bundleOptions = {
-		debug: !self._options.release,
-		watch: !self._options.release,
-		exports: null
-	};
-	
-	var libBundle = browserify(firstBundleOptions);
+	var libFilePaths = [];
 	
 	for (i in self._clientScripts) {
-		libBundle.addEntry(self._clientScripts[i].path);
+		libFilePaths.push(self._clientScripts[i].path);
 	}
-
+	
+	var libBundleOptions = {
+		debug: !self._options.release,
+		entries: libFilePaths,
+		noParse: libFilePaths
+	};
+	
+	var libBundle = watchify(libBundleOptions);
+	
 	var updateLibBundle = function (callback) {
-		var jsBundle = libBundle.bundle();
-		if (self._options.release) {
-			jsBundle = scriptManager.minify(jsBundle);
-		}
-		bundles[appDef.appLibBundleURL] = jsBundle;
-		var size = Buffer.byteLength(jsBundle, 'utf8');
-		var data;
-		for (var i in self._workers) {
-			data = {
-				url: appDef.appLibBundleURL,
-				content: jsBundle,
-				size: size
-			};
-			self._workers[i].send({
-				type: 'updateCache',
-				data: data
-			});
-		}
-		callback && callback();
+		libBundle.bundle({debug: !self._options.release}, function (err, jsBundle) {
+			if (err) {
+				self._errorDomain.emit('error', err);
+				callback && callback();
+			} else {
+				if (self._options.release) {
+					jsBundle = scriptManager.minify(jsBundle);
+				}
+				bundles[appDef.appLibBundleURL] = jsBundle;
+				var size = Buffer.byteLength(jsBundle, 'utf8');
+				var data;
+				for (var i in self._workers) {
+					data = {
+						url: appDef.appLibBundleURL,
+						content: jsBundle,
+						size: size
+					};
+					self._workers[i].send({
+						type: 'updateCache',
+						data: data
+					});
+				}
+				callback && callback();
+			}
+		});
 	};
 
-	var scriptBundle = browserify(bundleOptions);
-	scriptBundle.addEntry(pathManager.urlToPath(appDef.appScriptsURL + 'index.js'));
+	var scriptBundleOptions = {
+		debug: !self._options.release,
+		entries: [pathManager.urlToPath(appDef.appScriptsURL + 'index.js')]
+	};
+	
+	var scriptBundle = watchify(scriptBundleOptions);
+	scriptBundle.on('file', function (file) {
+		scriptBundle.require(file);
+	});
 
 	var updateScriptBundle = function (callback) {
-		var jsBundle = scriptBundle.bundle();
-		if (self._options.release) {
-			jsBundle = scriptManager.minify(jsBundle);
-		}
-		bundles[appDef.appScriptBundleURL] = jsBundle;
-		var size = Buffer.byteLength(jsBundle, 'utf8');
-		var data;
-		for (var i in self._workers) {
-			data = {
-				url: appDef.appScriptBundleURL,
-				content: jsBundle,
-				size: size
-			};
-			self._workers[i].send({
-				type: 'updateCache',
-				data: data
-			});
-		}
-		callback && callback();
+		scriptBundle.bundle({debug: !self._options.release}, function (err, jsBundle) {
+			if (err) {
+				self._errorDomain.emit('error', err);
+				callback && callback();
+			} else {
+				if (self._options.release) {
+					jsBundle = scriptManager.minify(jsBundle);
+				}
+				bundles[appDef.appScriptBundleURL] = jsBundle;
+				var size = Buffer.byteLength(jsBundle, 'utf8');
+				var data;
+				for (var i in self._workers) {
+					data = {
+						url: appDef.appScriptBundleURL,
+						content: jsBundle,
+						size: size
+					};
+					self._workers[i].send({
+						type: 'updateCache',
+						data: data
+					});
+				}
+				callback && callback();
+			}
+		});
 	};
 
 	var initBundles = function (callback) {
@@ -572,11 +589,11 @@ Master.prototype._start = function () {
 	};
 
 	var autoRebundle = function () {
-		styleBundle.on('bundle', function () {
+		styleBundle.on('update', function () {
 			updateCSSBundle();
 		});
 
-		templateBundle.on('bundle', function () {
+		templateBundle.on('update', function () {
 			updateTemplateBundle();
 		});
 
@@ -585,11 +602,11 @@ Master.prototype._start = function () {
 			listener: updateCoreBundle
 		});
 		
-		libBundle.on('bundle', function () {
+		libBundle.on('update', function () {
 			updateLibBundle();
 		});
 
-		scriptBundle.on('bundle', function () {
+		scriptBundle.on('update', function () {
 			updateScriptBundle();
 		});
 	};

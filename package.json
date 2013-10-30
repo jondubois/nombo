@@ -39,7 +39,6 @@
 		"async": "0.1.22",
 		"base64id": "0.1.0",
 		"clean-css": "1.0.4",
-		"coffee-script": "1.4.0",
 		"commander": "0.5.2",
 		"eventemitter2": "0.4.9",
 		"eventvat": "0.2.0",

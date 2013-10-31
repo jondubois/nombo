@@ -37,7 +37,7 @@ if (cluster.isMaster) {
 		}
 	});
 } else {	
-	var handleError = function (err) {
+	var handleError = function (err, notice) {
 		var error;
 		if (err.stack) {
 			error = {
@@ -47,16 +47,21 @@ if (cluster.isMaster) {
 		} else {
 			error = err;
 		}
-		process.send({type: 'error', data: error});
+		process.send({type: notice ? 'notice' : 'error', data: error});
 		if (err.code != 'ECONNRESET') {
 			process.exit();
 		}
+	};
+	
+	var handleNotice = function (err) {
+		handleError(err, true);
 	};
 	
 	process.on('message', function (m) {
 		if (m.type == 'init') {
 			balancer = new LoadBalancer(m.data);
 			balancer.on('error', handleError);
+			balancer.on('notice', handleNotice);
 		} else if (m.type == 'setWorkers') {
 			balancer.setWorkers(m.data);
 		}

@@ -583,9 +583,9 @@ IOClusterClient.prototype.bind = function (socket, callback) {
 	socket.sessionDataKey = this._keyManager.getSessionDataKey(socket.ssid);
 	socket.addressDataKey = this._keyManager.getGlobalDataKey(['__meta', 'addresses', socket.address]);
 	
-	this._handshake(socket, function (err, logLevel) {
+	this._handshake(socket, function (err, notice) {
 		if (err) {
-			callback && callback(err, logLevel);
+			callback && callback(err, notice);
 		} else {
 			self._sockets[socket.id] = socket;
 			if (self._sessions[socket.ssid] == null) {

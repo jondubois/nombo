@@ -650,13 +650,26 @@ Master.prototype._start = function () {
 			self.errorHandler(err);
 		};
 		
+		var balancerNoticeHandler = function (noticeMessage) {
+			var notice = {
+				message: noticeMessage,
+				origin: {
+					type: 'balancer'
+				}
+			};
+			self.noticeHandler(notice);
+		};
+		
 		self._balancer = fork(__dirname + '/nombo-balancer.node.js');
 		self._balancer.on('error', balancerErrorHandler);
+		self._balancer.on('notice', balancerNoticeHandler);
 
 		self._balancer.on('exit', launchLoadBalancer);
 		self._balancer.on('message', function (m) {
 			if (m.type == 'error') {
 				balancerErrorHandler(m.data);
+			} else if (m.type == 'notice') {
+				balancerNoticeHandler(m.data);
 			}
 		});
 		

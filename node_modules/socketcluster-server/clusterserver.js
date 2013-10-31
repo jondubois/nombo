@@ -110,6 +110,11 @@ ClusterServer.prototype.handshake = function (transport, req) {
 	}
 	
 	var socket = new ClusterSocket(id, this, transport);
+	
+	socket.on('error', function (err) {
+		self._handleSocketError(err);
+		socket.close();
+	});
 
 	if (false !== this.cookie) {
 		transport.on('headers', function (headers) {
@@ -131,10 +136,6 @@ ClusterServer.prototype.handshake = function (transport, req) {
 	socket.ssid = ssid || socket.id;
 	
 	this._ioClusterClient.bind(socket, function (err, notice) {
-		socket.on('error', function (err) {
-			socket.close();
-			self._handleSocketError(err);
-		});
 		if (err) {
 			var errorMessage = 'Failed to bind socket to io cluster - ' + err;
 			socket.emit('fail', errorMessage);

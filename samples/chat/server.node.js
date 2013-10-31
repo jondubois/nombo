@@ -7,9 +7,9 @@ var fs = require('fs');
 var options = {
 	port: port,
 	release: release,
-	balancerCount: 2,
+	balancerCount: 1,
 	workers: [{port: 9100}, {port: 9101}],
-	stores: [{port: 9120}, {port: 9121}],
+	stores: [{port: 9120}],
 	sessionTimeout: 10,
 	addressSocketLimit: 4,
 	connectTimeout: 10,

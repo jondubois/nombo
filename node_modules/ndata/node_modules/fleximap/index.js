@@ -205,8 +205,7 @@ var FlexiMap = function (object) {
 			target = new FlexiMap([target, value]);
 			self.set(keyChain, target);
 		} else {
-			keyChain.push(target.getLength());
-			self.set(keyChain, value);
+			self.set(keyChain.concat(target.getLength()), value);
 		}
 		return value;
 	}
@@ -233,7 +232,7 @@ var FlexiMap = function (object) {
 			var keyChainLastIndex = keyChain.length;
 			if (value instanceof Array) {
 				var len = target.getLength();
-				keyChain.push(len);
+				keyChain = keyChain.concat(len);
 				for (i in value) {
 					self.set(keyChain, value[i]);
 					keyChain[keyChainLastIndex] += 1;

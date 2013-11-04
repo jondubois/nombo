@@ -46,5 +46,5 @@ nombo samples
 
 **Structure**
 * Client side scripts can be loaded statically (at compile time) or dynamically (at runtime).
-* Client scripts have the same structure as server-side Node.js modules and Nombo SIMs (CommonJS) - Like Node.js modules, each script operates in its own isolated scope.
+* Client scripts have the same structure as server-side Node.js modules and Nombo sims (CommonJS) - Like Node.js modules, each script operates in its own isolated scope.
 * Allows you to import scripts which have global scope (e.g. jQuery, jQuery UI, Backbone, AngularJS...) - In Nombo, these are referred to as libs (libraries).

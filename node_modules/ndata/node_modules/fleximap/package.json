@@ -1,7 +1,7 @@
 {
   "name": "fleximap",
   "description": "A flexible hash map which supports deep keys.",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "author": {
     "name": "JF Gros-Dubois",
     "email": "flashthink@gmail.com"

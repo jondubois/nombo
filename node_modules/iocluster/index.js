@@ -585,7 +585,7 @@ IOClusterClient.prototype.bind = function (socket, callback) {
 	
 	this._handshake(socket, function (err, notice) {
 		if (err) {
-			callback && callback(err, notice);
+			callback && callback(err, socket, notice);
 		} else {
 			self._sockets[socket.id] = socket;
 			if (self._sessions[socket.ssid] == null) {

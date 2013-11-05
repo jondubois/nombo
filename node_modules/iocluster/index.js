@@ -532,7 +532,6 @@ IOClusterClient.prototype._handshake = function (socket, callback) {
 	if (socket.address == null || socket.id == null) {
 		callback && callback("Failed handshake - Invalid handshake data");
 	} else {
-		var ioSocket = this.socket(socket.id, socket.ssid);
 		var remoteAddr = socket.address;
 		
 		if (remoteAddr.address) {

@@ -231,6 +231,8 @@ Worker.prototype._init = function (options) {
 	self._middleware[self.MIDDLEWARE_RPC] = stepper.create({context: self});
 	self._middleware[self.MIDDLEWARE_RPC].setTail(gateway.exec);
 	
+	self._middleware[self.MIDDLEWARE_IO].setTail(self._middleware[self.MIDDLEWARE_RPC]);
+	
 	mime.define({
 		'text/css': ['less'],
 		'text/html': ['handlebars']
@@ -295,7 +297,6 @@ Worker.prototype._handleConnection = function (socket) {
 		var req = new IORequest(request, nSocket, socket.session, socket.global, remoteAddress, self._options.secure);
 		var res = new IOResponse(request, response);
 
-		self._middleware[self.MIDDLEWARE_IO].setTail(self._middleware[self.MIDDLEWARE_RPC]);
 		self._middleware[self.MIDDLEWARE_IO].run(req, res);
 	});
 	

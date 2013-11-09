@@ -159,14 +159,18 @@ $n.LocalInterface = function (wsSocket, namespace) {
 	self.namespace = namespace || mainNamespace;
 	self.connected = wsSocket.connected;
 	
-	wsSocket.on('close', function () {
+	wsSocket.on('disconnect', function () {
 		self.connected = false;
-		self.emit('close');
+		self.emit('disconnect');
 	});
 	
-	wsSocket.on('open', function () {
+	wsSocket.on('connect', function () {
 		self.connected = true;
-		self.emit('open');
+		self.emit('connect');
+	});
+	
+	wsSocket.on('error', function (err) {
+		self.emit('error', err);
 	});
 	
 	self.ns = function (namespace) {
@@ -235,14 +239,18 @@ $n.RemoteInterface = function (url, namespace, wsSocket) {
 	
 	self.connected = wsSocket.connected;
 	
-	wsSocket.on('close', function () {
+	wsSocket.on('disconnect', function () {
 		self.connected = false;
-		self.emit('close');
+		self.emit('disconnect');
 	});
 	
-	wsSocket.on('open', function () {
+	wsSocket.on('connect', function () {
 		self.connected = true;
-		self.emit('open');
+		self.emit('connect');
+	});
+	
+	wsSocket.on('error', function (err) {
+		self.emit('error', err);
 	});
 	
 	var mainSocket = wsSocket.ns(mainNamespace);

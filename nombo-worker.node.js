@@ -151,8 +151,6 @@ Worker.prototype._init = function (options) {
 	
 	self._clusterEngine = require(self._options.clusterEngine);
 	
-	self._config = conf.parseConfig(__dirname + '/config.node.json');
-	
 	self._middleware = {};
 	
 	self._middleware[self.MIDDLEWARE_HTTP] = stepper.create({context: self});
@@ -238,13 +236,13 @@ Worker.prototype._init = function (options) {
 		'text/html': ['handlebars']
 	});
 	
-	self._privateExtensions = self._config.privateExtensions;
+	self._privateExtensions = self._options.privateExtensions;
 	if (self._privateExtensions) {
 		self._privateExtensionRegex = new RegExp('[.](' + self._privateExtensions.join('|').replace(/[.]/g, '[.]') + ')$');
 	} else {
 		self._privateExtensionRegex = /$a/;
 	}
-	self._customSIMExtension =  self._config.customSIMExtension;
+	self._customSIMExtension = self._options.customSIMExtension;
 	
 	self._cacheCookieRegex = new RegExp('(^|; *)' + self._options.appDef.cacheCookieName + '=1');
 	
@@ -254,6 +252,7 @@ Worker.prototype._init = function (options) {
 	self._headerAdder.init(self._options);
 	
 	self._ioClusterClient = new self._clusterEngine.IOClusterClient({
+		workerPort: self._options.workerPort,
 		stores: self._options.stores,
 		dataKey: self._options.dataKey,
 		clusterKey: self._options.clusterKey,

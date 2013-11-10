@@ -72,6 +72,8 @@ Master.prototype._init = function (options) {
 		allowUploads: false,
 		hostAddress: null,
 		balancerCount: null,
+		customSIMExtension: "node.js",
+		privateExtensions: ["node.js", "node.json"],
 		clusterEngine: 'iocluster'
 	};
 

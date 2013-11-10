@@ -7,6 +7,7 @@ var options = {
 	port: port,
 	release: release,
 	sessionTimeout: 10,
+	workers: [{port: 9022}],
 	stores: [{port: 9020}, {port: 9021}],
 	title: 'Memo App'
 };

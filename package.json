@@ -38,6 +38,7 @@
 		"active-x-obfuscator": "0.0.1",
 		"async": "0.1.22",
 		"base64id": "0.1.0",
+		"cachemere": "0.9.3",
 		"clean-css": "1.0.4",
 		"commander": "0.5.2",
 		"eventemitter2": "0.4.9",

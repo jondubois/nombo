@@ -5,7 +5,7 @@ var scriptManager = require('nombo/scriptmanager');
 var fs = require('fs');
 var url = require('url');
 var querystring = require('querystring');
-var cache = require('nombo/cache');
+var cachemere = require('cachemere');
 var handlebars = require('handlebars');
 var stepper = require('stepper');
 var ws = require('nombo/webservice');
@@ -75,39 +75,33 @@ Worker.prototype._init = function (options) {
 	self._resourceSizes = {};
 	self._minifiedScripts = self._options.minifiedScripts;
 	
-	self._prerouter = require('nombo/router/prerouter.node.js');
-	self._headerAdder = require('nombo/router/headeradder.node.js');
-	self._cacheResponder = require('nombo/router/cacheresponder.node.js');
-	self._router = require('nombo/router/router.node.js');
-	self._preprocessor = require('nombo/router/preprocessor.node.js');
-	self._compressor = require('nombo/router/compressor.node.js');
-	self._responder = require('nombo/router/responder.node.js');
+	self._paths = self._options.paths;
 	
-	cache.init({
+	pathManager.init(self._paths.frameworkURL, self._paths.frameworkDirPath, self._paths.appDirPath, 
+		self._paths.appURL, self._paths.rootTemplateURL);
+		
+	pathManager.setBaseURL(self._paths.appURL);
+	scriptManager.init(self._paths.frameworkURL, self._paths.appURL, self._options.minifyMangle);
+	scriptManager.setBaseURL(self._paths.appURL);
+	
+	self._errorDomain.add(cachemere);
+	
+	cachemere.init({
+		mapper: pathManager.urlToPath,
 		maxSize: self._options.cacheMaxSize,
 		maxEntrySize: self._options.cacheMaxEntrySize,
-		cacheFilter: self._options.cacheFilter,
-		minCacheLifeMillis: self._options.minCacheLifeMillis
+		cacheFilter: self._options.cacheFilter
 	});
 	
 	if (self._options.release) {
 		for (j in self._minifiedScripts) {
-			cache.set(cache.ENCODING_PLAIN, j, self._minifiedScripts[j]);
-			self._cacheResponder.setUnrefreshable(j);
+			cachemere.set(j, self._minifiedScripts[j], 'text/javascript');
 		}
 	}
 	
 	for (j in self._bundles) {
-		cache.set(cache.ENCODING_PLAIN, j, self._bundles[j], true);
-		self._cacheResponder.setUnrefreshable(j);
+		cachemere.set(j, self._bundles[j], 'text/javascript');
 	}
-	
-	self._paths = self._options.paths;
-	
-	pathManager.init(self._paths.frameworkURL, self._paths.frameworkDirPath, self._paths.appDirPath, self._paths.appURL);
-	pathManager.setBaseURL(self._paths.appURL);
-	scriptManager.init(self._paths.frameworkURL, self._paths.appURL, self._options.minifyMangle);
-	scriptManager.setBaseURL(self._paths.appURL);
 	
 	var i;
 	for (i in self._options.resourceSizes) {
@@ -129,7 +123,7 @@ Worker.prototype._init = function (options) {
 	
 	self.allowFullAuthResource(self._paths.spinJSURL);
 	self.allowFullAuthResource(self._paths.frameworkURL + 'smartcachemanager.js');
-	self.allowFullAuthResource(self._paths.frameworkSocketIOClientURL);
+	self.allowFullAuthResource(self._paths.frameworkSocketClientURL);
 	self.allowFullAuthResource(self._paths.frameworkURL + 'session.js');
 	self.allowFullAuthResource(self._paths.frameworkClientURL + 'assets/logo.png');
 	self.allowFullAuthResource(self._paths.frameworkClientURL + 'scripts/failedconnection.js');
@@ -164,37 +158,6 @@ Worker.prototype._init = function (options) {
 		return req && res && !res.finished;
 	};
 	
-	self._tailGetStepper = stepper.create({context: self});
-	self._tailGetStepper.addFunction(self._prerouter.run);
-	self._tailGetStepper.addFunction(self._headerAdder.run);
-	self._tailGetStepper.addFunction(self._cacheResponder.run);
-	self._tailGetStepper.addFunction(self._router.run);
-	self._tailGetStepper.addFunction(self._preprocessor.run);
-	self._tailGetStepper.addFunction(self._compressor.run);
-	self._tailGetStepper.setTail(self._responder.run);
-	
-	self._respond = function (req, res, data, mimeType, skipCache) {
-		if (!req.hasOwnProperty('rout')) {
-			req.rout = {};
-		}
-		
-		if (typeof data == 'string') {
-			req.rout.buffer = new Buffer(data);
-		} else {
-			req.rout.buffer = data;
-		}
-		
-		if (mimeType) {
-			req.rout.mimeType = mimeType;
-		}
-		
-		if (skipCache) {
-			req.rout.skipCache = 1;
-		}
-		
-		self._tailGetStepper.run(req, res);
-	};
-	
 	self._httpMethodJunction = function (req, res) {
 		if (req.method == 'POST') {
 			self._middleware[self.MIDDLEWARE_POST].run(req, res)
@@ -203,18 +166,26 @@ Worker.prototype._init = function (options) {
 		}
 	};
 	
-	self._tailGetStepper.setValidator(self._responseNotSentValidator);
+	self._rout = function (req, res, next) {
+		cachemere.fetch(req, function (err, resource) {
+			var exp = new Date(Date.now() + self._options.clientCacheLife * 1000).toUTCString();
+			resource.headers['Cache-Control'] = self._options.clientCacheType;
+			resource.headers['Pragma'] = self._options.clientCacheType;
+			resource.headers['Expires'] = exp;
+			resource.output(res);
+		});
+	};
 	
 	self._middleware[self.MIDDLEWARE_GET] = stepper.create({context: self});
-	self._middleware[self.MIDDLEWARE_GET].setTail(self._tailGetStepper);
+	self._middleware[self.MIDDLEWARE_GET].setTail(self._rout);
+	
 	self._middleware[self.MIDDLEWARE_GET].setValidator(self._responseNotSentValidator);
 	
 	self._routStepper = stepper.create({context: self});
 	self._routStepper.addFunction(self._statusRequestHandler);
-	self._routStepper.addFunction(self._faviconHandler);
 	self._routStepper.addFunction(self._getParamsHandler);
 	self._routStepper.addFunction(self._sessionHandler);
-	self._routStepper.addFunction(self._cacheHandler);
+	self._routStepper.addFunction(self._cacheVersionHandler);
 	self._routStepper.setTail(self._httpMethodJunction);
 	
 	self._middleware[self.MIDDLEWARE_POST] = stepper.create({context: self});
@@ -246,11 +217,6 @@ Worker.prototype._init = function (options) {
 	
 	self._cacheCookieRegex = new RegExp('(^|; *)' + self._options.appDef.cacheCookieName + '=1');
 	
-	self._prerouter.init(self._options);
-	self._router.init(self._privateExtensionRegex);
-	self._preprocessor.init(self._options);
-	self._headerAdder.init(self._options);
-	
 	self._ioClusterClient = new self._clusterEngine.IOClusterClient({
 		workerPort: self._options.workerPort,
 		stores: self._options.stores,
@@ -266,12 +232,6 @@ Worker.prototype._init = function (options) {
 	self._ioClusterClient.on('sessiondestroy', function (sessionId) {
 		self.emit(self.EVENT_SESSION_DESTROY, sessionId);
 	});
-};
-
-Worker.prototype.handleCacheUpdate = function (url, content, size) {
-	this._resourceSizes[url] = size;
-	cache.clearMatches(new RegExp(cache.ENCODING_SEPARATOR + url + '$'));
-	cache.set(cache.ENCODING_PLAIN, url, content);	
 };
 
 Worker.prototype.handleMasterEvent = function () {
@@ -323,14 +283,94 @@ Worker.prototype.getStatus = function () {
 	};
 };
 
+Worker.prototype._getFavicon = function (callback) {
+	var self = this;
+	var iconPath = self._paths.appDirPath + '/assets/favicon.gif';
+	
+	fs.readFile(iconPath, function (err, data) {
+		if (err) {
+			if (err.code == 'ENOENT') {
+				iconPath = self._paths.frameworkClientDirPath + '/assets/favicon.gif';
+				fs.readFile(iconPath, function (err, data) {
+					callback(err, data)
+				});
+			} else {
+				callback(err)
+			}
+		} else {
+			callback(null, data)
+		}
+	});
+};
+
 Worker.prototype._start = function () {
 	var self = this;
 	
 	self._includeString = self._createScriptTag(self._paths.freshnessURL, 'text/javascript', true) + "\n\t";
 	self._includeString += self._createScriptTag(self._paths.frameworkURL + 'smartcachemanager.js', 'text/javascript') + "\n\t";
 	self._includeString += self._createScriptTag(self._paths.spinJSURL, 'text/javascript') + "\n\t";
-	self._includeString += self._createScriptTag(self._paths.frameworkSocketIOClientURL, 'text/javascript') + "\n\t";
+	self._includeString += self._createScriptTag(self._paths.frameworkSocketClientURL, 'text/javascript') + "\n\t";
 	self._includeString += self._createScriptTag(self._paths.frameworkURL + 'session.js', 'text/javascript');
+	
+	var htmlAttr = '';
+	var bodyAttr = '';
+	
+	if (self._options.angular) {
+		htmlAttr += ' xmlns:ng="http://angularjs.org"';
+		bodyAttr = ' ng-cloak';
+	} else {
+		htmlAttr += ' xmlns="http://www.w3.org/1999/xhtml"';
+	}
+	
+	var rootHTML = self._rootTemplate({
+		title: self._options.title,
+		includes: new handlebars.SafeString(self._includeString),
+		htmlAttr: htmlAttr,
+		bodyAttr: bodyAttr
+	});
+	
+	cachemere.set('/', rootHTML, 'text/html');
+	
+	var appDef = self._options.appDef;
+	
+	if (self._resourceSizes[appDef.appStyleBundleURL] <= 0) {
+		delete appDef.appStyleBundleURL;
+	}
+	if (self._resourceSizes[appDef.frameworkCoreBundleURL] <= 0) {
+		delete appDef.frameworkCoreBundleURL;
+	}
+	if (self._resourceSizes[appDef.appLibBundleURL] <= 0) {
+		delete appDef.appLibBundleURL;
+	}
+	if (self._resourceSizes[appDef.appTemplateBundleURL] <= 0) {
+		delete appDef.appTemplateBundleURL;
+	}
+	if (self._resourceSizes[appDef.appScriptBundleURL] <= 0) {
+		delete appDef.appScriptBundleURL;
+	}
+	
+	var specialPreps = {};
+	
+	specialPreps[self._paths.frameworkURL + 'session.js'] = function (data) {
+		var template = handlebars.compile(data.content.toString());
+		var result = template({
+			port: self._options.port,
+			frameworkURL: self._paths.frameworkURL,
+			frameworkClientURL: self._paths.frameworkClientURL,
+			timeout: self._options.connectTimeout * 1000,
+			appDef: JSON.stringify(appDef),
+			resources: JSON.stringify(self._bundledResources),
+			debug: self._options.release ? 'false' : 'true'
+		});
+		return result;
+	};
+	
+	cachemere.setPrepProvider(function (url) {
+		if (specialPreps[url]) {
+			return specialPreps[url];
+		}
+		return null
+	});
 	
 	self._server = http.createServer(self._middleware[self.MIDDLEWARE_HTTP].run);
 	
@@ -381,7 +421,16 @@ Worker.prototype._start = function () {
 	self._socketServer.on('connection', self._handleConnection.bind(self));
 	gateway.init(self._paths.appDirPath + '/sims/', self._customSIMExtension);
 	
-	self._socketServer.on('ready', self.ready.bind(self));
+	self._getFavicon(function (err, data) {
+		if (err) {
+			throw new Error('Failed to get favicon due to the following error: ' + (err.message || err));
+		} else {
+			cachemere.set('/favicon.ico', data, 'image/gif');
+			cachemere.on('ready', function () {
+				self._socketServer.on('ready', self.ready.bind(self));
+			});
+		}
+	});
 };
 
 Worker.prototype.getHTTPRate = function () {
@@ -427,51 +476,6 @@ Worker.prototype.isFullAuthResource = function (url) {
 	return this._fullAuthResources.hasOwnProperty(url);
 };
 
-Worker.prototype._writeSessionStartScreen = function (req, res) {
-	var encoding = this._getReqEncoding(req);
-	
-	res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, HEAD, GET, POST');
-	res.setHeader('Access-Control-Allow-Origin', '*');
-	
-	if (this._options.release && cache.has(encoding, req.url)) {
-		this._respond(req, res, cache.get(encoding, req.url), 'text/html', true);
-	} else {
-		var includeString = this._includeString;
-		
-		var htmlAttr = '';
-		var bodyAttr = '';
-		
-		if (this._options.angular) {
-			htmlAttr += ' xmlns:ng="http://angularjs.org"';
-			bodyAttr = ' ng-cloak';
-		} else {
-			htmlAttr += ' xmlns="http://www.w3.org/1999/xhtml"';
-		}
-		
-		var html = this._rootTemplate({
-			title: this._options.title,
-			includes: new handlebars.SafeString(includeString),
-			htmlAttr: htmlAttr,
-			bodyAttr: bodyAttr
-		});
-		this._respond(req, res, html, 'text/html', true);
-	}
-};
-
-Worker.prototype._getReqEncoding = function (req) {
-	var acceptEncoding = req.headers['accept-encoding'] || '';
-	
-	var encoding;
-	if (acceptEncoding.match(/\bgzip\b/)) {
-		encoding = 'gzip';
-	} else if (acceptEncoding.match(/\bdeflate\b/)) {
-		encoding = 'deflate';
-	} else {
-		encoding = '';
-	}
-	return encoding;
-};
-
 Worker.prototype._statusRequestHandler = function (req, res, next) {
 	if (req.url == this._paths.statusURL) {
 		var self = this;
@@ -500,7 +504,7 @@ Worker.prototype._statusRequestHandler = function (req, res, next) {
 	}
 };
 
-Worker.prototype._cacheHandler = function (req, res, next) {
+Worker.prototype._cacheVersionHandler = function (req, res, next) {
 	if (req.url == this._paths.freshnessURL) {
 		var cacheVersion;
 		if (this._options.release) {
@@ -527,10 +531,8 @@ Worker.prototype._cacheHandler = function (req, res, next) {
 			script = 'var NOMBO_CACHE_VERSION = "' + cacheVersion + '";\n';
 			script += 'var NOMBO_IS_FRESH = true;';
 		}
-		
 		res.writeHead(200);
 		res.end(script);
-		
 	} else {
 		next();
 	}
@@ -542,64 +544,23 @@ Worker.prototype._sessionHandler = function (req, res, next) {
 	req.global = self.global;
 	
 	var sid = self._parseSSID(req.headers.cookie);
-	var url;
+	var url = req.url;
 	
-	if (req.url == '/') {
-		url = self._paths.rootTemplateURL;
-	} else {
-		url = req.url;
-	}
-	
-	var filePath = pathManager.urlToPath(url);
-	
-	if (url == self._paths.rootTemplateURL) {
-		self._writeSessionStartScreen(req, res);
-	} else {
-		var encoding = self._getReqEncoding(req);
-		
+	if (url == '/') {
+		cachemere.fetch(req, function (err, resource) {
+			resource.headers['Access-Control-Allow-Methods'] = 'OPTIONS, HEAD, GET, POST';
+			resource.headers['Access-Control-Allow-Origin'] = '*';
+			resource.output(res);
+		});
+	} else {		
 		if (self.isFullAuthResource(url)) {
-			if (this._options.release && cache.has(encoding, url)) {
-				this._respond(req, res, cache.get(encoding, url), null);
-			} else {
-				fs.readFile(filePath, function (err, data) {
-					if (err) {
-						res.writeHead(500);
-						res.end('Failed to start session');
-					} else {
-						if (url == self._paths.frameworkURL + 'session.js') {
-							var appDef = self._options.appDef;
-							
-							if (self._resourceSizes[appDef.appStyleBundleURL] <= 0) {
-								delete appDef.appStyleBundleURL;
-							}
-							if (self._resourceSizes[appDef.frameworkCoreBundleURL] <= 0) {
-								delete appDef.frameworkCoreBundleURL;
-							}
-							if (self._resourceSizes[appDef.appLibBundleURL] <= 0) {
-								delete appDef.appLibBundleURL;
-							}
-							if (self._resourceSizes[appDef.appTemplateBundleURL] <= 0) {
-								delete appDef.appTemplateBundleURL;
-							}
-							if (self._resourceSizes[appDef.appScriptBundleURL] <= 0) {
-								delete appDef.appScriptBundleURL;
-							}
-							
-							var template = handlebars.compile(data.toString());
-							data = template({
-								port: self._options.port,
-								frameworkURL: self._paths.frameworkURL,
-								frameworkClientURL: self._paths.frameworkClientURL,
-								timeout: self._options.connectTimeout * 1000,
-								appDef: JSON.stringify(appDef),
-								resources: JSON.stringify(self._bundledResources),
-								debug: self._options.release ? 'false' : 'true'
-							});
-						}
-						self._respond(req, res, data, null);
-					}
-				});
-			}
+			cachemere.fetch(req, function (err, resource) {
+				var exp = new Date(Date.now() + self._options.clientCacheLife * 1000).toUTCString();
+				resource.headers['Cache-Control'] = self._options.clientCacheType;
+				resource.headers['Pragma'] = self._options.clientCacheType;
+				resource.headers['Expires'] = exp;
+				resource.output(res);
+			});
 		} else {
 			if (sid) {
 				req.session = this._ioClusterClient.session(sid);
@@ -639,45 +600,6 @@ Worker.prototype._prepareHTTPHandler = function (req, res, next) {
 	});
 };
 
-Worker.prototype._faviconHandler = function (req, res, next) {
-	var self = this;
-	var iconPath = self._paths.appDirPath + '/assets/favicon.gif';
-	
-	if (req.url == '/favicon.ico') {
-		fs.readFile(iconPath, function (err, data) {
-			if (err) {
-				if (err.code == 'ENOENT') {
-					iconPath = self._paths.frameworkClientDirPath + '/assets/favicon.gif';
-					fs.readFile(iconPath, function (err, data) {
-						if (err) {
-							if (err.code == 'ENOENT') {
-								res.writeHead(404);
-								res.end();
-							} else {
-								res.writeHead(500);
-								res.end();
-							}
-						} else {
-							self._applyFileResponseHeaders(res, iconPath);
-							res.writeHead(200);
-							res.end(data);
-						}
-					});
-				} else {
-					res.writeHead(500);
-					res.end();
-				}
-			} else {
-				self._applyFileResponseHeaders(res, iconPath);
-				res.writeHead(200);
-				res.end(data);
-			}
-		});
-	} else {
-		next();
-	}
-};
-
 Worker.prototype._getParamsHandler = function (req, res, next) {
 	var urlParts = url.parse(req.url);
 	var query = urlParts.query;
@@ -694,25 +616,6 @@ Worker.prototype._parseSSID = function (cookieString) {
 		}
 	}
 	return null;
-};
-
-Worker.prototype._applyFileResponseHeaders = function (res, filePath, mimeType, forceRefresh) {
-	if (!mimeType) {
-		mimeType = mime.lookup(filePath);
-	}
-	
-	if (this._options.release && !forceRefresh) {
-		var expiry = new Date(Date.now() + this._options.clientCacheLife * 1000);
-		
-		res.setHeader('Cache-Control', this._options.clientCacheType);
-		res.setHeader('Pragma', this._options.clientCacheType);
-		res.setHeader('Expires', expiry.toUTCString());
-	} else {
-		res.setHeader('Cache-Control', 'no-cache');
-		res.setHeader('Pragma', 'no-cache');
-	}
-	
-	res.setHeader('Content-Type', mimeType);
 };
 
 Worker.prototype._normalizeURL = function (url) {

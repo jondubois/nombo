@@ -59,7 +59,6 @@ Master.prototype._init = function (options) {
 		cacheMaxEntrySize: 10000000,
 		cacheMaxSize: 1000000000,
 		cacheVersion: null,
-		minCacheLifeMillis: 1000,
 		origins: '*:*',
 		publicResources: false,
 		minifyMangle: false,
@@ -304,7 +303,7 @@ Master.prototype._init = function (options) {
 	pathManager.setBaseURL(self._paths.appURL);
 	scriptManager.setBaseURL(self._paths.appURL);
 
-	self._paths.frameworkSocketIOClientURL = self._paths.frameworkModulesURL + 'socketcluster-client/socketcluster.js';
+	self._paths.frameworkSocketClientURL = self._paths.frameworkModulesURL + 'socketcluster-client/socketcluster.js';
 
 	self._minAddressSocketLimit = 20;
 	self._dataExpiryAccuracy = 5000;

@@ -17,6 +17,7 @@ var EventEmitter = require('events').EventEmitter;
 var SmartCacheManager = require("./smartcachemanager").SmartCacheManager;
 var socketCluster = require('socketcluster-server');
 var ncom = require('ncom');
+var less = require('less');
 var retry = require('retry');
 var domain = require('domain');
 var conf = require('nombo/configmanager');
@@ -93,17 +94,17 @@ Worker.prototype._init = function (options) {
 		cacheFilter: self._options.cacheFilter
 	});
 	
+	var i;
 	if (self._options.release) {
-		for (j in self._minifiedScripts) {
-			cachemere.set(j, self._minifiedScripts[j], 'text/javascript');
+		for (i in self._minifiedScripts) {
+			cachemere.set(i, self._minifiedScripts[i], 'text/javascript');
 		}
 	}
 	
-	for (j in self._bundles) {
-		cachemere.set(j, self._bundles[j], 'text/javascript');
+	for (i in self._bundles) {
+		cachemere.set(i, self._bundles[i], 'text/javascript');
 	}
 	
-	var i;
 	for (i in self._options.resourceSizes) {
 		self._resourceSizes[i] = self._options.resourceSizes[i];
 	}
@@ -232,6 +233,11 @@ Worker.prototype._init = function (options) {
 	self._ioClusterClient.on('sessiondestroy', function (sessionId) {
 		self.emit(self.EVENT_SESSION_DESTROY, sessionId);
 	});
+};
+
+Worker.prototype.handleCacheUpdate = function (url, content, size) {
+	this._resourceSizes[url] = size;
+	cachemere.set(url, content);
 };
 
 Worker.prototype.handleMasterEvent = function () {
@@ -365,12 +371,52 @@ Worker.prototype._start = function () {
 		return result;
 	};
 	
-	cachemere.setPrepProvider(function (url) {
+	var versionDeepCSSURLs = function (content) {
+		if (self._options.release) {
+			content = content.replace(/@import +["']([^"']+)["']/g, function (match, first) {
+				return '@import "' + self._smartCacheManager.setURLCacheVersion(first) + '"';
+			});
+			
+			content = content.replace(/([^A-Za-z0-9]|^)url[(][ ]*["']?([^"')]*)["']?[ ]*[)]/g, function (match, first, second) {
+				return first + 'url("' + self._smartCacheManager.setURLCacheVersion(second) + '")';
+			});
+		}
+		return content;
+	};
+	
+	var extPreps = {
+		js: function (resource) {
+			if (scriptManager.isJSModule(resource.url)) {
+				return scriptManager.moduleWrap(resource.url, resource.content.toString());
+			}
+			return resource.content;
+		},
+		css: function (resource) {
+			return versionDeepCSSURLs(resource.content.toString());
+		},
+		less: function (resource, callback) {
+			data = versionDeepCSSURLs(resource.content.toString());
+			less.render(data, callback);
+		}
+	};
+	
+	var extRegex = /[.]([^.]+)$/;
+	self._prepProvider = function (url) {
 		if (specialPreps[url]) {
 			return specialPreps[url];
 		}
-		return null
-	});
+		var matches = url.match(extRegex);
+		if (matches) {
+			var ext = matches[1];
+			if (extPreps[ext]) {
+				return extPreps[ext];
+			}
+			return false;
+		}
+		return false;
+	};
+	
+	cachemere.setPrepProvider(self._prepProvider);
 	
 	self._server = http.createServer(self._middleware[self.MIDDLEWARE_HTTP].run);
 	

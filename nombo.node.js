@@ -27,7 +27,7 @@ var Master = function (options) {
 	self._errorDomain.add(self);
 
 	self.start = self._errorDomain.bind(self._start);
-	this.init = self._errorDomain.run(function () {
+	self._errorDomain.run(function () {
 		self._init(options);
 	});
 };
@@ -507,7 +507,6 @@ Master.prototype._start = function () {
 	}
 	
 	var libBundleOptions = {
-		debug: !self._options.release,
 		entries: libFilePaths,
 		noParse: libFilePaths
 	};
@@ -543,15 +542,11 @@ Master.prototype._start = function () {
 	};
 
 	var scriptBundleOptions = {
-		debug: !self._options.release,
 		entries: [pathManager.urlToPath(appDef.appScriptsURL + 'index.js')]
 	};
 	
 	var scriptBundle = watchify(scriptBundleOptions);
-	scriptBundle.on('file', function (file) {
-		scriptBundle.require(file);
-	});
-
+	
 	var updateScriptBundle = function (callback) {
 		scriptBundle.bundle({debug: !self._options.release}, function (err, jsBundle) {
 			if (err) {

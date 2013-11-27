@@ -32,7 +32,7 @@ var Worker = function (options) {
 	self._errorDomain.add(self);
 	
 	self.start = self._errorDomain.bind(self._start);
-	self.init = self._errorDomain.run(function () {
+	self._errorDomain.run(function () {
 		self._init(options);
 	});
 };

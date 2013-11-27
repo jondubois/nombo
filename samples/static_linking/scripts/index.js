@@ -5,6 +5,7 @@
 	This avoids the need for waiting for scripts to load asyncronously.
 	This is the simplest and recommended way to link script dependencies.
 */
+
 var a = require('./a');
 
 $(document.body).html('<div style="padding:20px;">' + a.foo() + '</div>');

@@ -434,7 +434,7 @@ var $loader = {
 				
 				var requireName = '/' + scriptName;
 				
-				if (require.modules.hasOwnProperty(requireName)) {
+				if (require.modules[requireName] != null) {
 					return require(requireName);
 				} else {
 					var resourceName = self._options.appScriptsURL + scriptName;

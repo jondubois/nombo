@@ -94,7 +94,7 @@ These are exposed by `require('cachemere')`:
 	- Allows you to specify an optional preprocessor provider. If no prep provider is set, then Cachemere will not preprocess any of your files' contents before caching them.
 	- **Parameters**
 		- `Function`: A function which takes a URL as argument and returns a preprocessor function which will be used by Cachemere to preprocess that file's content. To skip preprocessing for a particular URL, this function should return a boolean true or false.
-		Returning false signifies that the file should be streamed directly from disk. Returning true will cause Cachemere to buffer the file's contents before sending it out).
+		Returning false signifies that the file should be streamed directly from disk. Returning true will cause Cachemere to buffer the file's contents before sending it out.
 		A preprocessor function is in the form function(resourceData) - Where resourceData is an object with a url, path and content property. The content represent's the files content as a Buffer. The preprocessor function can return either a string or a Buffer.
 		The returned value will be cached as the file's preprocessed content.
 

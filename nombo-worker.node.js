@@ -2,6 +2,7 @@ var http = require('http');
 var https = require('https');
 var pathManager = require('nombo/pathmanager');
 var scriptManager = require('nombo/scriptmanager');
+var Uglifier = require('nombo/uglifier').Uglifier;
 var fs = require('fs');
 var url = require('url');
 var querystring = require('querystring');
@@ -74,7 +75,6 @@ Worker.prototype._init = function (options) {
 	self._bundledResources = self._options.bundledResources;
 	
 	self._resourceSizes = {};
-	self._minifiedScripts = self._options.minifiedScripts;
 	
 	self._paths = self._options.paths;
 	
@@ -95,15 +95,17 @@ Worker.prototype._init = function (options) {
 	});
 	
 	var i;
-	if (self._options.release) {
-		for (i in self._minifiedScripts) {
-			cachemere.set(i, self._minifiedScripts[i], 'text/javascript');
-		}
-	}
 	
 	for (i in self._bundles) {
 		cachemere.set(i, self._bundles[i], 'text/javascript');
 	}
+	
+	self._uglifier = new Uglifier({
+		mangle: self._options.minifyMangle,
+		timeout: self._options.minifyTimeout
+	});
+	
+	self._errorDomain.add(self._uglifier);
 	
 	for (i in self._options.resourceSizes) {
 		self._resourceSizes[i] = self._options.resourceSizes[i];
@@ -385,11 +387,22 @@ Worker.prototype._start = function () {
 	};
 	
 	var extPreps = {
-		js: function (resource) {
-			if (scriptManager.isJSModule(resource.url)) {
-				return scriptManager.moduleWrap(resource.url, resource.content.toString());
+		js: function (resource, callback) {
+			var code;
+			
+			if (specialPreps[resource.url]) {
+				code = specialPreps[resource.url](resource);
+			} else {
+				code = resource.content.toString();
 			}
-			return resource.content;
+			if (scriptManager.isJSModule(resource.url)) {
+				code = scriptManager.moduleWrap(resource.url, code);
+			}
+			if (self._options.release) {
+				self._uglifier.minify(code, callback);
+			} else {
+				return code;
+			}
 		},
 		css: function (resource) {
 			return versionDeepCSSURLs(resource.content.toString());
@@ -402,9 +415,6 @@ Worker.prototype._start = function () {
 	
 	var extRegex = /[.]([^.]+)$/;
 	self._prepProvider = function (url) {
-		if (specialPreps[url]) {
-			return specialPreps[url];
-		}
 		var matches = url.match(extRegex);
 		if (matches) {
 			var ext = matches[1];

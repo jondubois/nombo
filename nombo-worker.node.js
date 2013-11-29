@@ -399,7 +399,17 @@ Worker.prototype._start = function () {
 				code = scriptManager.moduleWrap(resource.url, code);
 			}
 			if (self._options.release) {
-				self._uglifier.minify(code, callback);
+				self._uglifier.minify(code, function (err, minifiedCode) {
+					if (err) {
+						if (err instanceof Error) {
+							err = err.message;
+						}
+						self.noticeHandler(err);
+						callback(null, code);
+					} else {
+						callback(null, minifiedCode);
+					}
+				});
 			} else {
 				return code;
 			}

@@ -53,7 +53,7 @@ Master.prototype._init = function (options) {
 		logLevel: 1,
 		connectTimeout: 10,
 		sessionTimeout: 1200,
-		minifyTimeout: 60000,
+		minifyTimeout: 30000,
 		clientCacheLife: 2592000,
 		clientCacheType: 'public',
 		cacheFilter: null,
@@ -363,10 +363,6 @@ Master.prototype._start = function () {
 	var self = this;
 	
 	var appDef = self._getAppDef();
-	self._options.minifyURLs = [appDef.appScriptsURL, appDef.appLibsURL, appDef.frameworkClientURL + 'scripts/load.js',
-		self._paths.frameworkURL + 'nombo-client.js', self._paths.frameworkURL + 'loader.js',
-		self._paths.frameworkURL + 'smartcachemanager.js'
-	];
 
 	var bundles = {};
 	self._workers = [];
@@ -472,9 +468,6 @@ Master.prototype._start = function () {
 			}
 		}
 		var coreLibBundle = libArray.join('\n');
-		if (self._options.release) {
-			coreLibBundle = scriptManager.minify(coreLibBundle);
-		}
 		bundles[appDef.frameworkCoreBundleURL] = coreLibBundle;
 
 		var size = Buffer.byteLength(coreLibBundle, 'utf8');
@@ -520,9 +513,6 @@ Master.prototype._start = function () {
 				self._errorDomain.emit('error', err);
 				callback && callback();
 			} else {
-				if (self._options.release) {
-					jsBundle = scriptManager.minify(jsBundle);
-				}
 				bundles[appDef.appLibBundleURL] = jsBundle;
 				var size = Buffer.byteLength(jsBundle, 'utf8');
 				var data;
@@ -554,9 +544,6 @@ Master.prototype._start = function () {
 				self._errorDomain.emit('error', err);
 				callback && callback();
 			} else {
-				if (self._options.release) {
-					jsBundle = scriptManager.minify(jsBundle);
-				}
 				bundles[appDef.appScriptBundleURL] = jsBundle;
 				var size = Buffer.byteLength(jsBundle, 'utf8');
 				var data;
@@ -607,8 +594,6 @@ Master.prototype._start = function () {
 			updateScriptBundle();
 		});
 	};
-
-	var minifiedScripts = scriptManager.minifyScripts(self._options.minifyURLs);
 
 	var leaderId = -1;
 	var firstTime = true;
@@ -763,7 +748,6 @@ Master.prototype._start = function () {
 			workerOpts.workerPort = workerData.port;
 			workerOpts.stores = stores;
 			workerOpts.dataKey = pass;
-			workerOpts.minifiedScripts = minifiedScripts;
 			workerOpts.bundles = bundles;
 			workerOpts.bundledResources = self._bundledResources;
 			workerOpts.resourceSizes = self._resourceSizes;

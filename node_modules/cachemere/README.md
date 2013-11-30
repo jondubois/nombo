@@ -111,7 +111,7 @@ These are exposed by `require('cachemere')`:
 	};
 
 	cachemere.setPrepProvider(function (url) {
-		// Only preprocess files with .txt extension, the others will be streamed from Disk (unless they are already cached).
+		// Only preprocess files with .txt extension
 		if (textFileRegex.test(url)) {
 			return textPrep;
 		}
@@ -133,7 +133,7 @@ Note that you can manipulate any of the properties of a Resource before outputti
 
 - `status` _(Number)_: The status of the HTTP response associated with this resource.
 - `headers` _(Object)_: An object representing headers which will be sent along with this resource's content. Feel free to add additional headers as required.
-- `content` _(ReadableStream|Buffer)_: The resource's content as a readable stream or Buffer (depending on whether it should be streamed directly from the file system *miss* or served from cache *hit*).
+- `content` _(Buffer)_: The resource's content as a Buffer.
 
 ##### Methods
 

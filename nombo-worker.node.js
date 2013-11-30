@@ -106,6 +106,7 @@ Worker.prototype._init = function (options) {
 	});
 	
 	self._errorDomain.add(self._uglifier);
+	self._uglifier.on('notice', self.noticeHandler.bind(self));
 	
 	for (i in self._options.resourceSizes) {
 		self._resourceSizes[i] = self._options.resourceSizes[i];

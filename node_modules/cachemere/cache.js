@@ -2,8 +2,9 @@ var EventEmitter = require('events').EventEmitter;
 
 var Cache = function (options) {
 	var self = this;
-	self.ENCODING_PLAIN = 'plain';
-	self.ENCODING_SEPARATOR = '::';
+	
+	self.ENCODING_PLAIN = Cache.ENCODING_PLAIN;
+	self.ENCODING_SEPARATOR = Cache.ENCODING_SEPARATOR;
 	
 	self.reset = function () {
 		self._cache = {};
@@ -253,5 +254,8 @@ var Cache = function (options) {
 };
 
 Cache.prototype = Object.create(EventEmitter.prototype);
+
+Cache.ENCODING_PLAIN = 'plain';
+Cache.ENCODING_SEPARATOR = '::';
 
 module.exports.Cache = Cache

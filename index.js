@@ -20,11 +20,15 @@ module.exports = function(filename) {
     var totalPrelude = prepend + nodeModuleRequires;
     var offset = totalPrelude.split('\n').length - 1;
     
-    var complete = totalPrelude + combine.removeComments(buffer) + postpend;
+    var partial = totalPrelude + combine.removeComments(buffer);
+    if (partial.charAt(partial.length - 1) !== ';') {
+        partial += ';';
+    }
+    var complete = partial + postpend;
     
     var map = combine.create().addFile({ sourceFile: filename, source: buffer}, {line: offset});
 
-    this.queue( complete + '\n'+map.comment());
+    this.queue( complete + '\n' + map.comment());
 
     this.queue(null);
   });

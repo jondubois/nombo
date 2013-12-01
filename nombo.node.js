@@ -12,6 +12,7 @@ var crypto = require('crypto');
 var EventEmitter = require('events').EventEmitter;
 var domain = require('domain');
 var fork = require('child_process').fork;
+var requireify = require('requireify');
 
 var Master = function (options) {
 	var self = this;
@@ -534,6 +535,7 @@ Master.prototype._start = function () {
 	};
 	
 	var scriptBundle = watchify(scriptBundleOptions);
+	scriptBundle.transform(requireify);
 	
 	var updateScriptBundle = function (callback) {
 		scriptBundle.bundle({debug: !self._options.release}, function (err, jsBundle) {

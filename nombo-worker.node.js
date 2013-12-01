@@ -647,7 +647,9 @@ Worker.prototype._sessionHandler = function (req, res, next) {
 				req.session = this._ioClusterClient.session(sid);
 				next();
 			} else if (!this._options.publicResources && url != self._paths.freshnessURL) {
-				res.writeHead(500);
+				res.writeHead(500, {
+					'Content-Type': 'text/plain'
+				});
 				res.end('File cannot be accessed outside of a session');
 			} else {
 				next();

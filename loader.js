@@ -433,9 +433,10 @@ var $loader = {
 				}
 				
 				var requireName = '/' + scriptName;
+				var bundledModule = require(requireName);
 				
-				if (require.modules[requireName] != null) {
-					return require(requireName);
+				if (bundledModule != null) {
+					return bundledModule;
 				} else {
 					var resourceName = self._options.appScriptsURL + scriptName;
 					return self.script(resourceName);
@@ -1112,11 +1113,11 @@ $loader.Script = function (resourceName) {
 			}
 		}
 		
-		if (self._activeScripts[self.loader.name]) {
+		if ($loader.grab._activeScripts[self.loader.name]) {
 			moduleLoaded();
 		} else {
-			self.loadAndEmbedScript(self.loader.name, moduleLoaded);
-			self._activeScripts[self.loader.name] = true;
+			$loader.grab.loadAndEmbedScript(self.loader.name, moduleLoaded);
+			$loader.grab._activeScripts[self.loader.name] = true;
 		}
 	}
 }

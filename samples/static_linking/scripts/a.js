@@ -5,4 +5,4 @@ exports.foo = function() {
 	var dataFromDScript = b.run();
 	
 	return 'This is a.foo(), ' + b.foo() + ', ' + c.getMessage() + ', ' + dataFromDScript;
-}
+};

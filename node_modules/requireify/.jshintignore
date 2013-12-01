@@ -1,0 +1,4 @@
+node_modules
+test/compiled.js
+test/compiled-for-source-maps.js
+test/compiled-for-coffee-source-maps.js

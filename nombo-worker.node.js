@@ -389,34 +389,50 @@ Worker.prototype._start = function () {
 	
 	var extPreps = {
 		js: function (resource, callback) {
-			var code;
+			var content;
 			
 			if (specialPreps[resource.url]) {
-				code = specialPreps[resource.url](resource);
+				content = specialPreps[resource.url](resource);
 			} else {
-				code = resource.content.toString();
+				content = resource.content.toString();
 			}
 			if (scriptManager.isJSModule(resource.url)) {
-				code = scriptManager.moduleWrap(resource.url, code);
+				content = scriptManager.moduleWrap(resource.url, content);
 			}
 			if (self._options.release) {
-				self._uglifier.minify(code, function (err, minifiedCode) {
+				self._uglifier.minifyJS(content, function (err, minifiedContent) {
 					if (err) {
 						if (err instanceof Error) {
 							err = err.message;
 						}
 						self.noticeHandler(err);
-						callback(null, code);
+						callback(null, content);
 					} else {
-						callback(null, minifiedCode);
+						callback(null, minifiedContent);
 					}
 				});
 			} else {
-				return code;
+				return content;
 			}
 		},
-		css: function (resource) {
-			return versionDeepCSSURLs(resource.content.toString());
+		css: function (resource, callback) {
+			var content = versionDeepCSSURLs(resource.content.toString());
+			
+			if (self._options.release) {
+				self._uglifier.minifyCSS(content, function (err, minifiedContent) {
+					if (err) {
+						if (err instanceof Error) {
+							err = err.message;
+						}
+						self.noticeHandler(err);
+						callback(null, content);
+					} else {
+						callback(null, minifiedContent);
+					}
+				});
+			} else {
+				return content;
+			}
 		},
 		less: function (resource, callback) {
 			data = versionDeepCSSURLs(resource.content.toString());

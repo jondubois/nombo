@@ -403,9 +403,6 @@ Master.prototype._start = function () {
 
 	var updateCSSBundle = function () {
 		var cssBundle = styleBundle.bundle(cssURLFilter);
-		if (self._options.release) {
-			cssBundle = styleBundle.minify(cssBundle);
-		}
 		var size = Buffer.byteLength(cssBundle, 'utf8');
 		var data;
 		for (var i in self._workers) {

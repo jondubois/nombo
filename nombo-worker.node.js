@@ -1,6 +1,5 @@
 var http = require('http');
 var https = require('https');
-var pathManager = require('nombo/pathmanager');
 var scriptManager = require('nombo/scriptmanager');
 var Uglifier = require('nombo/uglifier').Uglifier;
 var fs = require('fs');
@@ -21,7 +20,6 @@ var ncom = require('ncom');
 var less = require('less');
 var retry = require('retry');
 var domain = require('domain');
-var conf = require('nombo/configmanager');
 
 var Worker = function (options) {
 	var self = this;

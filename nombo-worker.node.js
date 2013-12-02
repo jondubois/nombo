@@ -84,6 +84,7 @@ Worker.prototype._init = function (options) {
 	scriptManager.setBaseURL(self._paths.appURL);
 	
 	self._errorDomain.add(cachemere);
+	cachemere.on('notice', self.noticeHandler.bind(self));
 	
 	cachemere.init({
 		mapper: pathManager.urlToPath,
@@ -160,35 +161,36 @@ Worker.prototype._init = function (options) {
 		return req && res && !res.finished;
 	};
 	
-	self._httpMethodJunction = function (req, res) {
-		if (req.method == 'POST') {
-			self._middleware[self.MIDDLEWARE_POST].run(req, res)
-		} else {
-			self._middleware[self.MIDDLEWARE_GET].run(req, res)
-		}
-	};
-	
-	self._rout = function (req, res, next) {
+	self._fetchFile = function (req, res, next) {
 		cachemere.fetch(req, function (err, resource) {
-			var exp = new Date(Date.now() + self._options.clientCacheLife * 1000).toUTCString();
-			resource.headers['Cache-Control'] = self._options.clientCacheType;
-			resource.headers['Pragma'] = self._options.clientCacheType;
-			resource.headers['Expires'] = exp;
+			if (req.params.cv) {
+				var exp = new Date(Date.now() + self._options.clientCacheLife * 1000).toUTCString();
+				resource.headers['Cache-Control'] = self._options.clientCacheType;
+				resource.headers['Pragma'] = self._options.clientCacheType;
+				resource.headers['Expires'] = exp;
+			}
 			resource.output(res);
 		});
 	};
 	
 	self._middleware[self.MIDDLEWARE_GET] = stepper.create({context: self});
-	self._middleware[self.MIDDLEWARE_GET].setTail(self._rout);
-	
+	self._middleware[self.MIDDLEWARE_GET].setTail(self._fetchFile);
 	self._middleware[self.MIDDLEWARE_GET].setValidator(self._responseNotSentValidator);
 	
-	self._routStepper = stepper.create({context: self});
-	self._routStepper.addFunction(self._statusRequestHandler);
-	self._routStepper.addFunction(self._getParamsHandler);
-	self._routStepper.addFunction(self._sessionHandler);
-	self._routStepper.addFunction(self._cacheVersionHandler);
-	self._routStepper.setTail(self._httpMethodJunction);
+	self._httpMethodJunction = function (req, res) {
+		if (req.method == 'POST') {
+			self._middleware[self.MIDDLEWARE_POST].run(req, res);
+		} else {
+			self._middleware[self.MIDDLEWARE_GET].run(req, res);
+		}
+	};
+	
+	self._mainStepper = stepper.create({context: self});
+	self._mainStepper.addFunction(self._statusRequestHandler);
+	self._mainStepper.addFunction(self._getParamsHandler);
+	self._mainStepper.addFunction(self._sessionHandler);
+	self._mainStepper.addFunction(self._cacheVersionHandler);
+	self._mainStepper.setTail(self._httpMethodJunction);
 	
 	self._middleware[self.MIDDLEWARE_POST] = stepper.create({context: self});
 	self._middleware[self.MIDDLEWARE_POST].setTail(function () {
@@ -197,7 +199,7 @@ Worker.prototype._init = function (options) {
 		}
 	});
 	
-	self._middleware[self.MIDDLEWARE_HTTP].setTail(self._routStepper);
+	self._middleware[self.MIDDLEWARE_HTTP].setTail(self._mainStepper);
 	
 	self._middleware[self.MIDDLEWARE_RPC] = stepper.create({context: self});
 	self._middleware[self.MIDDLEWARE_RPC].setTail(gateway.exec);
@@ -506,7 +508,9 @@ Worker.prototype._start = function () {
 		if (err) {
 			throw new Error('Failed to get favicon due to the following error: ' + (err.message || err));
 		} else {
-			cachemere.set('/favicon.ico', data, 'image/gif');
+			var favURL = '/favicon.ico';
+			cachemere.set(favURL, data, 'image/gif');
+			self.allowFullAuthResource(favURL);
 			cachemere.on('ready', function () {
 				self._socketServer.on('ready', self.ready.bind(self));
 			});
@@ -636,10 +640,12 @@ Worker.prototype._sessionHandler = function (req, res, next) {
 	} else {		
 		if (self.isFullAuthResource(url)) {
 			cachemere.fetch(req, function (err, resource) {
-				var exp = new Date(Date.now() + self._options.clientCacheLife * 1000).toUTCString();
-				resource.headers['Cache-Control'] = self._options.clientCacheType;
-				resource.headers['Pragma'] = self._options.clientCacheType;
-				resource.headers['Expires'] = exp;
+				if (req.params.cv) {
+					var exp = new Date(Date.now() + self._options.clientCacheLife * 1000).toUTCString();
+					resource.headers['Cache-Control'] = self._options.clientCacheType;
+					resource.headers['Pragma'] = self._options.clientCacheType;
+					resource.headers['Expires'] = exp;
+				}
 				resource.output(res);
 			});
 		} else {
@@ -650,7 +656,10 @@ Worker.prototype._sessionHandler = function (req, res, next) {
 				res.writeHead(500, {
 					'Content-Type': 'text/plain'
 				});
-				res.end('File cannot be accessed outside of a session');
+				console.log(666, req.url);
+				var notice = 'File cannot be accessed outside of a session';
+				res.end(notice);
+				self.noticeHandler(notice);
 			} else {
 				next();
 			}

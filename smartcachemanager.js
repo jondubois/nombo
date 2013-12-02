@@ -70,6 +70,10 @@ var SmartCacheManager = function (cacheVersion) {
 		return 'cv=' + cacheVersion;
 	};
 	
+	self.setCacheVersion = function (version) {
+		cacheVersion = version;
+	};
+	
 	self.getCacheVersion = function () {
 		return cacheVersion;
 	};

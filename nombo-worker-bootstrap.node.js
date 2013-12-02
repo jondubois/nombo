@@ -15,6 +15,9 @@ var handleError = function (err) {
 };
 
 var handleNotice = function (notice) {
+	if (notice instanceof Error) {
+		notice = notice.message;
+	}
 	process.send({type: 'notice', data: notice});
 };
 

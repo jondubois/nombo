@@ -157,10 +157,6 @@ Worker.prototype._init = function (options) {
 	
 	self._errorDomain.add(self._middleware[self.MIDDLEWARE_IO]);
 	
-	self._responseNotSentValidator = function (req, res) {
-		return req && res && !res.finished;
-	};
-	
 	self._fetchFile = function (req, res, next) {
 		cachemere.fetch(req, function (err, resource) {
 			if (req.params.cv) {
@@ -175,7 +171,6 @@ Worker.prototype._init = function (options) {
 	
 	self._middleware[self.MIDDLEWARE_GET] = stepper.create({context: self});
 	self._middleware[self.MIDDLEWARE_GET].setTail(self._fetchFile);
-	self._middleware[self.MIDDLEWARE_GET].setValidator(self._responseNotSentValidator);
 	
 	self._httpMethodJunction = function (req, res) {
 		if (req.method == 'POST') {

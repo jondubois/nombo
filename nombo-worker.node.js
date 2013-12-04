@@ -17,6 +17,7 @@ var EventEmitter = require('events').EventEmitter;
 var SmartCacheManager = require("./smartcachemanager").SmartCacheManager;
 var socketCluster = require('socketcluster-server');
 var ncom = require('ncom');
+var cheerio = require('cheerio');
 var less = require('less');
 var retry = require('retry');
 var domain = require('domain');
@@ -111,8 +112,6 @@ Worker.prototype._init = function (options) {
 		self._resourceSizes[i] = self._options.resourceSizes[i];
 	}
 	
-	self._rootTemplateBody = fs.readFileSync(self._paths.frameworkClientDirPath + '/index.html', 'utf8');
-	self._rootTemplate = handlebars.compile(self._rootTemplateBody);
 	self._fullAuthResources = {};
 	
 	self._cacheVersion = self._options.cacheVersion;
@@ -310,31 +309,6 @@ Worker.prototype._getFavicon = function (callback) {
 Worker.prototype._start = function () {
 	var self = this;
 	
-	self._includeString = self._createScriptTag(self._paths.freshnessURL, 'text/javascript', true) + "\n\t";
-	self._includeString += self._createScriptTag(self._paths.frameworkURL + 'smartcachemanager.js', 'text/javascript') + "\n\t";
-	self._includeString += self._createScriptTag(self._paths.spinJSURL, 'text/javascript') + "\n\t";
-	self._includeString += self._createScriptTag(self._paths.frameworkSocketClientURL, 'text/javascript') + "\n\t";
-	self._includeString += self._createScriptTag(self._paths.frameworkURL + 'session.js', 'text/javascript');
-	
-	var htmlAttr = '';
-	var bodyAttr = '';
-	
-	if (self._options.angular) {
-		htmlAttr += ' xmlns:ng="http://angularjs.org"';
-		bodyAttr = ' ng-cloak';
-	} else {
-		htmlAttr += ' xmlns="http://www.w3.org/1999/xhtml"';
-	}
-	
-	var rootHTML = self._rootTemplate({
-		title: self._options.title,
-		includes: new handlebars.SafeString(self._includeString),
-		htmlAttr: htmlAttr,
-		bodyAttr: bodyAttr
-	});
-	
-	cachemere.set('/', rootHTML, 'text/html');
-	
 	var appDef = self._options.appDef;
 	
 	if (self._resourceSizes[appDef.appStyleBundleURL] <= 0) {
@@ -367,6 +341,36 @@ Worker.prototype._start = function () {
 			debug: self._options.release ? 'false' : 'true'
 		});
 		return result;
+	};
+	
+	var scriptTags = [];
+	scriptTags.push(self._createScriptTag(self._paths.freshnessURL, 'text/javascript', true));
+	scriptTags.push(self._createScriptTag(self._paths.frameworkURL + 'smartcachemanager.js', 'text/javascript'));
+	scriptTags.push(self._createScriptTag(self._paths.spinJSURL, 'text/javascript'));
+	scriptTags.push(self._createScriptTag(self._paths.frameworkSocketClientURL, 'text/javascript'));
+	scriptTags.push(self._createScriptTag(self._paths.frameworkURL + 'session.js', 'text/javascript'));
+	
+	specialPreps[self._paths.appURL] = function (data) {
+		var $ = cheerio.load(data.content.toString());
+		if (self._options.angular) {
+			if (!$('html').attr('xmlns:ng')) {
+				$('html').attr('xmlns:ng', 'http://angularjs.org');
+			}
+			$('body').attr('ng-cloak', '1');
+		} else {
+			if (!$('html').attr('xmlns')) {
+				$('html').attr('xmlns', 'http://www.w3.org/1999/xhtml');
+			}
+		}
+		if ($('title').length) {
+			$('title').text(self._options.title);
+		} else {
+			$('head').append('<title>' + self._options.title + '</title>');
+		}
+		for (var i in scriptTags) {
+			$('head').append(scriptTags[i]);
+		}
+		return $.html();
 	};
 	
 	var versionDeepCSSURLs = function (content) {
@@ -444,6 +448,8 @@ Worker.prototype._start = function () {
 				return extPreps[ext];
 			}
 			return false;
+		} else if (specialPreps[url]) {
+			return specialPreps[url];
 		}
 		return false;
 	};
@@ -651,7 +657,6 @@ Worker.prototype._sessionHandler = function (req, res, next) {
 				res.writeHead(500, {
 					'Content-Type': 'text/plain'
 				});
-				console.log(666, req.url);
 				var notice = 'File cannot be accessed outside of a session';
 				res.end(notice);
 				self.noticeHandler(notice);

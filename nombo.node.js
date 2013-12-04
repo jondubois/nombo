@@ -149,12 +149,13 @@ Master.prototype._init = function (options) {
 
 	self._paths.appLoadScriptPath = self._paths.appDirPath + '/scripts/load.js';
 	self._paths.frameworkLoadScriptPath = self._paths.frameworkClientDirPath + '/scripts/load.js';
-	self._paths.rootTemplateURL = self._paths.frameworkClientURL + 'index.html';
 
 	self._paths.spinJSURL = self._paths.frameworkClientURL + 'libs/spin.js';
 	self._paths.appURL = '/';
 	self._paths.freshnessURL = self._paths.appURL + '~freshness';
 	self._paths.statusURL = self._paths.appURL + '~status';
+	
+	self._paths.rootTemplateURL = self._paths.appURL + 'index.html';
 	
 	self._appName = path.basename(self._paths.appDirPath);
 	self._options.appName = self._appName;

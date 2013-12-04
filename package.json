@@ -40,6 +40,7 @@
 		"base64id": "0.1.0",
 		"browserify": "2.36.0",
 		"cachemere": "0.9.4",
+		"cheerio": "0.12.4",
 		"clean-css": "1.0.4",
 		"commander": "0.5.2",
 		"eventemitter2": "0.4.9",
@@ -61,8 +62,8 @@
 		"redis": "0.7.3",
 		"requireify": "0.1.0",
 		"retry": "0.6.0",
-		"socketcluster-server": ">= 0.9.6",
 		"socketcluster-client": ">= 0.9.3",
+		"socketcluster-server": ">= 0.9.6",
 		"uglify-js": "2.3.6",
 		"watchify": "0.3.0",
 		"watchr": "2.3.9",
@@ -72,7 +73,6 @@
 		"zeparser": "0.0.7"
 	},
 	"bundleDependencies": [
-		"css-bundler",
 		"fileuploader",
 		"json",
 		"nombo",

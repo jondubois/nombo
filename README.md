@@ -22,6 +22,24 @@ To create a 'nombo-samples/' directory containing sample apps use:
 nombo samples
 ```
 
+If you would like to contribute to the Nombo framework, you should:
+
+1. Fork this repo.
+2. Clone your forked repo to your machine.
+3. Navigate to the nombo/ directory on your machine.
+4. Run npm install to fetch all npm dependencies (necessary or otherwise, it will not work)
+5. Make your changes, commit them and push to your fork
+6. Submit a pull request
+
+Note that to test your changes, you should run the sample apps which are inside the nombo/samples/ directory.
+For example, to run the chat app from inside the main nombo/ directory, you will need to run:
+
+```js
+node samples/chat/server.node
+```
+
+Feel free to add more sample apps, especially ones that will help with testing Nombo as it matures.
+
 ==================
 
 #### Key Features

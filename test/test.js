@@ -69,6 +69,16 @@ b.transform(coffeeify).transform(requireify)
    assert.equal(json.sourcemap.mappings, expected);
  });
 
+var b = browserify();
+
+// test for last curly brace error in issue #4
+b.transform(requireify)
+ .add(__dirname+'/regressions/last-char-curly-brace.js')
+ .bundle({ debug: true }, function(err, src){
+    console.log(src);
+ });
+
+
 function getContext(){
   return {console:{log: function(){
      console.log.apply(console, arguments);

@@ -6,8 +6,8 @@ var detective = require('detective');
 var generator = require('inline-source-map');
 var combine = require('combine-source-map');
 
-var prepend = innersource(addRequire).replace(/\n/g, '');
-var postpend = innersource(addModule).replace(/\n/g, '');
+var prepend = innersource(addRequire).replace(/[\n\r]/g, '');
+var postpend = innersource(addModule).replace(/[\n\r]/g, '');
 
 module.exports = function(filename) {
   var buffer = '';

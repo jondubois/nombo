@@ -75,7 +75,12 @@ var b = browserify();
 b.transform(requireify)
  .add(__dirname+'/regressions/last-char-curly-brace.js')
  .bundle({ debug: true }, function(err, src){
-    console.log(src);
+    if(err){
+      throw err;
+    }
+   var script = vm.createScript(src);
+   var context = getContext();
+   script.runInNewContext(context);
  });
 
 

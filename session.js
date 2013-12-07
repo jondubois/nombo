@@ -1,7 +1,7 @@
 var IE = false;
 var IE_VERSION = 0;
 
-if(/MSIE (\d+\.\d+);/.test(navigator.userAgent)) {
+if (/MSIE (\d+\.\d+);/.test(navigator.userAgent)) {
 	IE = true;
 	IE_VERSION = new Number(RegExp.$1)
 }
@@ -19,6 +19,7 @@ var NOMBO_APP_DEF = {{{appDef}}};
 var NOMBO_RESOURCES = {{{resources}}};
 var NOMBO_DEBUG = {{debug}};
 var NOMBO_ERROR = 'Unkown Error';
+var NOMBO_SPINNER = {{spinner}};
 var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 
 (function () {
@@ -29,18 +30,18 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 	}
 
 	var head = document.getElementsByTagName('head');
-	if(head) {
+	if (head) {
 		head = head[0];
 	}
 
 	var ncOnScriptLoad = function (scriptTag, callback) {
-		if(!NOMBO_IE || NOMBO_IE_VERSION > 8) {
+		if (!NOMBO_IE || NOMBO_IE_VERSION > 8) {
 			scriptTag.onload = function () {
 				callback();
 			}
 		} else {
 			scriptTag.onreadystatechange = function () {
-				if(this.readyState == 'complete' || this.readyState == 'loaded') {
+				if (this.readyState == 'complete' || this.readyState == 'loaded') {
 					callback();
 				}
 			}
@@ -54,7 +55,7 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 	
 	url = NOMBO_FRAMEWORK_URL + 'loader.js';
 	
-	if(!NOMBO_DEBUG) {
+	if (!NOMBO_DEBUG) {
 		url = smartCacheManager.setURLCacheVersion(url);
 	}
 	
@@ -66,43 +67,45 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 	
 	head.appendChild(loadScript);
 
-	var spinnerOpts = {
-		lines: 8,
-		length: 5,
-		width: 4,
-		radius: 7,
-		corners: 2,
-		rotate: 0,
-		color: '#666',
-		speed: 1,
-		trail: 60,
-		shadow: false,
-		hwaccel: false,
-		zIndex: 2e9,
-		top: 'auto',
-		left: 'auto'
-	};
-	
-	for (var i in NOMBO_SPINNER_OPTIONS) {
-		spinnerOpts[i] = NOMBO_SPINNER_OPTIONS[i];
-	};
-	
-	spinnerOpts.className = 'ncspinner';
+	if (NOMBO_SPINNER) {
+		var spinnerOpts = {
+			lines: 8,
+			length: 5,
+			width: 4,
+			radius: 7,
+			corners: 2,
+			rotate: 0,
+			color: '#666',
+			speed: 1,
+			trail: 60,
+			shadow: false,
+			hwaccel: false,
+			zIndex: 2e9,
+			top: 'auto',
+			left: 'auto'
+		};
+		
+		for (var i in NOMBO_SPINNER_OPTIONS) {
+			spinnerOpts[i] = NOMBO_SPINNER_OPTIONS[i];
+		};
+		
+		spinnerOpts.className = 'ncspinner';
 
-	var spinnerDiv = document.createElement('div');
+		var spinnerDiv = document.createElement('div');
 
-	spinnerDiv.id = spinnerOpts.className;
-	spinnerDiv.style.width = spinnerOpts.radius * 2 + 'px';
-	spinnerDiv.style.height = spinnerOpts.radius * 2 + 'px';
-	spinnerDiv.style.position = 'absolute';
-	spinnerDiv.style.left = '50%';
-	spinnerDiv.style.top = '50%';
+		spinnerDiv.id = spinnerOpts.className;
+		spinnerDiv.style.width = spinnerOpts.radius * 2 + 'px';
+		spinnerDiv.style.height = spinnerOpts.radius * 2 + 'px';
+		spinnerDiv.style.position = 'absolute';
+		spinnerDiv.style.left = '50%';
+		spinnerDiv.style.top = '50%';
 
-	var spinner = new Spinner(spinnerOpts).spin(spinnerDiv);
+		var spinner = new Spinner(spinnerOpts).spin(spinnerDiv);
+	}
 	
 	function setCookie(name, value, expirySeconds) {
 		var exdate = null;
-		if(expirySeconds) {
+		if (expirySeconds) {
 			exdate = new Date();
 			exdate.setTime(exdate.getTime() + Math.round(expirySeconds * 1000));
 		}
@@ -112,11 +115,11 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 
 	function getCookie(name) {
 	    var i, x, y, ARRcookies = document.cookie.split(';');
-	    for(i = 0; i < ARRcookies.length; i++) {
+	    for (i = 0; i < ARRcookies.length; i++) {
 			x = ARRcookies[i].substr(0, ARRcookies[i].indexOf('='));
 			y = ARRcookies[i].substr(ARRcookies[i].indexOf('=') + 1);
 			x = x.replace(/^\s+|\s+$/g, '');
-			if(x == name) {
+			if (x == name) {
 				return unescape(y);
 			}
 	    }
@@ -125,12 +128,12 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 	var cookiesEnabledResult = false;
 	
 	function areCookiesEnabled() {
-		if(cookiesEnabledResult) {
+		if (cookiesEnabledResult) {
 			return true;
 		}
 		var cookieName = 'n/cookiecheck';
 		setCookie(cookieName, '1');
-		if(getCookie(cookieName) != null) {
+		if (getCookie(cookieName) != null) {
 			cookiesEnabledResult = true;
 			setCookie(cookieName, '', -100);
 		}
@@ -142,19 +145,21 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 	};
 
 	var readyInterval = setInterval(function () {
-		if(document.body) {
-			if(areCookiesEnabled()) {
+		if (document.body) {
+			if (areCookiesEnabled()) {
 				clearInterval(readyInterval);
-				appendSpinner();
+				if (NOMBO_SPINNER) {
+					appendSpinner();
+				}
 			} else {
-				if(document.head) {
+				if (document.head) {
 					clearInterval(readyInterval);
 					var cookiesDisabledScript = document.createElement('script');
 					cookiesDisabledScript.type = 'text/javascript';
 					
 					url = NOMBO_FRAMEWORK_CLIENT_URL + 'scripts/cookiesdisabled.js';
 					
-					if(!NOMBO_DEBUG) {
+					if (!NOMBO_DEBUG) {
 						url = smartCacheManager.setURLCacheVersion(url);
 					}
 					
@@ -167,7 +172,7 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 
 	var _getHTTPReqObject = function () {
 		var xmlhttp = null;
-		if(NOMBO_IE) {
+		if (NOMBO_IE) {
 			try {
 				xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
 			} catch (exceptionA) {
@@ -185,7 +190,7 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 				xmlhttp = null;
 			}
 		}
-		if(!xmlhttp) {
+		if (!xmlhttp) {
 			throw new Error("Could not instantiate XMLHttpRequest");
 		}
 		return xmlhttp;
@@ -209,7 +214,7 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 			}
 			var soidDest = soid.match(sessionDestRegex);
 			soidDest = soidDest ? soidDest[0]: null;
-			if(!ssid || soidDest != ssidDest) {
+			if (!ssid || soidDest != ssidDest) {
 				ssid = soid;
 				setCookie(sessionCookieName, ssid);
 			}
@@ -234,7 +239,7 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 		self.startSession = function (callback) {
 			var timeoutCallback = null;
 			
-			if(NOMBO_SOCKET && (NOMBO_SOCKET.readyState == 'open' || NOMBO_SOCKET.readyState == 'opening')) {
+			if (NOMBO_SOCKET && (NOMBO_SOCKET.readyState == 'open' || NOMBO_SOCKET.readyState == 'opening')) {
 				NOMBO_SOCKET.removeAllListeners();
 				NOMBO_SOCKET.close();
 			}
@@ -247,9 +252,9 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 			
 			NOMBO_SOCKET = NOMBO_SOCKET_ENGINE.connect(options);
 		    
-			if(callback) {
+			if (callback) {
 				var errorCallback = function (err) {
-					if(err != 'client not handshaken') {
+					if (err != 'client not handshaken') {
 						clearTimeout(timeoutCallback);
 						NOMBO_SOCKET.removeListener('connect', connectCallback);
 						NOMBO_SOCKET.removeListener('fail', errorCallback);
@@ -265,7 +270,7 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 					callback(null, sessionID);
 				}
 				
-				if(timeout > 0) {
+				if (timeout > 0) {
 					timeoutCallback = setTimeout(function () {
 						NOMBO_SOCKET.removeListener('connect', connectCallback);
 						NOMBO_SOCKET.removeListener('fail', errorCallback);
@@ -280,13 +285,13 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 		
 		self.endSession = function (callback) {
 			var timeoutCallback = null;
-			if(callback) {
+			if (callback) {
 				var disconnectCallback = function () {
 					clearTimeout(timeoutCallback);
 					callback(null);
 				}
 			
-				if(timeout > 0) {
+				if (timeout > 0) {
 					timeoutCallback = setTimeout(function () {
 						NOMBO_SOCKET.removeListener('close', disconnectCallback);
 						callback('Disconnection attempt timed out')
@@ -300,17 +305,21 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 	})();
 	
 	var ncBegin = function () {
-		if(areCookiesEnabled()) {
+		if (areCookiesEnabled()) {
 			var startLoader = function () {
-				if(document.getElementById('ncspinner')) {
-					document.body.removeChild(spinnerDiv);
-					beginLoading();
+				if (NOMBO_SPINNER) {
+					if (document.getElementById(spinnerOpts.className)) {
+						document.body.removeChild(spinnerDiv);
+						beginLoading();
+					} else {
+						setTimeout(startLoader, 20);
+					}
 				} else {
-					setTimeout(startLoader, 20);
+					beginLoading();
 				}
 			}
 
-			if(ncScriptLoaded) {
+			if (ncScriptLoaded) {
 				startLoader();
 			} else {
 				ncOnScriptLoad(loadScript, function () {
@@ -321,9 +330,9 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 	};
 	
 	var handler = function (err, ssid) {
-		if(err) {
+		if (err) {
 			var head = document.getElementsByTagName('head');
-			if(head) {
+			if (head) {
 				head = head[0];
 			}
 			

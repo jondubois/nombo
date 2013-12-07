@@ -50,6 +50,7 @@ Master.prototype._init = function (options) {
 		},
 		protocol: 'http',
 		protocolOptions: null,
+		spinner: true,
 		spinnerOptions: null,
 		transports: ['polling', 'websocket'],
 		logLevel: 1,

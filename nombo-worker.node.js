@@ -339,6 +339,7 @@ Worker.prototype._start = function () {
 			appDef: JSON.stringify(appDef),
 			resources: JSON.stringify(self._bundledResources),
 			debug: self._options.release ? 'false' : 'true',
+			spinner: self._options.spinner ? 'true' : 'false',
 			spinnerOptions: JSON.stringify(self._options.spinnerOptions)
 		});
 		return result;

@@ -338,7 +338,8 @@ Worker.prototype._start = function () {
 			timeout: self._options.connectTimeout * 1000,
 			appDef: JSON.stringify(appDef),
 			resources: JSON.stringify(self._bundledResources),
-			debug: self._options.release ? 'false' : 'true'
+			debug: self._options.release ? 'false' : 'true',
+			spinnerOptions: JSON.stringify(self._options.spinnerOptions)
 		});
 		return result;
 	};

@@ -19,6 +19,7 @@ var NOMBO_APP_DEF = {{{appDef}}};
 var NOMBO_RESOURCES = {{{resources}}};
 var NOMBO_DEBUG = {{debug}};
 var NOMBO_ERROR = 'Unkown Error';
+var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 
 (function () {
 	var freshnessURL = NOMBO_APP_DEF.freshnessURL;
@@ -66,26 +67,31 @@ var NOMBO_ERROR = 'Unkown Error';
 	head.appendChild(loadScript);
 
 	var spinnerOpts = {
-	  lines: 8,
-	  length: 5,
-	  width: 4,
-	  radius: 7,
-	  corners: 2,
-	  rotate: 0,
-	  color: '#666',
-	  speed: 1,
-	  trail: 60,
-	  shadow: false,
-	  hwaccel: false,
-	  className: 'ncspinner',
-	  zIndex: 2e9,
-	  top: 'auto',
-	  left: 'auto'
+		lines: 8,
+		length: 5,
+		width: 4,
+		radius: 7,
+		corners: 2,
+		rotate: 0,
+		color: '#666',
+		speed: 1,
+		trail: 60,
+		shadow: false,
+		hwaccel: false,
+		zIndex: 2e9,
+		top: 'auto',
+		left: 'auto'
 	};
+	
+	for (var i in NOMBO_SPINNER_OPTIONS) {
+		spinnerOpts[i] = NOMBO_SPINNER_OPTIONS[i];
+	};
+	
+	spinnerOpts.className = 'ncspinner';
 
 	var spinnerDiv = document.createElement('div');
 
-	spinnerDiv.id = 'ncspinner';
+	spinnerDiv.id = spinnerOpts.className;
 	spinnerDiv.style.width = spinnerOpts.radius * 2 + 'px';
 	spinnerDiv.style.height = spinnerOpts.radius * 2 + 'px';
 	spinnerDiv.style.position = 'absolute';

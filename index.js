@@ -5,9 +5,11 @@ var innersource = require('innersource');
 var detective = require('detective');
 var generator = require('inline-source-map');
 var combine = require('combine-source-map');
+var EOL = require('os').EOL;
+var newlineRegex = new RegExp(EOL, 'g');
 
-var prepend = innersource(addRequire).replace(/[\n\r]/g, '');
-var postpend = innersource(addModule).replace(/[\n\r]/g, '');
+var prepend = innersource(addRequire).replace(newlineRegex, '');
+var postpend = innersource(addModule).replace(newlineRegex, '');
 
 module.exports = function(filename) {
   var buffer = '';

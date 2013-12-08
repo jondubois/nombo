@@ -60,7 +60,7 @@
 		"options": "0.0.3",
 		"policyfile": "0.0.4",
 		"redis": "0.7.3",
-		"requireify": "0.1.0",
+		"requireify": "0.1.1",
 		"retry": "0.6.0",
 		"socketcluster-client": ">= 0.9.3",
 		"socketcluster-server": ">= 0.9.6",

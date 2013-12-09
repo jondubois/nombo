@@ -56,7 +56,7 @@ Master.prototype._init = function (options) {
 		logLevel: 1,
 		connectTimeout: 10,
 		sessionTimeout: 1200,
-		minifyTimeout: 60000,
+		minifyTimeout: 30000,
 		clientCacheLife: 2592000,
 		clientCacheType: 'public',
 		cacheFilter: null,

@@ -388,6 +388,12 @@ Worker.prototype._start = function () {
 		return content;
 	};
 	
+	var mainBundles = {};
+	mainBundles[self._options.appDef.frameworkCoreBundleURL] = 1;
+	mainBundles[self._options.appDef.appLibBundleURL] = 1;
+	mainBundles[self._options.appDef.appScriptBundleURL] = 1;
+	mainBundles[self._options.appDef.appStyleBundleURL] = 1;
+	
 	var extPreps = {
 		js: function (resource, callback) {
 			var content;
@@ -401,7 +407,13 @@ Worker.prototype._start = function () {
 				content = scriptManager.moduleWrap(resource.url, content);
 			}
 			if (self._options.release) {
-				self._uglifier.minifyJS(content, function (err, minifiedContent) {
+				var minifyOptions = {
+					content: content
+				};
+				if (mainBundles[resource.url]) {
+					minifyOptions.noTimeout = true;
+				}
+				self._uglifier.minifyJS(minifyOptions, function (err, minifiedContent) {
 					if (err) {
 						if (err instanceof Error) {
 							err = err.message;
@@ -420,7 +432,13 @@ Worker.prototype._start = function () {
 			var content = versionDeepCSSURLs(resource.content.toString());
 			
 			if (self._options.release) {
-				self._uglifier.minifyCSS(content, function (err, minifiedContent) {
+				var minifyOptions = {
+					content: content
+				};
+				if (mainBundles[resource.url]) {
+					minifyOptions.noTimeout = true;
+				}
+				self._uglifier.minifyCSS(minifyOptions, function (err, minifiedContent) {
 					if (err) {
 						if (err instanceof Error) {
 							err = err.message;

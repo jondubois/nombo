@@ -1,6 +1,6 @@
 {
   "name": "requireify",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Browserify plugin to access all modules from browser console",
   "main": "index.js",
   "scripts": {
@@ -35,6 +35,6 @@
     "coffeeify": "~0.5.2"
   },
   "peerDependencies": {
-    "browserify": "2.x"
+    "browserify": ">=2.0.0"
   }
 }

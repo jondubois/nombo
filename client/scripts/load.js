@@ -13,6 +13,7 @@ var jLoad = {
 	_fadeSpeed: 20,
 	_alpha: 0,
 	_fadeInterval: null,
+	_isFinished: false,
     
 	start: function(settings) {
 		jLoad._frameworkURL = settings.frameworkURL;
@@ -36,76 +37,78 @@ var jLoad = {
 	
 	_load: function(loadImageURL, loadImageCaption, loadImageLinkURL, text) {
 		if (!NOMBO_DEBUG) {
-			jLoad._loader = document.createElement('div');
-			jLoad._loader.style.position = 'absolute';
-			jLoad._loader.style.visibility = 'hidden';
-			jLoad._loader.style.width = '80px';
-			
-			jLoad._imgLoaded = false;
-			jLoad.hideLoader();
-			jLoad._loaderText = text;
-			
-			var linkEl = document.createElement('a');
-			linkEl.setAttribute('href', loadImageLinkURL);
-			linkEl.setAttribute('target', '_blank');
-			
-			var imgEl = document.createElement('img');
-			imgEl.style.width = '80px';
-			imgEl.style.height = '80px';
-			imgEl.style.display = 'block';
-			imgEl.style.marginRight = 'auto';
-			imgEl.style.marginLeft = 'auto';
-			imgEl.setAttribute('src', loadImageURL);
-			imgEl.setAttribute('alt', loadImageCaption);
-			imgEl.setAttribute('border', '0px');
-			
-			jLoad._loaderTextBox = document.createElement('div');
-			jLoad._loaderTextBox.style.whiteSpace = 'nowrap';
-			jLoad._loaderTextBox.style.marginTop = '4px';
-			jLoad._loaderTextBox.style.fontFamily = 'Arial';
-			jLoad._loaderTextBox.style.fontSize = '12px';
-			jLoad._loaderTextBox.style.color = '#666';
-			
-			jLoad.progress({loaded: 0, total: 1});
-			
-			linkEl.appendChild(imgEl);
-			
-			jLoad._loader.appendChild(linkEl);
-			jLoad._loader.appendChild(jLoad._loaderTextBox);
-			
 			var showLoader = function() {
-				document.body.appendChild(jLoad._loader);
-				
-				var loadWidth = jLoad._loader.offsetWidth;
-				var loadHeight = jLoad._loader.offsetHeight;
-				
-				jLoad._loader.style.left = '50%';
-				jLoad._loader.style.top = '50%';
-				jLoad._loader.style.marginLeft = -loadWidth / 2 + 'px';
-				jLoad._loader.style.marginTop = -loadHeight / 2 + 'px';
-				
-				jLoad._alpha = 0;
-				jLoad._setOpacity(jLoad._loader, jLoad._alpha);
-				
-				jLoad._loader.style.visibility = 'visible';
-				
-				if(NOMBO_IS_FRESH) {
-					$loader.progress(jLoad.progress);
-					jLoad._fadeInterval = setInterval(function() {
-						if(jLoad._alpha < 100) {
-							jLoad._alpha += jLoad._fadeSpeed;
-						} else {
-							jLoad._alpha = 100;
-							clearInterval(jLoad._fadeInterval);
-						}
-						if(jLoad._loader) {
-							jLoad._setOpacity(jLoad._loader, jLoad._alpha);
-						} else {
-							clearInterval(jLoad._fadeInterval);
-						}
-					}, 25);
+				if (!jLoad._isFinished) {
+					jLoad._loader = document.createElement('div');
+					jLoad._loader.style.position = 'absolute';
+					jLoad._loader.style.visibility = 'hidden';
+					jLoad._loader.style.width = '80px';
+					
+					jLoad._imgLoaded = false;
+					jLoad.hideLoader();
+					jLoad._loaderText = text;
+					
+					var linkEl = document.createElement('a');
+					linkEl.setAttribute('href', loadImageLinkURL);
+					linkEl.setAttribute('target', '_blank');
+					
+					var imgEl = document.createElement('img');
+					imgEl.style.width = '80px';
+					imgEl.style.height = '80px';
+					imgEl.style.display = 'block';
+					imgEl.style.marginRight = 'auto';
+					imgEl.style.marginLeft = 'auto';
+					imgEl.setAttribute('src', loadImageURL);
+					imgEl.setAttribute('alt', loadImageCaption);
+					imgEl.setAttribute('border', '0px');
+					
+					jLoad._loaderTextBox = document.createElement('div');
+					jLoad._loaderTextBox.style.whiteSpace = 'nowrap';
+					jLoad._loaderTextBox.style.marginTop = '4px';
+					jLoad._loaderTextBox.style.fontFamily = 'Arial';
+					jLoad._loaderTextBox.style.fontSize = '12px';
+					jLoad._loaderTextBox.style.color = '#666';
+					
+					jLoad.progress({loaded: 0, total: 1});
+					
+					linkEl.appendChild(imgEl);
+					
+					jLoad._loader.appendChild(linkEl);
+					jLoad._loader.appendChild(jLoad._loaderTextBox);
+					
+					document.body.appendChild(jLoad._loader);
+					
+					var loadWidth = jLoad._loader.offsetWidth;
+					var loadHeight = jLoad._loader.offsetHeight;
+					
+					jLoad._loader.style.left = '50%';
+					jLoad._loader.style.top = '50%';
+					jLoad._loader.style.marginLeft = -loadWidth / 2 + 'px';
+					jLoad._loader.style.marginTop = -loadHeight / 2 + 'px';
+					
+					jLoad._alpha = 0;
+					jLoad._setOpacity(jLoad._loader, jLoad._alpha);
+					
+					jLoad._loader.style.visibility = 'visible';
+					
+					if (NOMBO_IS_FRESH) {
+						$loader.progress(jLoad.progress);
+						jLoad._fadeInterval = setInterval(function() {
+							if(jLoad._alpha < 100) {
+								jLoad._alpha += jLoad._fadeSpeed;
+							} else {
+								jLoad._alpha = 100;
+								clearInterval(jLoad._fadeInterval);
+							}
+							if(jLoad._loader) {
+								jLoad._setOpacity(jLoad._loader, jLoad._alpha);
+							} else {
+								clearInterval(jLoad._fadeInterval);
+							}
+						}, 25);
+					}
 				}
-			}
+			};
 			
 			var img = new Image();
 			img.onload = showLoader;
@@ -131,11 +134,11 @@ var jLoad = {
 	hideLoader: function() {
 		if(document.body && jLoad._loader && jLoad._loader.parentNode == document.body) {
 			document.body.removeChild(jLoad._loader);
-			jLoad._loader = null;
 		}
 	},
 	
 	fadeOutLoader: function(callback) {
+		jLoad._isFinished = true;
 		clearInterval(jLoad._fadeInterval);
 		jLoad._fadeInterval = setInterval(function() {
 			if(jLoad._alpha > 0) {
@@ -143,6 +146,7 @@ var jLoad = {
 			} else {
 				jLoad._alpha = 0;
 				jLoad.hideLoader();
+				jLoad._loader = null;
 			}
 			if(jLoad._loader) {
 				jLoad._setOpacity(jLoad._loader, jLoad._alpha);

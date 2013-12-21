@@ -56,7 +56,7 @@ Master.prototype._init = function (options) {
 		logLevel: 1,
 		connectTimeout: 10,
 		sessionTimeout: 1200,
-		minifyTimeout: 30000,
+		minifyTimeout: 120,
 		clientCacheLife: 2592000,
 		clientCacheType: 'public',
 		cacheFilter: null,
@@ -333,10 +333,9 @@ Master.prototype._init = function (options) {
 	};
 
 	console.log('   ' + self.colorText('[Busy]', 'yellow') + ' Launching Nombo server');
-	if (!self._options.release) {
-		process.stdin.resume();
-		process.stdin.setEncoding('utf8');
-	}
+	
+	process.stdin.resume();
+	process.stdin.setEncoding('utf8');
 
 	if (self._options.cacheVersion == null) {
 		self._options.cacheVersion = (new Date()).getTime();
@@ -695,6 +694,7 @@ Master.prototype._start = function () {
 				console.log('   ' + self.colorText('[Active]', 'green') + ' Nombo server started');
 				console.log('            Port: ' + self._options.port);
 				console.log('            Mode: ' + (self._options.release ? 'Release' : 'Debug'));
+				console.log('            Master PID: ' + process.pid);
 				if (self._options.release) {
 					console.log('            Version: ' + self._options.cacheVersion);
 				}
@@ -708,6 +708,12 @@ Master.prototype._start = function () {
 					initLoadBalancer();
 					workersActive = true;
 				}
+				
+				process.on('SIGUSR2', function () {
+					for (var i in self._workers) {
+						self._workers[i].kill();
+					}
+				});
 			}
 		};
 

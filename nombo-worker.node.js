@@ -97,12 +97,12 @@ Worker.prototype._init = function (options) {
 	var i;
 	
 	for (i in self._bundles) {
-		cachemere.set(i, self._bundles[i], 'text/javascript');
+		cachemere.setRaw(i, self._bundles[i], 'text/javascript');
 	}
 	
 	self._uglifier = new Uglifier({
 		mangle: self._options.minifyMangle,
-		timeout: self._options.minifyTimeout
+		timeout: self._options.minifyTimeout * 1000
 	});
 	
 	self._errorDomain.add(self._uglifier);
@@ -234,7 +234,7 @@ Worker.prototype._init = function (options) {
 
 Worker.prototype.handleCacheUpdate = function (url, content, size) {
 	this._resourceSizes[url] = size;
-	cachemere.set(url, content);
+	cachemere.setRaw(url, content);
 };
 
 Worker.prototype.handleMasterEvent = function () {
@@ -309,7 +309,11 @@ Worker.prototype._getFavicon = function (callback) {
 Worker.prototype._start = function () {
 	var self = this;
 	
-	var appDef = self._options.appDef;
+	var appDef = {};
+	
+	for (var def in self._options.appDef) {
+		appDef[def] = self._options.appDef[def];
+	};
 	
 	if (self._resourceSizes[appDef.appStyleBundleURL] <= 0) {
 		delete appDef.appStyleBundleURL;
@@ -393,6 +397,9 @@ Worker.prototype._start = function () {
 	mainBundles[self._options.appDef.appLibBundleURL] = 1;
 	mainBundles[self._options.appDef.appScriptBundleURL] = 1;
 	mainBundles[self._options.appDef.appStyleBundleURL] = 1;
+	mainBundles[self._options.appDef.appTemplateBundleURL] = 1;
+	
+	var activeMinifications = {};
 	
 	var extPreps = {
 		js: function (resource, callback) {
@@ -408,22 +415,42 @@ Worker.prototype._start = function () {
 			}
 			if (self._options.release) {
 				var minifyOptions = {
+					url: resource.url,
 					content: content
 				};
 				if (mainBundles[resource.url]) {
 					minifyOptions.noTimeout = true;
-				}
-				self._uglifier.minifyJS(minifyOptions, function (err, minifiedContent) {
-					if (err) {
-						if (err instanceof Error) {
-							err = err.message;
+					self._uglifier.minifyJS(minifyOptions, function (err, minifiedContent) {
+						if (err) {
+							if (err instanceof Error) {
+								err = err.message;
+							}
+							self.noticeHandler(err + ': ' + resource.url);
+							callback(null, content);
+						} else {
+							callback(null, minifiedContent);
 						}
-						self.noticeHandler(err);
-						callback(null, content);
-					} else {
-						callback(null, minifiedContent);
-					}
-				});
+					});
+				} else {
+					callback(null, content);
+					self._uglifier.minifyJS(minifyOptions, function (err, minifiedContent, freshest) {
+						if (freshest) {
+							if (err) {
+								if (err instanceof Error) {
+									err = err.message;
+								}
+								self.noticeHandler(err + ': ' + resource.url);
+							} else {
+								cachemere.set({
+									url: resource.url,
+									content: minifiedContent,
+									mime: 'text/javascript',
+									preprocessed: true
+								});
+							}
+						}
+					});
+				}
 			} else {
 				return content;
 			}
@@ -433,22 +460,42 @@ Worker.prototype._start = function () {
 			
 			if (self._options.release) {
 				var minifyOptions = {
+					url: resource.url,
 					content: content
 				};
 				if (mainBundles[resource.url]) {
 					minifyOptions.noTimeout = true;
-				}
-				self._uglifier.minifyCSS(minifyOptions, function (err, minifiedContent) {
-					if (err) {
-						if (err instanceof Error) {
-							err = err.message;
+					self._uglifier.minifyCSS(minifyOptions, function (err, minifiedContent) {
+						if (err) {
+							if (err instanceof Error) {
+								err = err.message;
+							}
+							self.noticeHandler(err + ': ' + resource.url);
+							callback(null, content);
+						} else {
+							callback(null, minifiedContent);
 						}
-						self.noticeHandler(err);
-						callback(null, content);
-					} else {
-						callback(null, minifiedContent);
-					}
-				});
+					});
+				} else {
+					callback(null, content);
+					self._uglifier.minifyCSS(minifyOptions, function (err, minifiedContent, freshest) {
+						if (freshest) {
+							if (err) {
+								if (err instanceof Error) {
+									err = err.message;
+								}
+								self.noticeHandler(err + ': ' + resource.url);
+							} else {
+								cachemere.set({
+									url: resource.url,
+									content: minifiedContent,
+									mime: 'text/css',
+									preprocessed: true
+								});
+							}
+						}
+					});
+				}
 			} else {
 				return content;
 			}
@@ -530,7 +577,7 @@ Worker.prototype._start = function () {
 			throw new Error('Failed to get favicon due to the following error: ' + (err.message || err));
 		} else {
 			var favURL = '/favicon.ico';
-			cachemere.set(favURL, data, 'image/gif');
+			cachemere.setRaw(favURL, data, 'image/gif');
 			self.allowFullAuthResource(favURL);
 			cachemere.on('ready', function () {
 				self._socketServer.on('ready', self.ready.bind(self));
@@ -677,7 +724,7 @@ Worker.prototype._sessionHandler = function (req, res, next) {
 				res.writeHead(500, {
 					'Content-Type': 'text/plain'
 				});
-				var notice = 'File cannot be accessed outside of a session';
+				var notice = 'File at URL ' + url + ' cannot be accessed outside of a session';
 				res.end(notice);
 				self.noticeHandler(notice);
 			} else {

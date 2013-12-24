@@ -21,11 +21,11 @@ module.exports = function(filename) {
     var nodeModuleRequires = getNodeModuleRequires(buffer);
     var totalPrelude = prepend + nodeModuleRequires;
     var offset = totalPrelude.split('\n').length - 1;
-    
+
     var partial = totalPrelude + combine.removeComments(buffer) + ';';
 
     var complete = partial + postpend;
-    
+
     var map = combine.create().addFile({ sourceFile: filename, source: buffer}, {line: offset});
 
     this.queue( complete + '\n' + map.comment());
@@ -38,7 +38,8 @@ module.exports = function(filename) {
 function addModule(){
   var global = (function(){ return this; }).call(null);
   if(typeof __filename !== 'undefined'){
-    global.require[__filename.substring(0, __filename.length - 3)] = module.exports;
+    var moduleName = __filename.slice(0, __filename.lastIndexOf('.'));
+    global.require[moduleName] = module.exports;
   }
 }
 
@@ -50,7 +51,7 @@ function addRequire(){
     (function(){
     var require = global.require;
     var ret = global.require;
-        
+
     Object.defineProperty(global, 'require', {
         get: function(){
           return ret;

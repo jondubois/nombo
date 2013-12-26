@@ -60,6 +60,8 @@ function addRequire(){
             ret = function(key){
                 if(require[key]){
                   return require[key];
+                }else if(require[key + '/index']){
+                  return require[key + '/index'];
                 }else{
                   var temp = ret;
                   var module;

@@ -34,6 +34,7 @@ b.add(modulePath)
    assert.equal(context.window.test, 'world');
    assert.equal(context.window.test2, 'world');
    assert.equal(context.window.test3, 'tests();');
+   assert.equal(context.window.test4, 'works');
  });
 
 // test for sourcemaps
@@ -44,6 +45,7 @@ b.add(modulePath)
    var json = convert.fromComment(sourceMapComment);
 
    //expected was found by first checking by hand and then saving those mappings
+   //fs.writeFileSync('./expected-sourcemap', JSON.stringify(json));
    var expected = JSON.parse(require('./expected-sourcemap')).mappings;
 
   assert.equal(json.sourcemap.mappings, expected);
@@ -102,4 +104,5 @@ function tests(){
   }
   window.test2 = require("/foo/dep").hello;
   window.test3 = innersource(function(){tests();});
+  window.test4 = require('/withIndex');
 }

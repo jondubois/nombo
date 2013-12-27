@@ -378,7 +378,7 @@ Master.prototype._start = function () {
 	var styleBundle = cssBundler({
 		watchDirs: styleDirs,
 		files: stylePaths,
-		watch: !self._options.release
+		watch: true
 	});
 
 	if (fs.existsSync(self._paths.appLoadScriptPath)) {
@@ -415,7 +415,7 @@ Master.prototype._start = function () {
 	var templateBundle = templateBundler({
 		watchDirs: templateDirs,
 		files: templatePaths,
-		watch: !self._options.release
+		watch: true
 	});
 
 	var updateTemplateBundle = function () {

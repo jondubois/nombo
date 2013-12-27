@@ -622,7 +622,7 @@ var $loader = {
 				if (curTag.ready) {
 					self._embedQueue.shift();
 					if (curTag.type == 'link') {
-						if (curTag.url == $loader._appDefinition.appStyleBundleURL && (!$loader._ie || $loader._ieVersion > 8)) {
+						if (!$loader._ie || $loader._ieVersion > 8) {
 							self.styleTag(self._styleCodes[curTag.url], 'text/css');
 						} else {
 							self.linkTag(curTag.url, 'text/css', 'stylesheet', curTag.query);
@@ -1001,20 +1001,20 @@ var $loader = {
 			var urls = [];
 			var fileDirURL = fileURL.match(/^(.*)\//)[0];
 			
-			var chuncks = self._parseFunctionCalls(fileContent, ['url']);
+			var chunks = self._parseFunctionCalls(fileContent, ['url']);
 			
 			var imports = fileContent.match(/@import +["'][^"']+["']/g);
 			if (imports) {
-				chuncks = chuncks.concat(imports);
+				chunks = chunks.concat(imports);
 			}
 			
 			var isolateURL = /(^url[(][ ]*["']?|["']?[)]$|^@import[ ]*["']|["']$)/g;
 			var absolute = /^(https?:[/][/]|[\/\\])/;
 			
 			var i, curURL;
-			var len = chuncks.length;
+			var len = chunks.length;
 			for (i=0; i<len; i++) {
-				curURL = chuncks[i].replace(isolateURL, '');
+				curURL = chunks[i].replace(isolateURL, '');
 				if (curURL != "" && !urlMap.hasOwnProperty(curURL)) {
 					if (!absolute.test(curURL)) {
 						urls.push(fileDirURL + curURL);

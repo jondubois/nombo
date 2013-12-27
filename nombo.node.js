@@ -1,7 +1,6 @@
 var fs = require('fs');
 var url = require('url');
 var watchify = require('watchify');
-var scriptManager = require('nombo/scriptmanager');
 var cssBundler = require('nombo/css-bundler');
 var templateBundler = require('nombo/template-bundler');
 var SmartCacheManager = require("./smartcachemanager").SmartCacheManager;
@@ -62,7 +61,7 @@ Master.prototype._init = function (options) {
 		cacheFilter: null,
 		cacheMaxEntrySize: 10000000,
 		cacheMaxSize: 1000000000,
-		cacheVersion: null,
+		versionFile: null,
 		origins: '*:*',
 		publicResources: false,
 		minifyMangle: false,
@@ -75,8 +74,8 @@ Master.prototype._init = function (options) {
 		allowUploads: false,
 		hostAddress: null,
 		balancerCount: null,
-		customSIMExtension: "node.js",
-		privateExtensions: ["node.js", "node.json"],
+		customSIMExtension: 'node.js',
+		privateExtensions: ['node.js', 'node.json', 'node.txt'],
 		clusterEngine: 'iocluster'
 	};
 
@@ -147,7 +146,11 @@ Master.prototype._init = function (options) {
 	self._paths.frameworkModulesURL = self._paths.frameworkURL + 'node_modules/';
 
 	self._paths.appDirPath = path.dirname(require.main.filename);
-	self._paths.appWorkerControllerPath = self._paths.appDirPath + '/worker.node';
+	self._paths.appWorkerControllerPath = self._paths.appDirPath + '/worker.node.js';
+	
+	if (self._options.versionFile == null) {
+		self._options.versionFile = self._paths.appDirPath + '/version.node.txt';
+	}
 
 	self._paths.appLoadScriptPath = self._paths.appDirPath + '/scripts/load.js';
 	self._paths.frameworkLoadScriptPath = self._paths.frameworkClientDirPath + '/scripts/load.js';
@@ -303,10 +306,8 @@ Master.prototype._init = function (options) {
 		}
 		self.bundle.app.template(self._options.angularOptions.mainTemplate);
 	}
-	scriptManager.init(self._paths.frameworkURL, self._paths.appURL, self._options.minifyMangle);
 
 	pathManager.setBaseURL(self._paths.appURL);
-	scriptManager.setBaseURL(self._paths.appURL);
 
 	self._paths.frameworkSocketClientURL = self._paths.frameworkModulesURL + 'socketcluster-client/socketcluster.js';
 
@@ -336,10 +337,6 @@ Master.prototype._init = function (options) {
 	
 	process.stdin.resume();
 	process.stdin.setEncoding('utf8');
-
-	if (self._options.cacheVersion == null) {
-		self._options.cacheVersion = (new Date()).getTime();
-	}
 
 	self.useStyle(self._paths.frameworkClientURL + 'styles/nombo.css');
 	self._useCoreLib(self._paths.frameworkClientURL + 'libs/jquery.js');
@@ -383,7 +380,6 @@ Master.prototype._start = function () {
 		files: stylePaths,
 		watch: !self._options.release
 	});
-	self._smartCacheManager = new SmartCacheManager(self._options.cacheVersion);
 
 	if (fs.existsSync(self._paths.appLoadScriptPath)) {
 		self._paths.loadScriptURL = pathManager.pathToURL(self._paths.appLoadScriptPath);
@@ -391,21 +387,8 @@ Master.prototype._start = function () {
 		self._paths.loadScriptURL = pathManager.pathToURL(self._paths.frameworkLoadScriptPath);
 	}
 
-	var newURL;
-
-	var cssURLFilter = function (url, rootDir) {
-		rootDir = pathManager.toUnixSep(rootDir);
-		newURL = pathManager.pathToURL(rootDir + '/' + url);
-		newURL = pathManager.toUnixSep(path.normalize(newURL));
-		if (self._options.release) {
-			newURL = self._smartCacheManager.setURLCacheVersion(newURL);
-		}
-
-		return newURL;
-	};
-
 	var updateCSSBundle = function () {
-		var cssBundle = styleBundle.bundle(cssURLFilter);
+		var cssBundle = styleBundle.bundle();
 		var size = Buffer.byteLength(cssBundle, 'utf8');
 		var data;
 		for (var i in self._workers) {
@@ -695,9 +678,6 @@ Master.prototype._start = function () {
 				console.log('            Port: ' + self._options.port);
 				console.log('            Mode: ' + (self._options.release ? 'Release' : 'Debug'));
 				console.log('            Master PID: ' + process.pid);
-				if (self._options.release) {
-					console.log('            Version: ' + self._options.cacheVersion);
-				}
 				console.log('            Balancer count: ' + self._options.balancerCount);
 				console.log('            Worker count: ' + self._options.workers.length);
 				console.log('            Store count: ' + self._options.stores.length);
@@ -710,9 +690,11 @@ Master.prototype._start = function () {
 				}
 				
 				process.on('SIGUSR2', function () {
-					for (var i in self._workers) {
-						self._workers[i].kill();
-					}
+					self._updateCacheVersion(function () {
+						for (var i in self._workers) {
+							self._workers[i].kill();
+						}
+					});
 				});
 			}
 		};
@@ -754,6 +736,7 @@ Master.prototype._start = function () {
 			workerOpts.paths = self._paths;
 			workerOpts.workerId = worker.id;
 			workerOpts.workerPort = workerData.port;
+			workerOpts.cacheVersion = self._cacheVersion;
 			workerOpts.stores = stores;
 			workerOpts.dataKey = pass;
 			workerOpts.bundles = bundles;
@@ -836,8 +819,8 @@ Master.prototype._start = function () {
 				}
 			});
 		};
-
-		launchWorkers();
+		
+		self._updateCacheVersion(launchWorkers);
 	};
 
 	var stores = self._options.stores;
@@ -863,6 +846,30 @@ Master.prototype._start = function () {
 	
 	launchIOCluster();
 	self._ioCluster.on('ready', ioClusterReady);
+};
+
+Master.prototype._updateCacheVersion = function (callback) {
+	var self = this;
+	
+	fs.readFile(self._options.versionFile, function (err, data) {
+		if (err) {
+			var noticeMessage = 'Failed to read cache version from versionFile at ' + self._options.versionFile;
+			var notice = {
+				message: noticeMessage,
+				origin: {
+					type: 'master'
+				}
+			};
+			self.noticeHandler(notice);
+		} else {
+			self._cacheVersion = parseInt(data);
+		}
+		if (!self._cacheVersion && self._cacheVersion != 0) {
+			self._cacheVersion = Date.now();
+		}
+		
+		callback(self._cacheVersion);
+	});
 };
 
 Master.prototype._cloneObject = function (object) {

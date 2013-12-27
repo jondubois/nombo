@@ -21,6 +21,7 @@ var cheerio = require('cheerio');
 var less = require('less');
 var retry = require('retry');
 var domain = require('domain');
+var async = require('async');
 
 var Worker = function (options) {
 	var self = this;
@@ -379,16 +380,139 @@ Worker.prototype._start = function () {
 		return $.html();
 	};
 	
-	var versionDeepCSSURLs = function (content) {
-		if (self._options.release) {
-			content = content.replace(/@import +["']([^"']+)["']/g, function (match, first) {
-				return '@import "' + self._smartCacheManager.setURLCacheVersion(first) + '"';
-			});
-			
-			content = content.replace(/([^A-Za-z0-9]|^)url[(][ ]*["']?([^"')]*)["']?[ ]*[)]/g, function (match, first, second) {
-				return first + 'url("' + self._smartCacheManager.setURLCacheVersion(second) + '")';
-			});
+	var cssAbsoluteRegex = /^([\/\\]|https?:\/\/)/;
+	var cssImportRegex = /([^A-Za-z0-9\/]|^) *@import +["']([^"']+)["']/g;
+	var cssURLRegex = /([^A-Za-z0-9]|^)url[(][ ]*["']?([^"')]*)["']?[ ]*[)]/g;
+
+	var cssImportURLRegex = /["'][^"']+/;
+
+	var urlToAbsolutePath = function (currentDirPath, url) {
+		var absolutePath;
+		if (cssAbsoluteRegex.test(url)) {
+			absolutePath = pathManager.urlToPath(url);
+		} else {
+			absolutePath = currentDirPath + url;
 		}
+		return pathManager.toUnixSep(path.normalize(absolutePath));
+	};
+
+	var flattenCSS = function (filePath, content, callback, importMap, importedMap, rootPath) {
+		var isRoot = false;
+		
+		if (importMap == null) {
+			importMap = {};
+		}
+		if (importedMap == null) {
+			importedMap = {};
+		}
+		if (rootPath == null) {
+			isRoot = true;
+			rootPath = filePath;
+		}
+		
+		var currentDir = path.dirname(filePath) + '/';
+		
+		var rebaseURLs = function (fileContent) {
+			return fileContent.replace(cssURLRegex, function (match, first, second) {
+				var subPath = urlToAbsolutePath(currentDir, second);
+				return first + 'url("' + pathManager.pathToURL(subPath) + '")';
+			});
+		};
+		
+		var importTasks = [];
+		var imports = content.match(cssImportRegex);
+		var matches, relURL, importPath;
+		
+		for (var i in imports) {
+			matches = imports[i].match(cssImportURLRegex);
+			if (matches) {
+				relURL = matches[0].slice(1);
+				importPath = urlToAbsolutePath(currentDir, relURL);
+				
+				(function (importPath) {
+					importTasks.push(function (cb) {
+						fs.readFile(importPath, {encoding: 'utf8'}, function (err, data) {
+							if (err) {
+								cb(err);
+							} else {
+								flattenCSS(importPath, data, cb, importMap, importedMap, rootPath);
+							}
+						});
+					});
+				})(importPath);
+			}
+		}
+		
+		if (importTasks.length > 0) {
+			async.parallel(importTasks, function (err, results) {
+				if (err) {
+					callback(err);
+				} else {
+					content = content.replace(cssImportRegex, function (match, first, second) {
+						var subPath = urlToAbsolutePath(currentDir, second);
+						
+						var importedContent;
+						if (importMap[subPath]) {
+							importedContent = importMap[subPath];
+							delete importMap[subPath];
+						} else {
+							importedContent = '';
+						}
+						return importedContent;
+					});
+					
+					content = rebaseURLs(content);
+					
+					importMap[filePath] = content;
+					importedMap[filePath] = content;
+					
+					var dependencies = [];
+					if (isRoot) {
+						for (var j in importedMap) {
+							if (j != filePath) {
+								dependencies.push(j);
+							}
+						}
+					}
+					callback(null, content, dependencies);
+				}
+			});
+		} else {
+			content = rebaseURLs(content);
+			importMap[filePath] = content;
+			importedMap[filePath] = content;
+			
+			var dependencies = [];
+			if (isRoot) {
+				for (var j in importedMap) {
+					if (j != filePath) {
+						dependencies.push(j);
+					}
+				}
+			}
+			callback(null, content, dependencies);
+		}
+	};
+
+	var versionDeepCSSURLs = function (url, content) {
+		var fileDirURL = path.dirname(url) + '/';
+	
+		content = content.replace(cssImportRegex, function (match, first) {
+			var newURL = first;
+			if (self._options.release) {
+				newURL = self._smartCacheManager.setURLCacheVersion(newURL);
+			}
+			return '@import "' + newURL + '"';
+		});
+		
+		content = content.replace(cssURLRegex, function (match, first, second) {
+			var newURL = second;
+			if (self._options.release) {
+				newURL = self._smartCacheManager.setURLCacheVersion(newURL);
+			}
+			return first + 'url("' + newURL + '")';
+		});
+		
 		return content;
 	};
 	
@@ -456,53 +580,73 @@ Worker.prototype._start = function () {
 			}
 		},
 		css: function (resource, callback) {
-			var content = versionDeepCSSURLs(resource.content.toString());
-			
-			if (self._options.release) {
-				var minifyOptions = {
-					url: resource.url,
-					content: content
-				};
-				if (mainBundles[resource.url]) {
-					minifyOptions.noTimeout = true;
-					self._uglifier.minifyCSS(minifyOptions, function (err, minifiedContent) {
-						if (err) {
-							if (err instanceof Error) {
-								err = err.message;
-							}
-							self.noticeHandler(err + ': ' + resource.url);
-							callback(null, content);
-						} else {
-							callback(null, minifiedContent);
-						}
-					});
-				} else {
-					callback(null, content);
-					self._uglifier.minifyCSS(minifyOptions, function (err, minifiedContent, freshest) {
-						if (freshest) {
-							if (err) {
-								if (err instanceof Error) {
-									err = err.message;
-								}
-								self.noticeHandler(err + ': ' + resource.url);
-							} else {
-								cachemere.set({
-									url: resource.url,
-									content: minifiedContent,
-									mime: 'text/css',
-									preprocessed: true
-								});
-							}
-						}
-					});
-				}
+			var filePath = pathManager.urlToPath(resource.url);
+			var resContent;
+			if (typeof resource.content == 'string') {
+				resContent = resource.content;
 			} else {
-				return content;
+				resContent = resource.content.toString();
 			}
+			flattenCSS(filePath, resContent, function (err, content, dependencies) {
+				if (err) {
+					self.errorHandler(err);
+				} else {
+					cachemere.setDeps(resource.url, dependencies);
+					content = versionDeepCSSURLs(resource.url, content);
+					
+					if (self._options.release) {
+						var minifyOptions = {
+							url: resource.url,
+							content: content
+						};
+						if (mainBundles[resource.url]) {
+							minifyOptions.noTimeout = true;
+							self._uglifier.minifyCSS(minifyOptions, function (err, minifiedContent) {
+								if (err) {
+									if (err instanceof Error) {
+										err = err.message;
+									}
+									self.noticeHandler(err + ': ' + resource.url);
+									callback(null, content);
+								} else {
+									callback(null, minifiedContent);
+								}
+							});
+						} else {
+							callback(null, content);
+							self._uglifier.minifyCSS(minifyOptions, function (err, minifiedContent, freshest) {
+								if (freshest) {
+									if (err) {
+										if (err instanceof Error) {
+											err = err.message;
+										}
+										self.noticeHandler(err + ': ' + resource.url);
+									} else {
+										cachemere.set({
+											url: resource.url,
+											content: minifiedContent,
+											mime: 'text/css',
+											preprocessed: true
+										});
+									}
+								}
+							});
+						}
+					} else {
+						return content;
+					}
+				}
+			});
 		},
 		less: function (resource, callback) {
-			data = versionDeepCSSURLs(resource.content.toString());
-			less.render(data, callback);
+			less.render(data, function (err, content) {
+				if (err) {
+					self.errorHandler(err);
+				} else {
+					resource.content = content;
+					extPreps.css(resource, callback);
+				}
+			});
 		}
 	};
 	

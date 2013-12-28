@@ -26,13 +26,15 @@ var jLoad = {
 	},
 	
 	progress: function(status) {
-		var percentage;
-		if(status.total == 0) {
-			percentage = 100;
-		} else {
-			percentage = Math.round(status.loaded / status.total * 100);
+		if (jLoad._loaderTextBox != null) {
+			var percentage;
+			if(status.total == 0) {
+				percentage = 100;
+			} else {
+				percentage = Math.round(status.loaded / status.total * 100);
+			}
+			jLoad._loaderTextBox.innerHTML = jLoad._loaderText + ' (' + percentage + '%)';
 		}
-		jLoad._loaderTextBox.innerHTML = jLoad._loaderText + ' (' + percentage + '%)';
 	},
 	
 	_load: function(loadImageURL, loadImageCaption, loadImageLinkURL, text) {
@@ -90,7 +92,6 @@ var jLoad = {
 					jLoad._setOpacity(jLoad._loader, jLoad._alpha);
 					
 					jLoad._loader.style.visibility = 'visible';
-					
 					if (NOMBO_IS_FRESH) {
 						$loader.progress(jLoad.progress);
 						jLoad._fadeInterval = setInterval(function() {
@@ -113,6 +114,7 @@ var jLoad = {
 			var img = new Image();
 			img.onload = showLoader;
 			img.src = loadImageURL;
+			
 			$loader.on('loadall', jLoad._loaded);
 		} else {
 			$loader.on('loadall', $loader.finish);
@@ -127,7 +129,9 @@ var jLoad = {
 	},
 	
 	_loaded: function() {
+		jLoad._isFinished = true;
 		$loader.off('progress', jLoad.progress);
+		jLoad.progress({loaded: 1, total: 1});
 		jLoad.fadeOutLoader($loader.finish);
 	},
 	
@@ -138,7 +142,6 @@ var jLoad = {
 	},
 	
 	fadeOutLoader: function(callback) {
-		jLoad._isFinished = true;
 		clearInterval(jLoad._fadeInterval);
 		jLoad._fadeInterval = setInterval(function() {
 			if(jLoad._alpha > 0) {

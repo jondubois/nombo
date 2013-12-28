@@ -39,7 +39,7 @@
 		"async": "0.1.22",
 		"base64id": "0.1.0",
 		"browserify": "2.36.0",
-		"cachemere": "0.9.5",
+		"cachemere": "0.9.7",
 		"cheerio": "0.12.4",
 		"clean-css": "1.0.4",
 		"commander": "0.5.2",

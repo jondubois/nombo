@@ -15,5 +15,4 @@ var options = {
 };
 
 var nombo = new Master(options);
-require('./master.node').run(nombo);
 nombo.start();

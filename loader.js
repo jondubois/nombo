@@ -878,7 +878,6 @@ var $loader = {
 				for (i in progressMap) {
 					status.loaded += progressMap[i];
 				}
-				
 				$loader.emit('progress', status);
 			}
 		};
@@ -1064,7 +1063,7 @@ var $loader = {
 			return functionCalls;
 		};
 	})
-}
+};
 
 $loader.EventEmitter.apply($loader);
 

@@ -247,6 +247,18 @@ Worker.prototype.ready = function () {
 	process.send({type: 'ready'});
 };
 
+Worker.prototype._handleConnectionNotReady = function (socket) {
+	var self = this;
+	
+	self._errorDomain.add(socket);
+	socket.emit('fail', 'Server is not ready. Please try again later');
+	socket.close();
+	
+	socket.on('close', function () {
+		self._errorDomain.remove(socket);
+	});
+};
+
 Worker.prototype._handleConnection = function (socket) {
 	var self = this;
 	
@@ -708,12 +720,14 @@ Worker.prototype._start = function () {
 	for (i in oldUpgradeListeners) {
 		self._server.on('upgrade', oldUpgradeListeners[i]);
 	}
+	
 	self._server.listen(self._options.workerPort);
 	self.global = self._ioClusterClient.global();
 
 	gateway.setReleaseMode(self._options.release);
 	
-	self._socketServer.on('connection', self._handleConnection.bind(self));
+	var serverNotReady = self._handleConnectionNotReady.bind(self);
+	self._socketServer.on('connection', serverNotReady);
 	gateway.init(self._paths.appDirPath + '/sims/', self._customSIMExtension);
 	
 	self._getFavicon(function (err, data) {
@@ -724,6 +738,8 @@ Worker.prototype._start = function () {
 			cachemere.setRaw(favURL, data, 'image/gif');
 			self.allowFullAuthResource(favURL);
 			cachemere.on('ready', function () {
+				self._socketServer.removeListener('connection', serverNotReady);
+				self._socketServer.on('connection', self._handleConnection.bind(self));
 				self._socketServer.on('ready', self.ready.bind(self));
 			});
 		}

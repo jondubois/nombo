@@ -29,6 +29,8 @@ var Master = function (options) {
 	self.start = self._errorDomain.bind(self._start);
 	self._errorDomain.run(function () {
 		self._init(options);
+		self._masterBootstrap = require(self._paths.appDirPath + '/master.node');
+		self._masterBootstrap.run(self);
 	});
 };
 
@@ -149,7 +151,9 @@ Master.prototype._init = function (options) {
 	self._paths.appWorkerControllerPath = self._paths.appDirPath + '/worker.node.js';
 	
 	if (self._options.versionFile == null) {
-		self._options.versionFile = self._paths.appDirPath + '/version.node.txt';
+		self._paths.versionFilePath = self._paths.appDirPath + '/version.node.txt';
+	} else {
+		self._paths.versionFilePath = self._options.versionFile;
 	}
 
 	self._paths.appLoadScriptPath = self._paths.appDirPath + '/scripts/load.js';
@@ -488,10 +492,10 @@ Master.prototype._start = function () {
 		noParse: libFilePaths
 	};
 	
-	var libBundle = watchify(libBundleOptions);
+	self._libBundle = watchify(libBundleOptions);
 	
 	var updateLibBundle = function (callback) {
-		libBundle.bundle({debug: !self._options.release}, function (err, jsBundle) {
+		self._libBundle.bundle({debug: !self._options.release}, function (err, jsBundle) {
 			if (err) {
 				self._errorDomain.emit('error', err);
 				callback && callback();
@@ -570,7 +574,7 @@ Master.prototype._start = function () {
 			listener: updateCoreBundle
 		});
 		
-		libBundle.on('update', function () {
+		self._libBundle.on('update', function () {
 			updateLibBundle();
 		});
 
@@ -689,12 +693,18 @@ Master.prototype._start = function () {
 					workersActive = true;
 				}
 				
-				process.on('SIGUSR2', function () {
-					self._updateCacheVersion(function () {
-						for (var i in self._workers) {
-							self._workers[i].kill();
-						}
-					});
+				watchr.watch({
+					paths: [self._paths.versionFilePath],
+					listener: function (event, filePath) {
+						var oldCacheVersion = self._cacheVersion;
+						self._updateCacheVersion(function () {
+							if (self._cacheVersion != oldCacheVersion) {
+								for (var i in self._workers) {
+									self._workers[i].kill();
+								}
+							}
+						});
+					}
 				});
 			}
 		};
@@ -851,9 +861,9 @@ Master.prototype._start = function () {
 Master.prototype._updateCacheVersion = function (callback) {
 	var self = this;
 	
-	fs.readFile(self._options.versionFile, function (err, data) {
+	fs.readFile(self._paths.versionFilePath, function (err, data) {
 		if (err) {
-			var noticeMessage = 'Failed to read cache version from versionFile at ' + self._options.versionFile;
+			var noticeMessage = 'Failed to read cache version from versionFile at ' + self._paths.versionFilePath;
 			var notice = {
 				message: noticeMessage,
 				origin: {

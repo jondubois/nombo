@@ -56,7 +56,7 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 	url = NOMBO_FRAMEWORK_URL + 'loader.js';
 	
 	if (!NOMBO_DEBUG) {
-		url = smartCacheManager.setURLCacheVersion(url);
+		url = NOMBO_CACHE_MANAGER.setURLCacheVersion(url);
 	}
 	
 	loadScript.src = url;
@@ -160,7 +160,7 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 					url = NOMBO_FRAMEWORK_CLIENT_URL + 'scripts/cookiesdisabled.js';
 					
 					if (!NOMBO_DEBUG) {
-						url = smartCacheManager.setURLCacheVersion(url);
+						url = NOMBO_CACHE_MANAGER.setURLCacheVersion(url);
 					}
 					
 					cookiesDisabledScript.src = url;
@@ -340,7 +340,7 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 			
 			var limitScript = document.createElement('script');
 			limitScript.type = 'text/javascript';
-			limitScript.src = smartCacheManager.setURLCacheVersion(NOMBO_FRAMEWORK_CLIENT_URL + 'scripts/failedconnection.js');
+			limitScript.src = NOMBO_CACHE_MANAGER.setURLCacheVersion(NOMBO_FRAMEWORK_CLIENT_URL + 'scripts/failedconnection.js');
 			head.appendChild(limitScript);
 		} else {
 			ncBegin();

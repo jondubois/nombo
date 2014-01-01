@@ -340,9 +340,6 @@ var $loader = {
 	grab: new (function () {
 		var self = this;
 		
-		this.CACHE_LEVEL_HARD = 'hard';
-		this.CACHE_LEVEL_SOFT = 'soft';
-		this.CACHE_LEVEL_NONE = 'none';
 		this._options = {};
 		this._callbacks = {
 			ready: [],
@@ -353,8 +350,6 @@ var $loader = {
 		this._resources = [];
 		this._resourcesLoaded = [];
 		this._resourcesGrabbed = [];
-		this._deepResources = [];
-		this._deepResourcesLoaded = [];
 		this._resourcesLoadedMap = {};
 		this._loadableResourceMap = {};
 		this._deepResources = {};
@@ -364,6 +359,7 @@ var $loader = {
 		this._embedQueue = [];
 		this._extRegex = /[.][^\/\\]*$/;
 		this._lessExtRegex = /[.]less$/;
+		this._cssURLRegex = /([^A-Za-z0-9]|^)url[(][ ]*["']?([^"')]*)["']?[ ]*[)]/g;
 		this._resourceSizeTotal = 0;
 		
 		this.init = function (options) {
@@ -461,7 +457,7 @@ var $loader = {
 				self.style(resourceName, callback);
 			},
 			
-			template: function (name, cacheLevel) {
+			template: function (name) {
 				var tmplDirURL = $loader._appDefinition.appTemplatesURL;
 				
 				if (self._extRegex.test(name)) {
@@ -470,12 +466,12 @@ var $loader = {
 					var resourceName = tmplDirURL + name + '.html';
 				}
 				
-				return self.template(resourceName, cacheLevel);
+				return self.template(resourceName);
 			},
 			
-			templateURL: function (name, cacheLevel) {
+			templateURL: function (name) {
 				name = self._addFileExtension(name, 'html');
-				return self.url($loader._appDefinition.appTemplatesURL + name, cacheLevel);
+				return self.url($loader._appDefinition.appTemplatesURL + name);
 			},
 			
 			styleURL: function (name) {
@@ -483,12 +479,12 @@ var $loader = {
 				return self.url(self._options.appStylesURL + name);
 			},
 			
-			assetURL: function (nameWithExtension, cacheLevel) {
-				return self.url(self._options.appAssetsURL + nameWithExtension, cacheLevel);
+			assetURL: function (nameWithExtension, fresh) {
+				return self.url(self._options.appAssetsURL + nameWithExtension, fresh);
 			},
 			
-			fileURL: function (nameWithExtension, cacheLevel) {
-				return self.url(self._options.appFilesURL + nameWithExtension, cacheLevel);
+			fileURL: function (nameWithExtension, fresh) {
+				return self.url(self._options.appFilesURL + nameWithExtension, fresh);
 			}
 		};
 		
@@ -534,8 +530,8 @@ var $loader = {
 				return self.url(self._options.frameworkStylesURL + name);
 			},
 			
-			assetURL: function (nameWithExtension, cacheLevel) {
-				return self.url(self._options.frameworkAssetsURL + nameWithExtension, cacheLevel);
+			assetURL: function (nameWithExtension, fresh) {
+				return self.url(self._options.frameworkAssetsURL + nameWithExtension, fresh);
 			}
 		},
 		
@@ -567,23 +563,21 @@ var $loader = {
 			}
 		};
 		
-		this.template = function (resourceName, cacheLevel) {
-			if (self._loadableResourceMap.hasOwnProperty(resourceName) && !cacheLevel) {
+		this.template = function (resourceName) {
+			if (self._loadableResourceMap.hasOwnProperty(resourceName)) {
 				return self._loadableResourceMap[resourceName];
 			}
 			var templ = new $loader.Template(resourceName);
-			templ.loader.grab(cacheLevel);
+			templ.loader.grab();
 			self._loadableResourceMap[resourceName] = templ;
 			return templ;
 		};
 		
-		this.url = function (url, cacheLevel) {
-			if (!cacheLevel || cacheLevel == self.CACHE_LEVEL_HARD) {
-				return smartCacheManager.setURLCacheVersion(url);
-			} else if (cacheLevel == self.CACHE_LEVEL_SOFT) {
+		this.url = function (url, fresh) {
+			if (fresh) {
 				return url;
 			} else {
-				return smartCacheManager.setCacheKiller(url);
+				return NOMBO_CACHE_MANAGER.setURLCacheVersion(url);
 			}
 		};
 		
@@ -593,11 +587,11 @@ var $loader = {
 		this.image = function () {
 			var url = arguments[0];
 			var callback = null;
-			var cacheLevel = null;
+			var fresh = null;
 			if (arguments[1] instanceof Function) {
 				callback = arguments[1];
 			} else {
-				cacheLevel = arguments[1];
+				fresh = arguments[1];
 				if (arguments[2]) {
 					callback = arguments[2];
 				}
@@ -611,7 +605,7 @@ var $loader = {
 				}
 			}
 			
-			img.src = self.url(url, cacheLevel);
+			img.src = self.url(url, fresh);
 			return img;
 		};
 		
@@ -673,7 +667,7 @@ var $loader = {
 				tagData = {type: 'link', url: url, ready: false};
 				self._loadTagResource(tagData, callback);
 			} else {
-				self._loadDeepResourceToCache(url, function (err, data) {
+				self._loadDeepResourceToCache(url, false, function (err, data) {
 					self._resourcesGrabbed.push(url);
 					callback(err, data);
 				});
@@ -682,7 +676,7 @@ var $loader = {
 		
 		this._loadTagResource = function (tagData, callback) {
 			self._embedQueue.push(tagData);
-			self._loadDeepResourceToCache(tagData.url, function (err, data) {
+			self._loadDeepResourceToCache(tagData.url, false, function (err, data) {
 				tagData.ready = true;
 				tagData.error = err;
 				callback(err, data);
@@ -692,7 +686,7 @@ var $loader = {
 		this.loadAndEmbedScript = function (url, callback) {
 			var tagData = {type: 'script', url: url, callback: callback, error: null, ready: false};
 			self._embedQueue.push(tagData);
-			self._loadDeepResourceToCache(url, function (err) {
+			self._loadDeepResourceToCache(url, false, function (err) {
 				tagData.ready = true;
 				tagData.error = err;
 				self._processEmbedQueue();
@@ -702,7 +696,7 @@ var $loader = {
 		this.loadAndEmbedCSS = function (url, callback) {		
 			var tagData = {type: 'link', url: url, callback: callback, error: null, ready: false}
 			self._embedQueue.push(tagData);
-			self._loadDeepResourceToCache(url, function (err) {
+			self._loadDeepResourceToCache(url, false, function (err) {
 				tagData.ready = true;
 				tagData.error = err;
 				self._processEmbedQueue();
@@ -743,7 +737,7 @@ var $loader = {
 			if (query) {
 				script.src = url + '?' + query;
 			} else {
-				script.src = smartCacheManager.setURLCacheVersion(url);
+				script.src = NOMBO_CACHE_MANAGER.setURLCacheVersion(url);
 			}
 			
 			head.appendChild(script);
@@ -780,7 +774,7 @@ var $loader = {
 			if (query) {
 				link.href = url + '?' + query;
 			} else {
-				link.href = smartCacheManager.setURLCacheVersion(url);
+				link.href = NOMBO_CACHE_MANAGER.setURLCacheVersion(url);
 			}
 			
 			if (firstScript) {
@@ -882,11 +876,18 @@ var $loader = {
 			}
 		};
 		
-		this._loadDeepResourceToCache = function (url, callback, rootURL) {
+		this._versionDeepCSSURLs = function (content) {
+			content = content.replace(this._cssURLRegex, function (match, first, second) {
+				var newURL = NOMBO_CACHE_MANAGER.setURLCacheVersion(second);
+				return first + 'url("' + newURL + '")';
+			});
+			
+			return content;
+		};
+		
+		this._loadDeepResourceToCache = function (url, fresh, callback, rootURL) {
 			url = url.replace(/[?].*/, '');
 			if (!self._resourcesLoadedMap[url]) {
-				var resourceData = null;
-				
 				if (!rootURL || url == rootURL) {
 					rootURL = url;
 					self._resources.push(url);
@@ -900,9 +901,7 @@ var $loader = {
 					// images
 					var img = new Image();
 					img.onload = function () {
-						if (url == rootURL) {
-							resourceData = img;
-						}
+						var resourceData = img;
 						self._resourcesLoadedMap[url] = true;
 						self._deepResourcesLoaded[rootURL].push(url);
 						if ($loader._booting) {
@@ -924,26 +923,25 @@ var $loader = {
 						}
 					};
 					
-					var tempURL = self.url(url);
+					var tempURL = self.url(url, fresh);
 					img.src = tempURL;
 				} else {
-					var tempURL = self.url(url);
-					
+					var tempURL = self.url(url, fresh);
 					var ajaxSettings = {
 						url: tempURL,
 						type: "GET",
 						success: function (data) {
 							self._updateProgressStatus(url, self._options.resourceSizeMap[url]);
-							if (url == rootURL) {
-								resourceData = data;
-							}
+							var resourceData = data;
 							
 							self._resourcesLoadedMap[url] = true;
 							self._deepResourcesLoaded[rootURL].push(url);
 							var urls, nonLoadedURLs;
 							if (/[.](css|less)$/.test(url)) {
+								resourceData = self._versionDeepCSSURLs(resourceData);
+								urls = self._parseDeepCSSURLs(resourceData, url);
+								
 								nonLoadedURLs = [];
-								urls = self._parseDeepCSSURLs(data, url);
 								
 								var i, curURL;
 								var len = urls.length;
@@ -959,12 +957,12 @@ var $loader = {
 								len = nonLoadedURLs.length;
 								
 								for (i=0; i<len; i++) {
-									self._loadDeepResourceToCache(nonLoadedURLs[i], callback, rootURL);
+									self._loadDeepResourceToCache(nonLoadedURLs[i], fresh, callback, rootURL);
 								}
 								
-								self._styleCodes[url] = data;
+								self._styleCodes[url] = resourceData;
 							} else if (/[.]js$/.test(url)) {
-								self._scriptCodes[url] = data;
+								self._scriptCodes[url] = resourceData;
 							}
 							
 							if (self._deepResourcesLoaded[rootURL].length >= self._deepResources[rootURL].length) {
@@ -1137,8 +1135,8 @@ $loader.Template = function (resourceName) {
 		return self.loader.loaded;
 	}
 	
-	self.loader.grab = function (cacheLevel) {
-		$loader.grab._loadDeepResourceToCache(self.loader.name, function (err, result) {
+	self.loader.grab = function () {
+		$loader.grab._loadDeepResourceToCache(self.loader.name, false, function (err, result) {
 			if (err) {
 				self.loader.emit('error', self);
 			} else {

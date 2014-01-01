@@ -82,5 +82,5 @@ var SmartCacheManager = function (cacheVersion) {
 if (typeof window === 'undefined') {
 	module.exports.SmartCacheManager = SmartCacheManager;
 } else {
-	var smartCacheManager = new SmartCacheManager(NOMBO_CACHE_VERSION);
+	var NOMBO_CACHE_MANAGER = new SmartCacheManager(NOMBO_CACHE_VERSION);
 }

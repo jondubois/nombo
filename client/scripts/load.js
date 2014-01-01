@@ -19,7 +19,7 @@ var jLoad = {
 		jLoad._frameworkURL = settings.frameworkURL;
 		jLoad._frameworkClientURL = settings.frameworkClientURL;
 		
-		var imgURL = smartCacheManager.setURLCacheVersion(jLoad._frameworkClientURL + 'assets/logo.png');
+		var imgURL = NOMBO_CACHE_MANAGER.setURLCacheVersion(jLoad._frameworkClientURL + 'assets/logo.png');
 		var text = 'Loading';
 		
 		jLoad._load(imgURL, 'Nombo', 'http://nombo.io/', text);

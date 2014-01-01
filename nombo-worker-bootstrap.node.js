@@ -31,6 +31,8 @@ process.on('message', function (m) {
 		worker.start();
 	} else if (m.type == 'updateCache') {
 		worker.handleCacheUpdate(m.data.url, m.data.content, m.data.size);
+	} else if (m.type == 'updateCacheVersion') {
+		worker.handleCacheVersionUpdate(m.data.cacheVersion);
 	} else if (m.type == 'emit') {
 		if (m.data) {
 			worker.handleMasterEvent(m.event, m.data);

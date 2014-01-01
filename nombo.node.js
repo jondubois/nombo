@@ -394,13 +394,12 @@ Master.prototype._start = function () {
 	var updateCSSBundle = function () {
 		var cssBundle = styleBundle.bundle();
 		var size = Buffer.byteLength(cssBundle, 'utf8');
-		var data;
+		var data = {
+			url: appDef.appStyleBundleURL,
+			content: cssBundle,
+			size: size
+		};
 		for (var i in self._workers) {
-			data = {
-				url: appDef.appStyleBundleURL,
-				content: cssBundle,
-				size: size
-			};
 			self._workers[i].send({
 				type: 'updateCache',
 				data: data
@@ -693,19 +692,33 @@ Master.prototype._start = function () {
 					workersActive = true;
 				}
 				
-				watchr.watch({
-					paths: [self._paths.versionFilePath],
-					listener: function (event, filePath) {
-						var oldCacheVersion = self._cacheVersion;
-						self._updateCacheVersion(function () {
-							if (self._cacheVersion != oldCacheVersion) {
-								for (var i in self._workers) {
-									self._workers[i].kill();
-								}
-							}
-						});
+				process.on('SIGUSR2', function () {
+					for (var i in self._workers) {
+						self._workers[i].kill();
 					}
 				});
+				
+				if (self._options.release) {
+					watchr.watch({
+						paths: [self._paths.versionFilePath],
+						listener: function (event, filePath) {
+							var oldCacheVersion = self._cacheVersion;
+							self._updateCacheVersion(function () {
+								if (self._cacheVersion != oldCacheVersion) {
+									var data = {
+										cacheVersion: self._cacheVersion
+									};
+									for (var i in self._workers) {
+										self._workers[i].send({
+											type: 'updateCacheVersion',
+											data: data
+										});
+									}
+								}
+							});
+						}
+					});
+				}
 			}
 		};
 
@@ -807,7 +820,7 @@ Master.prototype._start = function () {
 			return worker;
 		};
 
-		var launchWorkers = function () {					
+		var launchWorkers = function () {
 			initBundles(function () {
 				var len = self._options.workers.length;
 				if (len > 0) {
@@ -830,7 +843,11 @@ Master.prototype._start = function () {
 			});
 		};
 		
-		self._updateCacheVersion(launchWorkers);
+		if (self._options.release) {
+			self._updateCacheVersion(launchWorkers);
+		} else {
+			launchWorkers();
+		}
 	};
 
 	var stores = self._options.stores;

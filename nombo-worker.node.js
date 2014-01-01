@@ -131,8 +131,6 @@ Worker.prototype._init = function (options) {
 	self.allowFullAuthResource(self._paths.frameworkClientURL + 'assets/logo.png');
 	self.allowFullAuthResource(self._paths.frameworkClientURL + 'scripts/failedconnection.js');
 	self.allowFullAuthResource(self._paths.frameworkClientURL + 'scripts/cookiesdisabled.js');
-	self.allowFullAuthResource(self._paths.frameworkClientURL + 'scripts/notaccessible.js');
-	self.allowFullAuthResource(self._paths.frameworkClientURL + 'scripts/notfound.js');
 	self.allowFullAuthResource(self._paths.frameworkURL + 'loader.js');
 	self.allowFullAuthResource(self._paths.statusURL);
 	
@@ -236,6 +234,16 @@ Worker.prototype._init = function (options) {
 Worker.prototype.handleCacheUpdate = function (url, content, size) {
 	this._resourceSizes[url] = size;
 	cachemere.setRaw(url, content);
+};
+
+Worker.prototype.handleCacheVersionUpdate = function (cacheVersion) {
+	this._cacheVersion = cacheVersion;
+	this._smartCacheManager.setCacheVersion(this._cacheVersion);
+	
+	// Force Cachemere to update the root HTML - Preprocessing will make use of the new cache version.
+	cachemere.set({
+		url: this._paths.appURL
+	});
 };
 
 Worker.prototype.handleMasterEvent = function () {
@@ -362,14 +370,14 @@ Worker.prototype._start = function () {
 		return result;
 	};
 	
-	var scriptTags = [];
-	scriptTags.push(self._createScriptTag(self._paths.freshnessURL, 'text/javascript', true));
-	scriptTags.push(self._createScriptTag(self._paths.frameworkURL + 'smartcachemanager.js', 'text/javascript'));
-	scriptTags.push(self._createScriptTag(self._paths.spinJSURL, 'text/javascript'));
-	scriptTags.push(self._createScriptTag(self._paths.frameworkSocketClientURL, 'text/javascript'));
-	scriptTags.push(self._createScriptTag(self._paths.frameworkURL + 'session.js', 'text/javascript'));
-	
 	specialPreps[self._paths.appURL] = function (data) {
+		var scriptTags = [];
+		scriptTags.push(self._createScriptTag(self._paths.freshnessURL, 'text/javascript', true));
+		scriptTags.push(self._createScriptTag(self._paths.frameworkURL + 'smartcachemanager.js', 'text/javascript'));
+		scriptTags.push(self._createScriptTag(self._paths.spinJSURL, 'text/javascript'));
+		scriptTags.push(self._createScriptTag(self._paths.frameworkSocketClientURL, 'text/javascript'));
+		scriptTags.push(self._createScriptTag(self._paths.frameworkURL + 'session.js', 'text/javascript'));
+		
 		var $ = cheerio.load(data.content.toString());
 		if (self._options.angular) {
 			if (!$('html').attr('xmlns:ng')) {
@@ -505,28 +513,6 @@ Worker.prototype._start = function () {
 			callback(null, content, dependencies);
 		}
 	};
-
-	var versionDeepCSSURLs = function (url, content) {
-		var fileDirURL = path.dirname(url) + '/';
-	
-		content = content.replace(cssImportRegex, function (match, first) {
-			var newURL = first;
-			if (self._options.release) {
-				newURL = self._smartCacheManager.setURLCacheVersion(newURL);
-			}
-			return '@import "' + newURL + '"';
-		});
-		
-		content = content.replace(cssURLRegex, function (match, first, second) {
-			var newURL = second;
-			if (self._options.release) {
-				newURL = self._smartCacheManager.setURLCacheVersion(newURL);
-			}
-			return first + 'url("' + newURL + '")';
-		});
-		
-		return content;
-	};
 	
 	var mainBundles = {};
 	mainBundles[self._options.appDef.frameworkCoreBundleURL] = 1;
@@ -599,12 +585,12 @@ Worker.prototype._start = function () {
 			} else {
 				resContent = resource.content.toString();
 			}
+			
 			flattenCSS(filePath, resContent, function (err, content, dependencies) {
 				if (err) {
 					self.errorHandler(err);
 				} else {
 					cachemere.setDeps(resource.url, dependencies);
-					content = versionDeepCSSURLs(resource.url, content);
 					
 					if (self._options.release) {
 						var minifyOptions = {
@@ -645,7 +631,7 @@ Worker.prototype._start = function () {
 							});
 						}
 					} else {
-						return content;
+						callback(null, content);
 					}
 				}
 			});

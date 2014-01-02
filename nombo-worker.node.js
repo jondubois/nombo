@@ -129,8 +129,8 @@ Worker.prototype._init = function (options) {
 	self.allowFullAuthResource(self._paths.frameworkSocketClientURL);
 	self.allowFullAuthResource(self._paths.frameworkURL + 'session.js');
 	self.allowFullAuthResource(self._paths.frameworkClientURL + 'assets/logo.png');
-	self.allowFullAuthResource(self._paths.frameworkClientURL + 'scripts/failedconnection.js');
-	self.allowFullAuthResource(self._paths.frameworkClientURL + 'scripts/cookiesdisabled.js');
+	self.allowFullAuthResource(self._paths.failedConnectionURL);
+	self.allowFullAuthResource(self._paths.cookiesDisabledURL);
 	self.allowFullAuthResource(self._paths.frameworkURL + 'loader.js');
 	self.allowFullAuthResource(self._paths.statusURL);
 	

@@ -157,7 +157,7 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 					var cookiesDisabledScript = document.createElement('script');
 					cookiesDisabledScript.type = 'text/javascript';
 					
-					url = NOMBO_FRAMEWORK_CLIENT_URL + 'scripts/cookiesdisabled.js';
+					url = NOMBO_APP_DEF.cookiesDisabledURL;
 					
 					if (!NOMBO_DEBUG) {
 						url = NOMBO_CACHE_MANAGER.setURLCacheVersion(url);
@@ -340,7 +340,7 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 			
 			var limitScript = document.createElement('script');
 			limitScript.type = 'text/javascript';
-			limitScript.src = NOMBO_CACHE_MANAGER.setURLCacheVersion(NOMBO_FRAMEWORK_CLIENT_URL + 'scripts/failedconnection.js');
+			limitScript.src = NOMBO_CACHE_MANAGER.setURLCacheVersion(NOMBO_APP_DEF.failedConnectionURL);
 			head.appendChild(limitScript);
 		} else {
 			ncBegin();

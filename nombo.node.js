@@ -157,7 +157,12 @@ Master.prototype._init = function (options) {
 	}
 
 	self._paths.appLoadScriptPath = self._paths.appDirPath + '/scripts/load.js';
+	self._paths.appCookiesDisabledPath = self._paths.appDirPath + '/scripts/cookiesdisabled.js';
+	self._paths.appFailedConnectionPath = self._paths.appDirPath + '/scripts/failedconnection.js';
+	
 	self._paths.frameworkLoadScriptPath = self._paths.frameworkClientDirPath + '/scripts/load.js';
+	self._paths.frameworkCookiesDisabledPath = self._paths.frameworkClientDirPath + '/scripts/cookiesdisabled.js';
+	self._paths.frameworkFailedConnectionPath = self._paths.frameworkClientDirPath + '/scripts/failedconnection.js';
 
 	self._paths.spinJSURL = self._paths.frameworkClientURL + 'libs/spin.js';
 	self._paths.appURL = '/';
@@ -389,6 +394,16 @@ Master.prototype._start = function () {
 		self._paths.loadScriptURL = pathManager.pathToURL(self._paths.appLoadScriptPath);
 	} else {
 		self._paths.loadScriptURL = pathManager.pathToURL(self._paths.frameworkLoadScriptPath);
+	}
+	if (fs.existsSync(self._paths.appCookiesDisabledPath)) {
+		self._paths.cookiesDisabledURL = pathManager.pathToURL(self._paths.appCookiesDisabledPath);
+	} else {
+		self._paths.cookiesDisabledURL = pathManager.pathToURL(self._paths.frameworkCookiesDisabledPath);
+	}
+	if (fs.existsSync(self._paths.appFailedConnectionPath)) {
+		self._paths.failedConnectionURL = pathManager.pathToURL(self._paths.appFailedConnectionPath);
+	} else {
+		self._paths.failedConnectionURL = pathManager.pathToURL(self._paths.frameworkFailedConnectionPath);
 	}
 
 	var updateCSSBundle = function () {
@@ -936,6 +951,8 @@ Master.prototype._getAppDef = function () {
 	appDef.pluginsURL = this._paths.frameworkClientURL + 'plugins/';
 	appDef.frameworkScriptsURL = this._paths.frameworkClientURL + 'scripts/';
 	appDef.loadScriptURL = this._paths.loadScriptURL;
+	appDef.cookiesDisabledURL = this._paths.cookiesDisabledURL;
+	appDef.failedConnectionURL = this._paths.failedConnectionURL;
 	appDef.frameworkStylesURL = this._paths.frameworkClientURL + 'styles/';
 	appDef.appScriptsURL = appDef.appURL + 'scripts/';
 	appDef.appLibsURL = appDef.appURL + 'libs/';

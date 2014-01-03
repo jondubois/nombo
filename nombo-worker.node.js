@@ -18,7 +18,6 @@ var SmartCacheManager = require("./smartcachemanager").SmartCacheManager;
 var socketCluster = require('socketcluster-server');
 var ncom = require('ncom');
 var cheerio = require('cheerio');
-var less = require('less');
 var retry = require('retry');
 var domain = require('domain');
 var async = require('async');
@@ -200,7 +199,6 @@ Worker.prototype._init = function (options) {
 	self._middleware[self.MIDDLEWARE_IO].setTail(self._middleware[self.MIDDLEWARE_RPC]);
 	
 	mime.define({
-		'text/css': ['less'],
 		'text/html': ['handlebars']
 	});
 	
@@ -633,16 +631,6 @@ Worker.prototype._start = function () {
 					} else {
 						callback(null, content);
 					}
-				}
-			});
-		},
-		less: function (resource, callback) {
-			less.render(data, function (err, content) {
-				if (err) {
-					self.errorHandler(err);
-				} else {
-					resource.content = content;
-					extPreps.css(resource, callback);
 				}
 			});
 		}

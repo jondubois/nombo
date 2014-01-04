@@ -21,8 +21,8 @@ var Master = function (options) {
 	self.EVENT_LEADER_START = 'leaderstart';
 	
 	self._errorDomain = domain.create();
-	self._errorDomain.on('error', function () {
-		self.errorHandler.apply(self, arguments);
+	self._errorDomain.on('error', function (err) {
+		self.errorHandler(err, 'master');
 	});
 	self._errorDomain.add(self);
 
@@ -201,22 +201,27 @@ Master.prototype._init = function (options) {
 	self.useScript = function (url, index) {
 		var normalURL = self._normalizeURL(url);
 		var filePath = pathManager.urlToPath(normalURL);
-		var obj = {};
-
-		if (!self._clientScriptMap[normalURL]) {
-			if (self._extRegex.test(url)) {
-				obj.url = normalURL;
-				obj.path = filePath;
-			} else {
-				obj.url = url + '.js';
-				obj.path = filePath + '.js';
+		
+		if (fs.existsSync(filePath)) {
+			var obj = {};
+			if (!self._clientScriptMap[normalURL]) {
+				if (self._extRegex.test(url)) {
+					obj.url = normalURL;
+					obj.path = filePath;
+				} else {
+					obj.url = url + '.js';
+					obj.path = filePath + '.js';
+				}
+				if (index == null) {
+					self._clientScripts.push(obj);
+				} else {
+					self._clientScripts.splice(index, 0, obj);
+				}
+				self._clientScriptMap[normalURL] = true;
 			}
-			if (index == null) {
-				self._clientScripts.push(obj);
-			} else {
-				self._clientScripts.splice(index, 0, obj);
-			}
-			self._clientScriptMap[normalURL] = true;
+		} else {
+			var error = 'Cannot add ' + url + ' to bundle - File not found';
+			self.errorHandler(error, 'master');
 		}
 	};
 
@@ -286,10 +291,6 @@ Master.prototype._init = function (options) {
 		self.useScript(self._paths.frameworkClientURL + 'libs/' + name, index);
 	};
 
-	self.bundle.framework.script = function (name, index) {
-		self.useScript(self._paths.frameworkClientURL + 'scripts/' + name, index);
-	};
-
 	self.bundle.framework.plugin = function (name, index) {
 		self.useScript(self._paths.frameworkClientURL + 'plugins/' + name, index);
 	};
@@ -333,6 +334,9 @@ Master.prototype._init = function (options) {
 
 	console.log('   ' + self.colorText('[Busy]', 'yellow') + ' Launching Nombo server');
 	
+	process.stdin.on('error', function (err) {
+		self.noticeHandler(err, 'master');
+	});
 	process.stdin.resume();
 	process.stdin.setEncoding('utf8');
 
@@ -372,7 +376,6 @@ Master.prototype.noticeHandler = function (notice, origin) {
 	}
 	
 	this.emit(this.EVENT_NOTICE, notice);
-	console.log(notice.message);
 };
 
 Master.prototype._start = function () {

@@ -343,16 +343,34 @@ Master.prototype._init = function (options) {
 	self._useCoreLib(self._paths.frameworkURL + 'nombo-client.js');
 };
 
-Master.prototype.errorHandler = function (err) {
-	this.emit(this.EVENT_FAIL, err);
+Master.prototype.errorHandler = function (err, origin) {
 	if (err.stack) {
-		console.log(err.stack);
+		err.origin = origin;
+	} else if (err instanceof Object) {
+		err.origin = origin;
+		err.stack = err.message;
 	} else {
-		console.log(err);
+		err = new Error(err);
+		err.stack = err.message;
+		err.origin = origin;
 	}
+
+	this.emit(this.EVENT_FAIL, err);
+	console.log(err.stack);
 };
 
-Master.prototype.noticeHandler = function (notice) {
+Master.prototype.noticeHandler = function (notice, origin) {
+	if (notice.stack) {
+		notice.origin = origin;
+	} else if (notice instanceof Object) {
+		notice.origin = origin;
+		notice.stack = notice.message;
+	} else {
+		notice = new Error(notice);
+		notice.stack = notice.message;
+		notice.origin = origin;
+	}
+	
 	this.emit(this.EVENT_NOTICE, notice);
 	console.log(notice.message);
 };
@@ -615,22 +633,11 @@ Master.prototype._start = function () {
 		}
 		
 		var balancerErrorHandler = function (err) {
-			if (err.stack) {
-				err.origin = {
-					type: 'balancer'
-				};
-			}
-			self.errorHandler(err);
+			self.errorHandler(err, {type: 'balancer'});
 		};
 		
 		var balancerNoticeHandler = function (noticeMessage) {
-			var notice = {
-				message: noticeMessage,
-				origin: {
-					type: 'balancer'
-				}
-			};
-			self.noticeHandler(notice);
+			self.noticeHandler(noticeMessage, {type: 'balancer'});
 		};
 		
 		self._balancer = fork(__dirname + '/nombo-balancer.node.js');
@@ -728,24 +735,19 @@ Master.prototype._start = function () {
 
 		var launchWorker = function (workerData, lead) {
 			var workerErrorHandler = function (err) {
-				if (err.stack) {
-					err.origin = {
-						type: 'worker',
-						pid: worker.pid
-					};
-				}
-				self.errorHandler(err);
+				var origin = {
+					type: 'worker',
+					pid: worker.pid
+				};
+				self.errorHandler(err, origin);
 			};
 			
 			var workerNoticeHandler = function (noticeMessage) {
-				var notice = {
-					message: noticeMessage,
-					origin: {
-						type: 'worker',
-						pid: worker.pid
-					}
+				var origin = {
+					type: 'worker',
+					pid: worker.pid
 				};
-				self.noticeHandler(notice);
+				self.noticeHandler(noticeMessage, origin);
 			};
 		
 			var worker = fork(__dirname + '/nombo-worker-bootstrap.node');
@@ -815,7 +817,7 @@ Master.prototype._start = function () {
 
 				var lead = worker.id == leaderId;
 				leaderId = -1;
-				self.errorHandler(new Error(message));
+				self.errorHandler(new Error(message), {type: 'master'});
 
 				console.log('   Respawning worker');
 				launchWorker(workerData, lead);
@@ -866,12 +868,7 @@ Master.prototype._start = function () {
 		});
 		
 		self._ioCluster.on('error', function (err) {
-			if (err.stack) {
-				err.origin = {
-					type: 'store'
-				}
-			}
-			self.errorHandler(err);
+			self.errorHandler(err, {type: 'store'});
 		});
 	};
 	
@@ -888,13 +885,7 @@ Master.prototype._updateCacheVersion = function (callback) {
 				err = err.message;
 			}
 			var noticeMessage = 'Failed to read cache version from versionFile at ' + self._paths.versionFilePath + '. Error: ' + err;
-			var notice = {
-				message: noticeMessage,
-				origin: {
-					type: 'master'
-				}
-			};
-			self.noticeHandler(notice);
+			self.noticeHandler(noticeMessage, {type: 'master'});
 		} else {
 			self._cacheVersion = parseInt(data);
 		}

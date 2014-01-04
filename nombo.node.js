@@ -883,7 +883,10 @@ Master.prototype._updateCacheVersion = function (callback) {
 	
 	fs.readFile(self._paths.versionFilePath, function (err, data) {
 		if (err) {
-			var noticeMessage = 'Failed to read cache version from versionFile at ' + self._paths.versionFilePath;
+			if (err instanceof Error) {
+				err = err.message;
+			}
+			var noticeMessage = 'Failed to read cache version from versionFile at ' + self._paths.versionFilePath + '. Error: ' + err;
 			var notice = {
 				message: noticeMessage,
 				origin: {

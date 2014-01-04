@@ -1,6 +1,8 @@
 require('./store');
 
-angular.module('project', ['store']).
+$(document.body).html($n.grab.app.template('index').toString());
+
+angular.module('project', ['store', 'ngRoute']).
 config(function ($routeProvider, $locationProvider) {
 	/*
 		The $n.grab.app.templateURL() is optional, you also simply type out the full URL.
@@ -84,3 +86,5 @@ function EditCtrl($scope, $location, $routeParams, Project) {
 		});
 	};
 }
+
+angular.bootstrap(document, ['project']);

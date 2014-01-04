@@ -45,10 +45,6 @@ Master.prototype._init = function (options) {
 		stores: null,
 		release: false,
 		title: 'Nombo App',
-		angular: false,
-		angularOptions: {
-			mainModule: null
-		},
 		protocol: 'http',
 		protocolOptions: null,
 		spinner: true,
@@ -307,14 +303,6 @@ Master.prototype._init = function (options) {
 		self._resourceSizes[url] = stats.size;
 		self._bundledResources.push(url);
 	};
-	
-	if (self._options.angular && self._options.angularOptions) {
-		self.bundle.framework.lib('angular.js', 0);
-		if (!self._options.angularOptions.mainTemplate) {
-			self._options.angularOptions.mainTemplate = 'index.html';
-		}
-		self.bundle.app.template(self._options.angularOptions.mainTemplate);
-	}
 
 	pathManager.setBaseURL(self._paths.appURL);
 
@@ -963,9 +951,6 @@ Master.prototype._getAppDef = function () {
 	appDef.releaseMode = this._options.release;
 	appDef.timeout = this._options.connectTimeout * 1000;
 	appDef.resourceSizeMap = this._resourceSizes;
-	appDef.angular = this._options.angular;
-	appDef.angularMainTemplate = this._options.angularOptions.mainTemplate;
-	appDef.angularMainModule = this._options.angularOptions.mainModule;
 
 	return appDef;
 };

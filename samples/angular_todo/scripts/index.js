@@ -1,3 +1,5 @@
+$(document.body).html($n.grab.app.template('index').toString());
+
 window.TodoCtrl = function ($scope) {
 	$scope.todos = [{
 			text: 'learn angular',
@@ -32,3 +34,5 @@ window.TodoCtrl = function ($scope) {
 		});
 	};
 }
+
+angular.bootstrap(document);

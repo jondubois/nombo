@@ -7,5 +7,8 @@
 module.exports.run = function(nombo) {
 	// These files will be included as part of preload process
 	nombo.bundle.framework.style('bootstrap');
+	nombo.bundle.framework.lib('angular');
+	nombo.bundle.framework.lib('angular/rout');
+	nombo.bundle.app.template('index');
 	nombo.bundle.app.style('main');
 }

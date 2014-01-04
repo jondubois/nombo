@@ -7,11 +7,7 @@ var options = {
 	port: port,
 	release: release,
 	sessionTimeout: 5000,
-	title: 'Projects App',
-	angular: true,
-	angularOptions: {
-		mainModule: 'project'
-	}
+	title: 'Projects App'
 };
 
 var nombo = new Master(options);

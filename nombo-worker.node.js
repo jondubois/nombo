@@ -377,19 +377,8 @@ Worker.prototype._start = function () {
 		scriptTags.push(self._createScriptTag(self._paths.frameworkURL + 'session.js', 'text/javascript'));
 		
 		var $ = cheerio.load(data.content.toString());
-		if (self._options.angular) {
-			if (!$('html').attr('xmlns:ng')) {
-				$('html').attr('xmlns:ng', 'http://angularjs.org');
-			}
-			$('body').attr('ng-cloak', '1');
-		} else {
-			if (!$('html').attr('xmlns')) {
-				$('html').attr('xmlns', 'http://www.w3.org/1999/xhtml');
-			}
-		}
-		if ($('title').length) {
-			$('title').text(self._options.title);
-		} else {
+		
+		if (!$('title').length) {
 			$('head').append('<title>' + self._options.title + '</title>');
 		}
 		for (var i in scriptTags) {

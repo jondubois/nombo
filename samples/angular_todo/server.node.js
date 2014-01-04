@@ -7,8 +7,7 @@ var options = {
 	port: port,
 	release: release,
 	sessionTimeout: 5000,
-	title: 'Todo App',
-	angular: true
+	title: 'Todo App'
 };
 
 var nombo = new Master(options);

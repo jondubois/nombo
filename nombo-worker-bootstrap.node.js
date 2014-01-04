@@ -24,21 +24,29 @@ var handleNotice = function (notice) {
 process.on('message', function (m) {
 	if (m.type == 'init') {
 		worker = new Worker(m.data);
-		worker.on('error', handleError);
-		worker.on('notice', handleNotice);
+		
+		if (m.data.propagateErrors) {
+			worker.on('error', handleError);
+			worker.on('notice', handleNotice);
+		}
+		
 		var workerController = require(m.data.paths.appWorkerControllerPath);
 		workerController.run(worker);
 		worker.start();
+		
 	} else if (m.type == 'updateCache') {
 		worker.handleCacheUpdate(m.data.url, m.data.content, m.data.size);
+		
 	} else if (m.type == 'updateCacheVersion') {
 		worker.handleCacheVersionUpdate(m.data.cacheVersion);
+		
 	} else if (m.type == 'emit') {
 		if (m.data) {
 			worker.handleMasterEvent(m.event, m.data);
 		} else {
 			worker.handleMasterEvent(m.event);
 		}
+		
 	} else if (m.type == 'kill') {
 		worker.kill();
 	}

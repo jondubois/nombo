@@ -70,6 +70,7 @@ Master.prototype._init = function (options) {
 		heartbeatTimeout: 60,
 		workerStatusInterval: 10,
 		allowUploads: false,
+		propagateErrors: true,
 		hostAddress: null,
 		balancerCount: null,
 		customSIMExtension: 'node.js',

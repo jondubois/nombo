@@ -16,7 +16,7 @@ module.exports.run = function(nombo) {
 				if(loggedIn) {
 					next();
 				} else {
-					res.error('Socket communication not authorized');
+					res.error('Socket communication not authorized - You are not logged in');
 				}
 			});
 		}

@@ -141,7 +141,7 @@ $n.LocalInterface = function (wsSocket, namespace) {
 	var self = this;
 	var mainNamespace = '__';
 	var simNamespace = '__nc';
-	
+	this.sock = wsSocket;
 	var mainSocket = wsSocket.ns(mainNamespace);
 	var simSocket = wsSocket.ns(simNamespace);
 	

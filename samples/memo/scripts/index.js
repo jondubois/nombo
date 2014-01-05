@@ -63,7 +63,9 @@ function main() {
 		var title = titleBox.val();
 		var message = messageBox.val();
 		// Execute the notes sim's createNote method - This will add a new note to this session
-		$n.local.exec('notes', 'createNote', {title: title, message: message});
+		$n.local.exec('notes', 'createNote', {title: title, message: message}, function (err) {
+			err && alert(err);
+		});
 		titleBox.val('');
 		messageBox.val('');
 		addNoteDialog.dialog('close');
@@ -86,7 +88,9 @@ function main() {
 		var message = parent.find('.message').html();
 		
 		// We are using the chat app's chat sim and calling its addMessage method with the specified 'data' parameter
-		chatApp.exec('chat', 'addMessage', {user: 'Memo', message: message});
+		chatApp.exec('chat', 'addMessage', {user: 'Memo', message: message}, function (err) {
+			err && alert(err);
+		});
 	});
 	
 	addNoteButton.click(function() {
@@ -100,7 +104,11 @@ function main() {
 	
 	// Execute the notes sim's getNotes method
 	$n.local.exec('notes', 'getNotes', function(err, notes) {
-		renderNotes(notes);
+		if (err) {
+			alert(err);
+		} else {
+			renderNotes(notes);
+		}
 	});
 	
 	// Watch for the addednote server event which will be triggered whenever a new note is added

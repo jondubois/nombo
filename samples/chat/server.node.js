@@ -10,7 +10,6 @@ var options = {
 	balancerCount: 1,
 	workers: [{port: 9100}],//, {port: 9101}],
 	stores: [{port: 9120}],
-	sessionTimeout: 10,
 	addressSocketLimit: 4,
 	connectTimeout: 10,
 	//hostAddress: '127.0.0.1',

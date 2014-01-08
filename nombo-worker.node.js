@@ -219,6 +219,7 @@ Worker.prototype._init = function (options) {
 		clusterKey: self._options.clusterKey,
 		connectTimeout: self._options.connectTimeout,
 		dataExpiry: self._options.sessionTimeout,
+		heartRate: self._options.sessionHeartRate,
 		addressSocketLimit: self._options.addressSocketLimit
 	});
 

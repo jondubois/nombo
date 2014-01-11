@@ -146,6 +146,11 @@ Master.prototype._init = function (options) {
 	self._paths.frameworkModulesURL = self._paths.frameworkURL + 'node_modules/';
 
 	self._paths.appDirPath = path.dirname(require.main.filename);
+	
+	var appScripts = self._paths.appDirPath + '/scripts';
+	var frameworkScripts = self._paths.frameworkClientDirPath + '/scripts';
+	self._paths.relativeFrameworkScriptsPath = path.relative(appScripts, frameworkScripts).replace(/\\/g, '/');
+	
 	self._paths.appWorkerControllerPath = self._paths.appDirPath + '/worker.node.js';
 	
 	if (self._options.versionFile == null) {
@@ -199,66 +204,72 @@ Master.prototype._init = function (options) {
 		}
 	};
 	
-	self.useScript = function (url, index) {
-		var normalURL = self._normalizeURL(url);
-		var filePath = pathManager.urlToPath(normalURL);
+	self.useLib = function (url, index) {
+		var url = self._normalizeURL(url);
+		if (!self._extRegex.test(url)) {
+			url = url + '.js';
+		}
+		var filePath = pathManager.urlToPath(url);
 		
 		if (fs.existsSync(filePath)) {
 			var obj = {};
-			if (!self._clientScriptMap[normalURL]) {
-				if (self._extRegex.test(url)) {
-					obj.url = normalURL;
-					obj.path = filePath;
-				} else {
-					obj.url = url + '.js';
-					obj.path = filePath + '.js';
-				}
+			if (!self._clientScriptMap[url]) {
+				obj.url = url;
+				obj.path = filePath;
 				if (index == null) {
 					self._clientScripts.push(obj);
 				} else {
 					self._clientScripts.splice(index, 0, obj);
 				}
-				self._clientScriptMap[normalURL] = true;
+				self._clientScriptMap[url] = true;
 			}
 		} else {
-			var error = 'Cannot add ' + url + ' to bundle - File not found';
+			var error = 'Cannot add ' + url + ' to lib bundle - File not found';
 			self.errorHandler(error, 'master');
 		}
 	};
 
 	self.useStyle = function (url) {
-		var normalURL = self._normalizeURL(url);
-		var filePath = pathManager.urlToPath(normalURL);
-		var obj = {};
-		if (self._extRegex.test(normalURL)) {
-			obj.url = normalURL;
-			obj.path = filePath;
-		} else {
-			obj.url = url + '.css';
-			obj.path = filePath + '.css';
+		var url = self._normalizeURL(url);
+		if (!self._extRegex.test(url)) {
+			url = url + '.css';
 		}
-		self._clientStyles.push(obj);
+		var filePath = pathManager.urlToPath(url);
+		
+		if (fs.existsSync(filePath)) {
+			var obj = {};
+			obj.url = url;
+			obj.path = filePath;
+			self._clientStyles.push(obj);
+		} else {
+			var error = 'Cannot add ' + url + ' to style bundle - File not found';
+			self.errorHandler(error, 'master');
+		}
 	};
 
 	self.useTemplate = function (url) {
-		var normalURL = self._normalizeURL(url);
-		var filePath = pathManager.urlToPath(normalURL);
-		var obj = {};
-		if (self._extRegex.test(normalURL)) {
-			obj.url = normalURL;
-			obj.path = filePath;
-		} else {
-			obj.url = url + '.html';
-			obj.path = filePath + '.html';
+		var url = self._normalizeURL(url);
+		if (!self._extRegex.test(url)) {
+			url = url + '.html';
 		}
+		var filePath = pathManager.urlToPath(url);
+		
+		if (fs.existsSync(filePath)) {
+			var obj = {};
+			obj.url = url;
+			obj.path = filePath;
 
-		self._clientTemplates.push(obj);
+			self._clientTemplates.push(obj);
+		} else {
+			var error = 'Cannot add ' + url + ' to template bundle - File not found';
+			self.errorHandler(error, 'master');
+		}
 	};
 
 	self.bundle = {};
 	self.bundle.app = {};
 	self.bundle.framework = {};
-	self.bundle.script = self.useScript;
+	self.bundle.script = self.useLib;
 	self.bundle.style = self.useStyle;
 	self.bundle.template = self.useTemplate;
 
@@ -270,9 +281,9 @@ Master.prototype._init = function (options) {
 	};
 
 	self.bundle.app.lib = function (name, index) {
-		self.useScript(self._paths.appURL + 'libs/' + name, index);
+		self.useLib(self._paths.appURL + 'libs/' + name, index);
 	};
-
+	
 	self.bundle.app.template = function (name) {
 		self.useTemplate(self._paths.appURL + 'templates/' + name);
 	};
@@ -289,11 +300,17 @@ Master.prototype._init = function (options) {
 	};
 
 	self.bundle.framework.lib = function (name, index) {
-		self.useScript(self._paths.frameworkClientURL + 'libs/' + name, index);
+		self.useLib(self._paths.frameworkClientURL + 'libs/' + name, index);
 	};
+	
+	/*
+	self.bundle.framework.script = function (name, index) {
+		
+	};
+	*/
 
 	self.bundle.framework.plugin = function (name, index) {
-		self.useScript(self._paths.frameworkClientURL + 'plugins/' + name, index);
+		self.useLib(self._paths.frameworkClientURL + 'plugins/' + name, index);
 	};
 
 	self.bundle.framework.style = function (name) {
@@ -517,10 +534,10 @@ Master.prototype._start = function () {
 		noParse: libFilePaths
 	};
 	
-	self._libBundle = watchify(libBundleOptions);
+	var libBundle = watchify(libBundleOptions);
 	
 	var updateLibBundle = function (callback) {
-		self._libBundle.bundle({debug: !self._options.release}, function (err, jsBundle) {
+		libBundle.bundle({debug: !self._options.release}, function (err, jsBundle) {
 			if (err) {
 				self._errorDomain.emit('error', err);
 				callback && callback();
@@ -599,7 +616,7 @@ Master.prototype._start = function () {
 			listener: updateCoreBundle
 		});
 		
-		self._libBundle.on('update', function () {
+		libBundle.on('update', function () {
 			updateLibBundle();
 		});
 
@@ -932,6 +949,7 @@ Master.prototype._getAppDef = function () {
 	appDef.appLibBundleURL = appDef.virtualURL + 'libs.js';
 	appDef.appScriptBundleURL = appDef.virtualURL + 'scripts.js';
 	appDef.freshnessURL = this._paths.freshnessURL;
+	appDef.relativeFrameworkScriptsPath = this._paths.relativeFrameworkScriptsPath;
 	appDef.frameworkClientURL = this._paths.frameworkClientURL;
 	appDef.frameworkLibsURL = this._paths.frameworkClientURL + 'libs/';
 	appDef.frameworkAssetsURL = this._paths.frameworkClientURL + 'assets/';

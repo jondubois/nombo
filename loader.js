@@ -357,8 +357,10 @@ var $loader = {
 		this._scriptCodes = {};
 		this._styleCodes = {};
 		this._embedQueue = [];
+		this._windowsFileSepRegex = /\\/g;
 		this._extRegex = /[.][^\/\\]*$/;
-		this._lessExtRegex = /[.]less$/;
+		this._jsExtRegex = /[.]js$/;
+		this._mainScriptPrefixRegex = /^([.]\/|\/)/;
 		this._cssURLRegex = /([^A-Za-z0-9]|^)url[(][ ]*["']?([^"')]*)["']?[ ]*[)]/g;
 		this._resourceSizeTotal = 0;
 		
@@ -368,6 +370,10 @@ var $loader = {
 			for (i in resourceSizeMap) {
 				self._resourceSizeTotal += resourceSizeMap[i];
 			}
+		};
+		
+		this.toUnixSep = function (filePath) {
+			return filePath.replace(this._windowsFileSepRegex, '/');
 		};
 		
 		this._triggerReady = function () {
@@ -423,20 +429,7 @@ var $loader = {
 		
 		this.app = {
 			script: function (name) {
-				var scriptName = name;
-				if (!self._extRegex.test(name)) {
-					scriptName += '.js';
-				}
-				
-				var requireName = '/' + scriptName;
-				var bundledModule = require(requireName);
-				
-				if (bundledModule != null) {
-					return bundledModule;
-				} else {
-					var resourceName = self._options.appScriptsURL + scriptName;
-					return self.script(resourceName);
-				}
+				return self.script(name);
 			},
 			
 			lib: function (name, callback) {				
@@ -490,12 +483,8 @@ var $loader = {
 		
 		this.framework = {
 			script: function (name) {
-				if (self._extRegex.test(name)) {
-					var resourceName = self._options.frameworkScriptsURL + name;
-				} else {
-					var resourceName = self._options.frameworkScriptsURL + name + '.js';
-				}
-				return self.script(resourceName);
+				name = name.replace(self._mainScriptPrefixRegex, '');
+				return self.script(self._options.relativeFrameworkScriptsPath + '/' + name);
 			},
 			
 			lib: function (name, callback) {				
@@ -536,12 +525,28 @@ var $loader = {
 		},
 		
 		this.script = function (resourceName) {
+			resourceName = self.toUnixSep(resourceName);
+			
+			if (!self._extRegex.test(name)) {
+				resourceName += '.js';
+			}
+			
+			var requireName = '/' + resourceName.replace(self._mainScriptPrefixRegex, '')
+				.replace(self._jsExtRegex, '');
+			
+			var bundledModule = require(requireName);
+			
+			if (bundledModule != null) {
+				return bundledModule;
+			}
+			
 			if (self._loadableResourceMap.hasOwnProperty(resourceName)) {
 				return self._loadableResourceMap[resourceName];
 			}
 			var scr = new $loader.Script(resourceName);
 			scr.loader.grab();
 			self._loadableResourceMap[resourceName] = scr;
+			
 			return scr;
 		};
 		
@@ -663,7 +668,7 @@ var $loader = {
 			if (ext[0] == '.js') {
 				tagData = {type: 'script', url: url, ready: false};
 				self._loadTagResource(tagData, callback);
-			} else if (ext[0] == '.css' || ext[0] == '.less') {
+			} else if (ext[0] == '.css') {
 				tagData = {type: 'link', url: url, ready: false};
 				self._loadTagResource(tagData, callback);
 			} else {
@@ -937,7 +942,7 @@ var $loader = {
 							self._resourcesLoadedMap[url] = true;
 							self._deepResourcesLoaded[rootURL].push(url);
 							var urls, nonLoadedURLs;
-							if (/[.](css|less)$/.test(url)) {
+							if (/[.](css)$/.test(url)) {
 								resourceData = self._versionDeepCSSURLs(resourceData);
 								urls = self._parseDeepCSSURLs(resourceData, url);
 								

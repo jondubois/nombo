@@ -112,8 +112,8 @@ var jLoad = {
 			};
 			
 			var img = new Image();
+			img.onload = showLoader;
 			img.src = loadImageURL;
-			showLoader();
 			
 			$loader.on('loadall', jLoad._loaded);
 		} else {

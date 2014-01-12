@@ -112,7 +112,7 @@ Worker.prototype._init = function (options) {
 		self._resourceSizes[i] = self._options.resourceSizes[i];
 	}
 	
-	self._fullAuthResources = {};
+	self._publicResources = {};
 	
 	self._cacheVersion = self._options.cacheVersion;
 	self._smartCacheManager = new SmartCacheManager(self._cacheVersion);
@@ -123,15 +123,15 @@ Worker.prototype._init = function (options) {
 	
 	self._ssidRegex = new RegExp('(^|; *)(' + self._options.appDef.sessionCookieName + '=)([^;]*)');
 	
-	self.allowFullAuthResource(self._paths.spinJSURL);
-	self.allowFullAuthResource(self._paths.frameworkURL + 'smartcachemanager.js');
-	self.allowFullAuthResource(self._paths.frameworkSocketClientURL);
-	self.allowFullAuthResource(self._paths.frameworkURL + 'session.js');
-	self.allowFullAuthResource(self._paths.frameworkClientURL + 'assets/logo.png');
-	self.allowFullAuthResource(self._paths.failedConnectionURL);
-	self.allowFullAuthResource(self._paths.cookiesDisabledURL);
-	self.allowFullAuthResource(self._paths.frameworkURL + 'loader.js');
-	self.allowFullAuthResource(self._paths.statusURL);
+	self.setPublicResource(self._paths.spinJSURL);
+	self.setPublicResource(self._paths.frameworkURL + 'smartcachemanager.js');
+	self.setPublicResource(self._paths.frameworkSocketClientURL);
+	self.setPublicResource(self._paths.frameworkURL + 'session.js');
+	self.setPublicResource(self._paths.frameworkClientURL + 'assets/logo.png');
+	self.setPublicResource(self._paths.failedConnectionURL);
+	self.setPublicResource(self._paths.cookiesDisabledURL);
+	self.setPublicResource(self._paths.frameworkURL + 'loader.js');
+	self.setPublicResource(self._paths.statusURL);
 	
 	self._retryOptions = {
 		retries: 10,
@@ -700,7 +700,7 @@ Worker.prototype._start = function () {
 		} else {
 			var favURL = '/favicon.ico';
 			cachemere.setRaw(favURL, data, 'image/gif');
-			self.allowFullAuthResource(favURL);
+			self.setPublicResource(favURL);
 			cachemere.on('ready', function () {
 				self._socketServer.removeListener('connection', serverNotReady);
 				self._socketServer.on('connection', self._handleConnection.bind(self));
@@ -739,18 +739,18 @@ Worker.prototype.removeMiddleware = function (type, callback) {
 	}
 };
 
-Worker.prototype.allowFullAuthResource = function (url) {
-	this._fullAuthResources[url] = true;
+Worker.prototype.setPublicResource = function (url) {
+	this._publicResources[url] = true;
 };
 
-Worker.prototype.denyFullAuthResource = function (url) {
-	if (this._fullAuthResources.hasOwnProperty(url)) {
-		delete this._fullAuthResources[url];
+Worker.prototype.unsetPublicResource = function (url) {
+	if (this._publicResources.hasOwnProperty(url)) {
+		delete this._publicResources[url];
 	}
 };
 
-Worker.prototype.isFullAuthResource = function (url) {
-	return this._fullAuthResources.hasOwnProperty(url);
+Worker.prototype.isPublicResource = function (url) {
+	return this._publicResources.hasOwnProperty(url);
 };
 
 Worker.prototype._statusRequestHandler = function (req, res, next) {
@@ -830,7 +830,7 @@ Worker.prototype._sessionHandler = function (req, res, next) {
 			resource.output(res);
 		});
 	} else {		
-		if (self.isFullAuthResource(url)) {
+		if (self.isPublicResource(url)) {
 			cachemere.fetch(req, function (err, resource) {
 				if (req.params.cv) {
 					var exp = new Date(Date.now() + self._options.clientCacheLife * 1000).toUTCString();

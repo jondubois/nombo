@@ -360,20 +360,24 @@ var $loader = {
 		this._windowsFileSepRegex = /\\/g;
 		this._extRegex = /[.][^\/\\]*$/;
 		this._jsExtRegex = /[.]js$/;
-		this._mainScriptPrefixRegex = /^([.]\/|\/)/;
+		this._mainScriptPrefixRegex = /^(\/)/;
 		this._cssURLRegex = /([^A-Za-z0-9]|^)url[(][ ]*["']?([^"')]*)["']?[ ]*[)]/g;
 		this._resourceSizeTotal = 0;
 		
 		this.init = function (options) {
 			self._options = options;
+			
+			self._appScriptsRegex = new RegExp('^' + self._options.appScriptsURL);
+			self._frameworkScriptsRegex = new RegExp('^' + self._options.frameworkScriptsURL);
+			
 			var resourceSizeMap = options.resourceSizeMap;
 			for (i in resourceSizeMap) {
 				self._resourceSizeTotal += resourceSizeMap[i];
 			}
 		};
 		
-		this.toUnixSep = function (filePath) {
-			return filePath.replace(this._windowsFileSepRegex, '/');
+		this.normalizeURL = function (url) {
+			return url.replace(this._windowsFileSepRegex, '/').replace(/\.\//g, '');
 		};
 		
 		this._triggerReady = function () {
@@ -429,7 +433,7 @@ var $loader = {
 		
 		this.app = {
 			script: function (name) {
-				return self.script(name);
+				return self.script(self._options.appScriptsURL + name);
 			},
 			
 			lib: function (name, callback) {				
@@ -483,8 +487,7 @@ var $loader = {
 		
 		this.framework = {
 			script: function (name) {
-				name = name.replace(self._mainScriptPrefixRegex, '');
-				return self.script(self._options.relativeFrameworkScriptsPath + '/' + name);
+				return self.script(self._options.frameworkScriptsURL + name);
 			},
 			
 			lib: function (name, callback) {				
@@ -525,14 +528,17 @@ var $loader = {
 		},
 		
 		this.script = function (resourceName) {
-			resourceName = self.toUnixSep(resourceName);
+			resourceName = self.normalizeURL(resourceName);
 			
-			if (!self._extRegex.test(name)) {
+			if (!self._extRegex.test(resourceName)) {
 				resourceName += '.js';
 			}
 			
-			var requireName = '/' + resourceName.replace(self._mainScriptPrefixRegex, '')
-				.replace(self._jsExtRegex, '');
+			var requireName = '/' + (resourceName
+				.replace(self._frameworkScriptsRegex, self._options.relativeFrameworkScriptsPath + '/')
+				.replace(self._appScriptsRegex, '')
+				.replace(self._mainScriptPrefixRegex, '')
+				.replace(self._jsExtRegex, ''));
 			
 			var bundledModule = require(requireName);
 			
@@ -543,6 +549,7 @@ var $loader = {
 			if (self._loadableResourceMap.hasOwnProperty(resourceName)) {
 				return self._loadableResourceMap[resourceName];
 			}
+			
 			var scr = new $loader.Script(resourceName);
 			scr.loader.grab();
 			self._loadableResourceMap[resourceName] = scr;
@@ -550,7 +557,9 @@ var $loader = {
 			return scr;
 		};
 		
-		this.lib = function (resourceName, callback) {			
+		this.lib = function (resourceName, callback) {
+			resourceName = self.normalizeURL(resourceName);
+			
 			if (self._activeScripts[resourceName]) {
 				callback(null, resourceName);
 			} else {
@@ -559,7 +568,9 @@ var $loader = {
 			}
 		};
 		
-		this.style = function (resourceName, callback) {			
+		this.style = function (resourceName, callback) {
+			resourceName = self.normalizeURL(resourceName);
+			
 			if (self._activeCSS[resourceName]) {
 				callback(null, resourceName);
 			} else {
@@ -569,6 +580,8 @@ var $loader = {
 		};
 		
 		this.template = function (resourceName) {
+			resourceName = self.normalizeURL(resourceName);
+			
 			if (self._loadableResourceMap.hasOwnProperty(resourceName)) {
 				return self._loadableResourceMap[resourceName];
 			}
@@ -579,6 +592,7 @@ var $loader = {
 		};
 		
 		this.url = function (url, fresh) {
+			url = self.normalizeURL(url);
 			if (fresh) {
 				return url;
 			} else {
@@ -591,6 +605,7 @@ var $loader = {
 		*/
 		this.image = function () {
 			var url = arguments[0];
+			
 			var callback = null;
 			var fresh = null;
 			if (arguments[1] instanceof Function) {
@@ -601,6 +616,7 @@ var $loader = {
 					callback = arguments[2];
 				}
 			}
+			url = self.url(url, fresh);
 			
 			var img = new Image();
 			
@@ -610,7 +626,7 @@ var $loader = {
 				}
 			}
 			
-			img.src = self.url(url, fresh);
+			img.src = url;
 			return img;
 		};
 		

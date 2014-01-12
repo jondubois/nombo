@@ -358,6 +358,7 @@ var $loader = {
 		this._styleCodes = {};
 		this._embedQueue = [];
 		this._windowsFileSepRegex = /\\/g;
+		this._doubleSlashRegex = /\/\//g;
 		this._extRegex = /[.][^\/\\]*$/;
 		this._jsExtRegex = /[.]js$/;
 		this._mainScriptPrefixRegex = /^(\/)/;
@@ -376,8 +377,37 @@ var $loader = {
 			}
 		};
 		
+		self._normalizeArray = function (parts, allowAboveRoot) {
+			// if the path tries to go above the root, 'up' ends up > 0
+			var up = 0;
+			for (var i = parts.length - 1; i >= 0; i--) {
+				var last = parts[i];
+				if (last === '.') {
+					parts.splice(i, 1);
+				} else if (last === '..') {
+					parts.splice(i, 1);
+					up++;
+				} else if (up) {
+					parts.splice(i, 1);
+					up--;
+				}
+			}
+
+			// if the path is allowed to go above the root, restore leading ..s
+			if (allowAboveRoot) {
+				for (; up--; up) {
+					parts.unshift('..');
+				}
+			}
+
+			return parts;
+		};
+		
 		this.normalizeURL = function (url) {
-			return url.replace(this._windowsFileSepRegex, '/').replace(/\.\//g, '');
+			url = url.replace(this._windowsFileSepRegex, '/')
+				.replace(this._doubleSlashRegex, '/');
+			var parts = url.split('/');
+			return self._normalizeArray(parts, true).join('/');
 		};
 		
 		this._triggerReady = function () {

@@ -298,7 +298,7 @@ Worker.prototype._calculateStatus = function () {
 	this._ioRequestCount = 0;
 };
 
-Worker.prototype.getStatus = function () {	
+Worker.prototype.getStatus = function () {
 	return {
 		clientCount: this._socketServer.clientsCount,
 		httpRPM: this._httpRPM,

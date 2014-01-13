@@ -18,6 +18,7 @@ var Master = function (options) {
 
 	self.EVENT_FAIL = 'fail';
 	self.EVENT_NOTICE = 'notice';
+	self.EVENT_INFO = 'info';
 	self.EVENT_LEADER_START = 'leaderstart';
 	
 	self._errorDomain = domain.create();
@@ -78,6 +79,8 @@ Master.prototype._init = function (options) {
 		privateExtensions: ['node.js', 'node.json', 'node.txt'],
 		clusterEngine: 'iocluster'
 	};
+	
+	self._active = false;
 
 	var i;
 	for (i in options) {
@@ -362,43 +365,52 @@ Master.prototype._init = function (options) {
 };
 
 Master.prototype.errorHandler = function (err, origin) {
-	if (err.stack) {
-		err.origin = origin;
-	} else if (err instanceof Object) {
-		err.origin = origin;
+	if (err.stack == null) {
+		if (!(err instanceof Object)) {
+			err = new Error(err);
+		}
 		err.stack = err.message;
-	} else {
-		err = new Error(err);
-		err.stack = err.message;
-		err.origin = origin;
 	}
+	err.origin = origin;
+	err.time = Date.now();
 
 	this.emit(this.EVENT_FAIL, err);
 	console.log(err.stack);
 };
 
 Master.prototype.noticeHandler = function (notice, origin) {
-	if (notice.stack) {
-		notice.origin = origin;
-	} else if (notice instanceof Object) {
-		notice.origin = origin;
+	if (notice.stack == null) {
+		if (!(notice instanceof Object)) {
+			notice = new Error(notice);
+		}
 		notice.stack = notice.message;
-	} else {
-		notice = new Error(notice);
-		notice.stack = notice.message;
-		notice.origin = origin;
 	}
+	notice.origin = origin;
+	notice.time = Date.now();
 	
 	this.emit(this.EVENT_NOTICE, notice);
+};
+
+Master.prototype.triggerInfo = function (info, origin) {
+	if (this._active) {
+		var infoData = {
+			origin: origin,
+			info: info,
+			time: Date.now()
+		};
+		this.emit(this.EVENT_INFO, infoData);
+		console.log('   ' + infoData.time + ' - ' + info);
+	}
 };
 
 Master.prototype._start = function () {
 	var self = this;
 	
 	var appDef = self._getAppDef();
-
+	
 	var bundles = {};
 	self._workers = [];
+	self._active = false;
 
 	var stylePaths = [];
 
@@ -431,6 +443,7 @@ Master.prototype._start = function () {
 	}
 
 	var updateCSSBundle = function () {
+		self.triggerInfo('Updating style bundle...', 'master');
 		var cssBundle = styleBundle.bundle();
 		var size = Buffer.byteLength(cssBundle, 'utf8');
 		var data = {
@@ -445,6 +458,7 @@ Master.prototype._start = function () {
 			});
 		}
 		bundles[appDef.appStyleBundleURL] = cssBundle;
+		self.triggerInfo('Updated style bundle', 'master');
 	};
 
 	var templatePaths = [];
@@ -461,6 +475,7 @@ Master.prototype._start = function () {
 	});
 
 	var updateTemplateBundle = function () {
+		self.triggerInfo('Updating template bundle...', 'master');
 		var htmlBundle = templateBundle.bundle();
 		var size = Buffer.byteLength(htmlBundle, 'utf8');
 		var data;
@@ -476,6 +491,7 @@ Master.prototype._start = function () {
 			});
 		}
 		bundles[appDef.appTemplateBundleURL] = htmlBundle;
+		self.triggerInfo('Updated template bundle', 'master');
 	};
 
 	var jsCoreLibCodes = {};
@@ -511,12 +527,14 @@ Master.prototype._start = function () {
 	};
 
 	var updateCoreBundle = function (event, filePath) {
+		self.triggerInfo('Updating core bundle...', 'master');
 		if (event == 'delete') {
 			jsCoreLibCodes[filePath] = null;
 		} else if ((event == 'create' || event == 'update') && jsCoreLibCodes.hasOwnProperty(filePath)) {
 			jsCoreLibCodes[filePath] = fs.readFileSync(filePath, 'utf8');
 		}
 		makeCoreBundle();
+		self.triggerInfo('Updated core bundle', 'master');
 	};
 	
 	var libFilePaths = [];
@@ -533,11 +551,13 @@ Master.prototype._start = function () {
 	var libBundle = watchify(libBundleOptions);
 	
 	var updateLibBundle = function (callback) {
+		self.triggerInfo('Updating lib bundle...', 'master');
 		libBundle.bundle({debug: !self._options.release}, function (err, jsBundle) {
 			if (err) {
 				self._errorDomain.emit('error', err);
 				callback && callback();
 			} else {
+				self.triggerInfo('Updated lib bundle', 'master');
 				bundles[appDef.appLibBundleURL] = jsBundle;
 				var size = Buffer.byteLength(jsBundle, 'utf8');
 				var data;
@@ -566,11 +586,13 @@ Master.prototype._start = function () {
 	scriptBundle.transform(requireify);
 	
 	var updateScriptBundle = function (callback) {
+		self.triggerInfo('Updating script bundle...', 'master');
 		scriptBundle.bundle({debug: !self._options.release}, function (err, jsBundle) {
 			if (err) {
 				self._errorDomain.emit('error', err);
 				callback && callback();
 			} else {
+				self.triggerInfo('Updated script bundle', 'master');
 				bundles[appDef.appScriptBundleURL] = jsBundle;
 				var size = Buffer.byteLength(jsBundle, 'utf8');
 				var data;
@@ -748,6 +770,7 @@ Master.prototype._start = function () {
 						}
 					});
 				}
+				self._active = true;
 			}
 		};
 

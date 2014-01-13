@@ -309,6 +309,7 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 			var startLoader = function () {
 				if (NOMBO_SPINNER) {
 					if (document.getElementById(spinnerOpts.className)) {
+						spinner.stop();
 						document.body.removeChild(spinnerDiv);
 						beginLoading();
 					} else {

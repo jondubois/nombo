@@ -77,7 +77,8 @@ Master.prototype._init = function (options) {
 		balancerCount: null,
 		customSIMExtension: 'node.js',
 		privateExtensions: ['node.js', 'node.json', 'node.txt'],
-		clusterEngine: 'iocluster'
+		clusterEngine: 'iocluster',
+		bundleUpdateDelay: 1000
 	};
 	
 	self._active = false;
@@ -423,7 +424,8 @@ Master.prototype._start = function () {
 	var styleBundle = cssBundler({
 		watchDirs: styleDirs,
 		files: stylePaths,
-		watch: true
+		watch: true,
+		updateDelay: self._options.bundleUpdateDelay
 	});
 
 	if (fs.existsSync(self._paths.appLoadScriptPath)) {
@@ -443,7 +445,7 @@ Master.prototype._start = function () {
 	}
 
 	var updateCSSBundle = function () {
-		self.triggerInfo('Updating style bundle...', 'master');
+		self.triggerInfo('Updating styles bundle...', 'master');
 		var cssBundle = styleBundle.bundle();
 		var size = Buffer.byteLength(cssBundle, 'utf8');
 		var data = {
@@ -458,7 +460,7 @@ Master.prototype._start = function () {
 			});
 		}
 		bundles[appDef.appStyleBundleURL] = cssBundle;
-		self.triggerInfo('Updated style bundle', 'master');
+		self.triggerInfo('Updated styles bundle', 'master');
 	};
 
 	var templatePaths = [];
@@ -466,16 +468,17 @@ Master.prototype._start = function () {
 	for (i in self._clientTemplates) {
 		templatePaths.push(self._clientTemplates[i].path);
 	}
-
 	var templateDirs = [pathManager.urlToPath(appDef.appTemplatesURL)];
+	
 	var templateBundle = templateBundler({
 		watchDirs: templateDirs,
 		files: templatePaths,
-		watch: true
+		watch: true,
+		updateDelay: self._options.bundleUpdateDelay
 	});
 
 	var updateTemplateBundle = function () {
-		self.triggerInfo('Updating template bundle...', 'master');
+		self.triggerInfo('Updating templates bundle...', 'master');
 		var htmlBundle = templateBundle.bundle();
 		var size = Buffer.byteLength(htmlBundle, 'utf8');
 		var data;
@@ -491,7 +494,7 @@ Master.prototype._start = function () {
 			});
 		}
 		bundles[appDef.appTemplateBundleURL] = htmlBundle;
-		self.triggerInfo('Updated template bundle', 'master');
+		self.triggerInfo('Updated templates bundle', 'master');
 	};
 
 	var jsCoreLibCodes = {};
@@ -551,13 +554,13 @@ Master.prototype._start = function () {
 	var libBundle = watchify(libBundleOptions);
 	
 	var updateLibBundle = function (callback) {
-		self.triggerInfo('Updating lib bundle...', 'master');
+		self.triggerInfo('Updating libs bundle...', 'master');
 		libBundle.bundle({debug: !self._options.release}, function (err, jsBundle) {
 			if (err) {
 				self._errorDomain.emit('error', err);
 				callback && callback();
 			} else {
-				self.triggerInfo('Updated lib bundle', 'master');
+				self.triggerInfo('Updated libs bundle', 'master');
 				bundles[appDef.appLibBundleURL] = jsBundle;
 				var size = Buffer.byteLength(jsBundle, 'utf8');
 				var data;
@@ -586,13 +589,13 @@ Master.prototype._start = function () {
 	scriptBundle.transform(requireify);
 	
 	var updateScriptBundle = function (callback) {
-		self.triggerInfo('Updating script bundle...', 'master');
+		self.triggerInfo('Updating scripts bundle...', 'master');
 		scriptBundle.bundle({debug: !self._options.release}, function (err, jsBundle) {
 			if (err) {
 				self._errorDomain.emit('error', err);
 				callback && callback();
 			} else {
-				self.triggerInfo('Updated script bundle', 'master');
+				self.triggerInfo('Updated scripts bundle', 'master');
 				bundles[appDef.appScriptBundleURL] = jsBundle;
 				var size = Buffer.byteLength(jsBundle, 'utf8');
 				var data;

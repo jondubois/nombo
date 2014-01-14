@@ -723,6 +723,9 @@ Worker.prototype.errorHandler = function (err) {
 };
 
 Worker.prototype.noticeHandler = function (notice) {
+	if (notice.message != null) {
+		notice = notice.message;
+	}
 	this.emit('notice', notice);
 };
 

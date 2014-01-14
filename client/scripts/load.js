@@ -9,20 +9,29 @@ var jLoad = {
 	_loaderAnimInterval: 200,
 	_loaderText: null,
 	_frameworkURL: null,
-	_imgLoaded: false,
 	_fadeSpeed: 20,
 	_alpha: 0,
 	_fadeInterval: null,
 	_isFinished: false,
-    
-	start: function(settings) {
+	_imgURL: null,
+	_img: null,
+	_imgIsLoaded: false,
+	
+	init: function (settings) {
 		jLoad._frameworkURL = settings.frameworkURL;
 		jLoad._frameworkClientURL = settings.frameworkClientURL;
+		jLoad._imgURL = NOMBO_CACHE_MANAGER.setURLCacheVersion(jLoad._frameworkClientURL + 'assets/logo.png');
 		
-		var imgURL = NOMBO_CACHE_MANAGER.setURLCacheVersion(jLoad._frameworkClientURL + 'assets/logo.png');
+		jLoad._img = new Image();
+		jLoad._img.onload = function () {
+			jLoad._imgIsLoaded = true;
+		};
+		jLoad._img.src = jLoad._imgURL;
+	},
+    
+	start: function() {
 		var text = 'Loading';
-		
-		jLoad._load(imgURL, 'Nombo', 'http://nombo.io/', text);
+		jLoad._load('Nombo', 'http://nombo.io/', text);
 	},
 	
 	progress: function(status) {
@@ -37,7 +46,7 @@ var jLoad = {
 		}
 	},
 	
-	_load: function(loadImageURL, loadImageCaption, loadImageLinkURL, text) {
+	_load: function(loadImageCaption, loadImageLinkURL, text) {
 		if (!NOMBO_DEBUG) {
 			var showLoader = function() {
 				if (!jLoad._isFinished) {
@@ -46,7 +55,6 @@ var jLoad = {
 					jLoad._loader.style.visibility = 'hidden';
 					jLoad._loader.style.width = '80px';
 					
-					jLoad._imgLoaded = false;
 					jLoad.hideLoader();
 					jLoad._loaderText = text;
 					
@@ -60,7 +68,7 @@ var jLoad = {
 					imgEl.style.display = 'block';
 					imgEl.style.marginRight = 'auto';
 					imgEl.style.marginLeft = 'auto';
-					imgEl.setAttribute('src', loadImageURL);
+					imgEl.setAttribute('src', jLoad._imgURL);
 					imgEl.setAttribute('alt', loadImageCaption);
 					imgEl.setAttribute('border', '0px');
 					
@@ -111,9 +119,11 @@ var jLoad = {
 				}
 			};
 			
-			var img = new Image();
-			img.onload = showLoader;
-			img.src = loadImageURL;
+			if (jLoad._imgIsLoaded) {
+				showLoader();
+			} else {
+				jLoad._img.onload = showLoader;
+			}
 			
 			$loader.on('loadall', jLoad._loaded);
 		} else {
@@ -177,4 +187,5 @@ var jLoad = {
 	}
 };
 
+$loader.config(jLoad.init);
 $loader.ready(jLoad.start);

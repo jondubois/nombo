@@ -353,7 +353,7 @@ Master.prototype._init = function (options) {
 	console.log('   ' + self.colorText('[Busy]', 'yellow') + ' Launching Nombo server');
 	
 	process.stdin.on('error', function (err) {
-		self.noticeHandler(err, 'master');
+		self.noticeHandler(err, {type: 'master'});
 	});
 	process.stdin.resume();
 	process.stdin.setEncoding('utf8');
@@ -372,7 +372,13 @@ Master.prototype.errorHandler = function (err, origin) {
 		}
 		err.stack = err.message;
 	}
-	err.origin = origin;
+	if (origin instanceof Object) {
+		err.origin = origin;
+	} else {
+		err.origin = {
+			type: origin
+		};
+	}
 	err.time = Date.now();
 
 	this.emit(this.EVENT_FAIL, err);
@@ -386,7 +392,13 @@ Master.prototype.noticeHandler = function (notice, origin) {
 		}
 		notice.stack = notice.message;
 	}
-	notice.origin = origin;
+	if (origin instanceof Object) {
+		notice.origin = origin;
+	} else {
+		notice.origin = {
+			type: origin
+		};
+	}
 	notice.time = Date.now();
 	
 	this.emit(this.EVENT_NOTICE, notice);
@@ -394,6 +406,11 @@ Master.prototype.noticeHandler = function (notice, origin) {
 
 Master.prototype.triggerInfo = function (info, origin) {
 	if (this._active) {
+		if (!(origin instanceof Object)) {
+			origin = {
+				type: origin
+			};
+		}
 		var infoData = {
 			origin: origin,
 			info: info,

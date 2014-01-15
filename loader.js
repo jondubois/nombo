@@ -96,14 +96,6 @@ var $loader = {
 		}
 	},
 	
-	config: function (callback) {
-		if ($loader._appDefinition) {
-			callback($loader._appDefinition);
-		} else {
-			$loader.on('config', callback);
-		}
-	},
-	
 	progress: function (callback) {
 		$loader.on('progress', callback);
 	},
@@ -138,11 +130,7 @@ var $loader = {
 			$loader._ieVersion = new Number(RegExp.$1);
 		}
 		
-		$loader.emit('config', appDefinition);
 		$loader.grab.init(appDefinition);
-	},
-	
-	start: function () {
 		$loader.grab.scriptTag($loader._appDefinition.loadScriptURL, 'text/javascript');
 	},
 	

@@ -13,25 +13,15 @@ var jLoad = {
 	_alpha: 0,
 	_fadeInterval: null,
 	_isFinished: false,
-	_imgURL: null,
-	_img: null,
-	_imgIsLoaded: false,
-	
-	init: function (settings) {
+    
+	start: function(settings) {
 		jLoad._frameworkURL = settings.frameworkURL;
 		jLoad._frameworkClientURL = settings.frameworkClientURL;
-		jLoad._imgURL = NOMBO_CACHE_MANAGER.setURLCacheVersion(jLoad._frameworkClientURL + 'assets/logo.png');
 		
-		jLoad._img = new Image();
-		jLoad._img.onload = function () {
-			jLoad._imgIsLoaded = true;
-		};
-		jLoad._img.src = jLoad._imgURL;
-	},
-    
-	start: function() {
+		var imgURL = NOMBO_CACHE_MANAGER.setURLCacheVersion(jLoad._frameworkClientURL + 'assets/logo.png');
 		var text = 'Loading';
-		jLoad._load('Nombo', 'http://nombo.io/', text);
+		
+		jLoad._load(imgURL, 'Nombo', 'http://nombo.io/', text);
 	},
 	
 	progress: function(status) {
@@ -46,7 +36,7 @@ var jLoad = {
 		}
 	},
 	
-	_load: function(loadImageCaption, loadImageLinkURL, text) {
+	_load: function(loadImageURL, loadImageCaption, loadImageLinkURL, text) {
 		if (!NOMBO_DEBUG) {
 			var showLoader = function() {
 				if (!jLoad._isFinished) {
@@ -68,7 +58,7 @@ var jLoad = {
 					imgEl.style.display = 'block';
 					imgEl.style.marginRight = 'auto';
 					imgEl.style.marginLeft = 'auto';
-					imgEl.setAttribute('src', jLoad._imgURL);
+					imgEl.setAttribute('src', loadImageURL);
 					imgEl.setAttribute('alt', loadImageCaption);
 					imgEl.setAttribute('border', '0px');
 					
@@ -119,11 +109,9 @@ var jLoad = {
 				}
 			};
 			
-			if (jLoad._imgIsLoaded) {
-				showLoader();
-			} else {
-				jLoad._img.onload = showLoader;
-			}
+			var img = new Image();
+			img.onload = showLoader;
+			img.src = loadImageURL;
 			
 			$loader.on('loadall', jLoad._loaded);
 		} else {
@@ -187,5 +175,4 @@ var jLoad = {
 	}
 };
 
-$loader.config(jLoad.init);
 $loader.ready(jLoad.start);

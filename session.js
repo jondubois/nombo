@@ -26,7 +26,7 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 	var freshnessURL = NOMBO_APP_DEF.freshnessURL;
 
 	var beginLoading = function () {
-		$loader.start();
+		$loader.init(NOMBO_APP_DEF, NOMBO_RESOURCES);
 	}
 
 	var head = document.getElementsByTagName('head');
@@ -63,7 +63,6 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 	
 	onScriptLoad(loadScript, function () {
 		scriptLoaded = true;
-		$loader.init(NOMBO_APP_DEF, NOMBO_RESOURCES);
 	});
 	
 	head.appendChild(loadScript);

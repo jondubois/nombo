@@ -25,10 +25,6 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 (function () {	
 	var freshnessURL = NOMBO_APP_DEF.freshnessURL;
 
-	var beginLoading = function () {
-		$loader.init(NOMBO_APP_DEF, NOMBO_RESOURCES);
-	}
-
 	var head = document.getElementsByTagName('head');
 	if (head) {
 		head = head[0];
@@ -101,6 +97,16 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 		spinnerDiv.style.top = '50%';
 
 		var spinner = new Spinner(spinnerOpts).spin(spinnerDiv);
+	}
+	
+	var beginLoading = function () {
+		$loader.init(NOMBO_APP_DEF, NOMBO_RESOURCES);
+		if (NOMBO_SPINNER) {
+			$loader.ready(function () {
+				spinner.stop();
+				document.body.removeChild(spinnerDiv);
+			});
+		}
 	}
 	
 	function setCookie(name, value, expirySeconds) {
@@ -309,8 +315,6 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 			var startLoader = function () {
 				if (NOMBO_SPINNER) {
 					if (document.getElementById(spinnerOpts.className)) {
-						spinner.stop();
-						document.body.removeChild(spinnerDiv);
 						beginLoading();
 					} else {
 						setTimeout(startLoader, 20);

@@ -1,15 +1,8 @@
 /*
-	Import stylesheet from framework/styles/ directory
-	You can also import a .less stylesheet which will be pre-compiled on the serverside; In this case, make sure that your files have a .less extension
-	Note that all Nombo framework files are stored under framework/ - App-specific files are stored under the app/ directory
+	Import stylesheet from appname/styles/ directory
+	Note that all Nombo framework files are stored under framework/ - App-specific files are stored under the appname/ directory
 */
-$n.grab.framework.style('jqueryui/ui-lightness/style.css');
-
-// Import library script, library scripts are core framework scripts and are located in the framework/libs/ directory
-$n.grab.framework.lib('jquery/ui.js');
-
-// Set the document to display a loading message while files are being loaded
-$(document.body).html('Loading Dynamic Libraries...');
+$n.grab.app.style('styles.css');
 
 /*
 	This uses the $j.mvp plugin which lets you work with views - You don't have to use the MVP plugin if you don't want to
@@ -89,8 +82,6 @@ $n.ready(function () {
 	
 	// Here we are simply watching for an event called 'updatemessages' which happens when a different client makes an update to the message log
 	$n.local.watch('updatemessages', chatHandler);
-	
-	$(".button").button();
 	
 	$("#nameBox").val("Guest");
 	$("#sendButton").click(sendMessage);

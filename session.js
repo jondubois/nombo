@@ -22,11 +22,11 @@ var NOMBO_ERROR = 'Unkown Error';
 var NOMBO_SPINNER = {{spinner}};
 var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 
-(function () {
+(function () {	
 	var freshnessURL = NOMBO_APP_DEF.freshnessURL;
 
 	var beginLoading = function () {
-		$loader.init(NOMBO_APP_DEF, NOMBO_RESOURCES);
+		$loader.start();
 	}
 
 	var head = document.getElementsByTagName('head');
@@ -34,7 +34,7 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 		head = head[0];
 	}
 
-	var ncOnScriptLoad = function (scriptTag, callback) {
+	var onScriptLoad = function (scriptTag, callback) {
 		if (!NOMBO_IE || NOMBO_IE_VERSION > 8) {
 			scriptTag.onload = function () {
 				callback();
@@ -48,7 +48,7 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 		}
 	};
 
-	var ncScriptLoaded = false;
+	var scriptLoaded = false;
 
 	var loadScript = document.createElement('script');
 	loadScript.type = 'text/javascript';
@@ -61,8 +61,9 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 	
 	loadScript.src = url;
 	
-	ncOnScriptLoad(loadScript, function () {
-		ncScriptLoaded = true;
+	onScriptLoad(loadScript, function () {
+		scriptLoaded = true;
+		$loader.init(NOMBO_APP_DEF, NOMBO_RESOURCES);
 	});
 	
 	head.appendChild(loadScript);
@@ -320,10 +321,10 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 				}
 			}
 
-			if (ncScriptLoaded) {
+			if (scriptLoaded) {
 				startLoader();
 			} else {
-				ncOnScriptLoad(loadScript, function () {
+				onScriptLoad(loadScript, function () {
 					startLoader();
 				});
 			}

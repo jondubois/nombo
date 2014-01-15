@@ -108,7 +108,7 @@ var $loader = {
 		$loader.on('progress', callback);
 	},
 	
-	init: function (appDefinition, resources, skipPreload) {
+	init: function (appDefinition, resources) {
 		$loader._resources = [];
 		$loader._appDefinition = appDefinition;
 		
@@ -140,6 +140,9 @@ var $loader = {
 		
 		$loader.emit('config', appDefinition);
 		$loader.grab.init(appDefinition);
+	},
+	
+	start: function () {
 		$loader.grab.scriptTag($loader._appDefinition.loadScriptURL, 'text/javascript');
 	},
 	

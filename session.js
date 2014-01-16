@@ -30,39 +30,6 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 		head = head[0];
 	}
 
-	var onScriptLoad = function (scriptTag, callback) {
-		if (!NOMBO_IE || NOMBO_IE_VERSION > 8) {
-			scriptTag.onload = function () {
-				callback();
-			}
-		} else {
-			scriptTag.onreadystatechange = function () {
-				if (this.readyState == 'complete' || this.readyState == 'loaded') {
-					callback();
-				}
-			}
-		}
-	};
-
-	var scriptLoaded = false;
-
-	var loadScript = document.createElement('script');
-	loadScript.type = 'text/javascript';
-	
-	url = NOMBO_FRAMEWORK_URL + 'loader.js';
-	
-	if (!NOMBO_DEBUG) {
-		url = NOMBO_CACHE_MANAGER.setURLCacheVersion(url);
-	}
-	
-	loadScript.src = url;
-	
-	onScriptLoad(loadScript, function () {
-		scriptLoaded = true;
-	});
-	
-	head.appendChild(loadScript);
-
 	if (NOMBO_SPINNER) {
 		var spinnerOpts = {
 			lines: 8,
@@ -100,13 +67,11 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 	}
 	
 	var beginLoading = function () {
-		$loader.init(NOMBO_APP_DEF, NOMBO_RESOURCES);
 		if (NOMBO_SPINNER) {
-			$loader.ready(function () {
-				spinner.stop();
-				document.body.removeChild(spinnerDiv);
-			});
+			spinner.stop();
+			document.body.removeChild(spinnerDiv);
 		}
+		$loader.init(NOMBO_APP_DEF, NOMBO_RESOURCES);
 	}
 	
 	function setCookie(name, value, expirySeconds) {
@@ -323,14 +288,7 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 					beginLoading();
 				}
 			}
-
-			if (scriptLoaded) {
-				startLoader();
-			} else {
-				onScriptLoad(loadScript, function () {
-					startLoader();
-				});
-			}
+			startLoader();
 		}
 	};
 	

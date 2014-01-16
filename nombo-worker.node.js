@@ -131,6 +131,7 @@ Worker.prototype._init = function (options) {
 	self.setPublicResource(self._paths.failedConnectionURL);
 	self.setPublicResource(self._paths.cookiesDisabledURL);
 	self.setPublicResource(self._paths.frameworkURL + 'loader.js');
+	self.setPublicResource(self._paths.loadScriptURL);
 	self.setPublicResource(self._paths.statusURL);
 	
 	self._retryOptions = {
@@ -375,6 +376,8 @@ Worker.prototype._start = function () {
 		scriptTags.push(self._createScriptTag(self._paths.frameworkURL + 'smartcachemanager.js', 'text/javascript'));
 		scriptTags.push(self._createScriptTag(self._paths.spinJSURL, 'text/javascript'));
 		scriptTags.push(self._createScriptTag(self._paths.frameworkSocketClientURL, 'text/javascript'));
+		scriptTags.push(self._createScriptTag(self._paths.frameworkURL + 'loader.js', 'text/javascript'));
+		scriptTags.push(self._createScriptTag(self._paths.loadScriptURL, 'text/javascript'));
 		scriptTags.push(self._createScriptTag(self._paths.frameworkURL + 'session.js', 'text/javascript'));
 		
 		var $ = cheerio.load(data.content.toString());

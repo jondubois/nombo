@@ -131,7 +131,7 @@ var $loader = {
 		}
 		
 		$loader.grab.init(appDefinition);
-		$loader.grab.scriptTag($loader._appDefinition.loadScriptURL, 'text/javascript');
+		//$loader.grab.scriptTag($loader._appDefinition.loadScriptURL, 'text/javascript');
 	},
 	
 	EventEmitter: function () {
@@ -222,7 +222,7 @@ var $loader = {
 	_waitForReady: function () {
 		var head = document.getElementsByTagName('head')[0];
 		
-		if (head && document.body) {
+		if (head && document.body && $loader._appDefinition) {
 			$loader._domReady = true;
 			clearInterval($loader._waitForReadyInterval);
 			$loader.emit('ready', $loader._appDefinition);

@@ -4,7 +4,7 @@
 	It is also an ideal place to spawn daemon processes.
 */
 
-module.exports.run = function(nombo) {
+module.exports.run = function (nombo) {
 	nombo.on('fail', function (err) {
 		console.log('FAIL:', err.origin, err.message);
 	});

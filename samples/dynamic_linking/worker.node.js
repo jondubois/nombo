@@ -3,6 +3,6 @@
 	Middleware functions should be added here.
 */
 
-module.exports.run = function(nombo) {
+module.exports.run = function (nombo) {
 	
 }

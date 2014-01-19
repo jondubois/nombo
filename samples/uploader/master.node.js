@@ -4,7 +4,7 @@
 	It is also an ideal place to spawn daemon processes.
 */
 
-module.exports.run = function(nombo) {
+module.exports.run = function (nombo) {
 	nombo.bundle.framework.style('fileuploader');
 	nombo.bundle.framework.lib('fileuploader');
 }

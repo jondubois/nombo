@@ -5,7 +5,7 @@
 
 var ws = require('nombo/webservice');
 
-module.exports.run = function(nombo) {
+module.exports.run = function (nombo) {
 	nombo.addMiddleware(nombo.MIDDLEWARE_IO, function(req, res, next) {
 		if(req.sim == 'auth') {
 			// Do not need to login to use auth server interface module

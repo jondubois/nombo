@@ -4,7 +4,7 @@
 	It is also an ideal place to spawn daemon processes.
 */
 
-module.exports.run = function(nombo) {
+module.exports.run = function (nombo) {
 	// These files will be included as part of preload process
 	nombo.bundle.framework.style('bootstrap.css');
 	nombo.bundle.framework.style('jqueryui/ui-lightness/style.css');

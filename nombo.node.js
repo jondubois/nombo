@@ -110,16 +110,44 @@ Master.prototype._init = function (options) {
 		}
 	}
 	
+	if (self._options.stores) {
+		var newStores = [];
+		var curStore;
+		
+		for (i in self._options.stores) {
+			curStore = self._options.stores[i];
+			if (typeof curStore == 'number') {
+				curStore = {port: curStore};
+			} else {
+				if (curStore.port == null) {
+					throw new Error('One or more store objects is missing a port property');
+				}
+			}
+			newStores.push(curStore);
+		}
+		self._options.stores = newStores;
+	}
+	
 	if (!self._options.stores || self._options.stores.length < 1) {
 		self._options.stores = [{port: self._options.port + 2}];
 	}
 	
 	if (self._options.workers) {
+		var newWorkers = [];
+		var curWorker;
+
 		for (i in self._options.workers) {
-			if (self._options.workers[i].port == null) {
-				throw new Error('One or more worker object is missing a port property');
+			curWorker = self._options.workers[i];
+			if (typeof curWorker == 'number') {
+				curWorker = {port: curWorker};
+			} else {
+				if (curWorker.port == null) {
+					throw new Error('One or more worker objects is missing a port property');
+				}
 			}
+			newWorkers.push(curWorker);
 		}
+		self._options.workers = newWorkers;
 	} else {
 		self._options.workers = [{port: self._options.port + 3}];
 	}

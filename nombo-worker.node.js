@@ -87,15 +87,24 @@ Worker.prototype._init = function (options) {
 	self._errorDomain.add(cachemere);
 	cachemere.on('notice', self.noticeHandler.bind(self));
 	
+	var appFilesURLRegex = new RegExp('^' + self._options.appDef.appFilesURL);
+	
+	var defaultCacheClassifier = function (url) {
+		if (appFilesURLRegex.test(url)) {
+			return cachemere.CACHE_TYPE_WEAK;
+		}
+		return cachemere.CACHE_TYPE_STRONG;
+	};
+	
 	cachemere.init({
 		mapper: pathManager.urlToPath,
-		maxSize: self._options.cacheMaxSize,
-		maxEntrySize: self._options.cacheMaxEntrySize,
-		cacheFilter: self._options.cacheFilter
+		maxSize: self._options.serverCacheMaxSize,
+		maxEntrySize: self._options.serverCacheMaxEntrySize,
+		cacheLife: self._options.serverCacheLife,
+		classifier: defaultCacheClassifier
 	});
 	
 	var i;
-	
 	for (i in self._bundles) {
 		cachemere.setRaw(i, self._bundles[i], 'text/javascript');
 	}
@@ -730,6 +739,10 @@ Worker.prototype.noticeHandler = function (notice) {
 		notice = notice.message;
 	}
 	this.emit('notice', notice);
+};
+
+Worker.prototype.setCacheClassifier = function (classifier) {
+	cachemere.setClassifier(classifier);
 };
 
 Worker.prototype.addMiddleware = function (type, callback) {

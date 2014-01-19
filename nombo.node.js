@@ -40,6 +40,9 @@ Master.prototype = Object.create(EventEmitter.prototype);
 Master.prototype._init = function (options) {
 	var self = this;
 	
+	var backslashRegex = /\\/g;
+	var appDirPath = path.dirname(require.main.filename).replace(backslashRegex, '/');
+	
 	self._options = {
 		port: 8000,
 		workers: null,
@@ -58,9 +61,9 @@ Master.prototype._init = function (options) {
 		minifyTimeout: 120,
 		clientCacheLife: 2592000,
 		clientCacheType: 'public',
-		cacheFilter: null,
-		cacheMaxEntrySize: 10000000,
-		cacheMaxSize: 1000000000,
+		serverCacheMaxEntrySize: 10000000,
+		serverCacheMaxSize: 1000000000,
+		serverCacheLife: 3600,
 		versionFile: null,
 		origins: '*:*',
 		publicResources: false,
@@ -138,8 +141,6 @@ Master.prototype._init = function (options) {
 
 	self._bundledResources = [];
 	self._resourceSizes = {};
-	
-	var backslashRegex = /\\/g;
 
 	self._paths = {};
 
@@ -150,7 +151,7 @@ Master.prototype._init = function (options) {
 	self._paths.frameworkClientURL = self._paths.frameworkURL + 'client/';
 	self._paths.frameworkModulesURL = self._paths.frameworkURL + 'node_modules/';
 
-	self._paths.appDirPath = path.dirname(require.main.filename).replace(backslashRegex, '/');
+	self._paths.appDirPath = appDirPath;
 	
 	self._paths.appScriptsPath = self._paths.appDirPath + '/scripts';
 	self._paths.frameworkScriptsPath = self._paths.frameworkClientDirPath + '/scripts';

@@ -3,7 +3,7 @@
 	Middleware functions should be added here.
 */
 
-module.exports.run = function(nombo) {
+module.exports.run = function (nombo) {
 	/* 
 		The following section sets the default text to show to web crawlers for indexing purposes.
 		If you do not need your app to be indexed by search engines, you can leave this as is - In doing so you will be helping
@@ -30,4 +30,4 @@ module.exports.run = function(nombo) {
 			next();
 		}
 	});
-}
+};

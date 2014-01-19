@@ -377,7 +377,7 @@ var $loader = {
 			}
 		};
 		
-		self._normalizeArray = function (parts, allowAboveRoot) {
+		this._normalizeArray = function (parts, allowAboveRoot) {
 			// if the path tries to go above the root, 'up' ends up > 0
 			var up = 0;
 			for (var i = parts.length - 1; i >= 0; i--) {
@@ -540,9 +540,9 @@ var $loader = {
 			
 			plugin: function (name, callback) {
 				if (self._extRegex.test(name)) {
-					var resourceName = self._options.pluginsURL + name;
+					var resourceName = self._options.frameworkPluginsURL + name;
 				} else {
-					var resourceName = self._options.pluginsURL + name + '.js';
+					var resourceName = self._options.frameworkPluginsURL + name + '.js';
 				}
 				self.lib(resourceName, callback);
 			},

@@ -240,6 +240,14 @@ Worker.prototype._init = function (options) {
 	});
 };
 
+Worker.prototype.getPaths = function () {
+	var paths = {};
+	for (var i in this._paths) {
+		paths[i] = this._paths[i];
+	}
+	return paths;
+};
+
 Worker.prototype.handleCacheUpdate = function (url, content, size) {
 	this._resourceSizes[url] = size;
 	cachemere.setRaw(url, content);

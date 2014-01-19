@@ -181,13 +181,56 @@ Master.prototype._init = function (options) {
 	
 	self._paths.rootTemplateURL = self._paths.appURL + 'index.html';
 	
+	self._paths.virtualURL = self._paths.appURL + '~virtual/';
+	self._paths.appStyleBundleURL = self._paths.virtualURL + 'styles.css';
+	self._paths.appTemplateBundleURL = self._paths.virtualURL + 'templates.js';
+	self._paths.frameworkCoreBundleURL = self._paths.virtualURL + 'core.js';
+	self._paths.appLibBundleURL = self._paths.virtualURL + 'libs.js';
+	self._paths.appScriptBundleURL = self._paths.virtualURL + 'scripts.js';
+	self._paths.frameworkLibsURL = self._paths.frameworkClientURL + 'libs/';
+	self._paths.frameworkAssetsURL = self._paths.frameworkClientURL + 'assets/';
+	self._paths.frameworkPluginsURL = self._paths.frameworkClientURL + 'plugins/';
+	self._paths.frameworkScriptsURL = self._paths.frameworkClientURL + 'scripts/';
+	self._paths.frameworkStylesURL = self._paths.frameworkClientURL + 'styles/';
+	self._paths.appScriptsURL = self._paths.appURL + 'scripts/';
+	self._paths.appLibsURL = self._paths.appURL + 'libs/';
+	self._paths.appStylesURL = self._paths.appURL + 'styles/';
+	self._paths.appTemplatesURL = self._paths.appURL + 'templates/';
+	self._paths.appAssetsURL = self._paths.appURL + 'assets/';
+	self._paths.appFilesURL = self._paths.appURL + 'files/';
+	
 	self._appName = path.basename(self._paths.appDirPath);
 	self._options.appName = self._appName;
 	
 	self._cacheCookieName = 'n/' + self._appName + '/cached';
-	self._sessionCookieName = 'n/' + this._appName + '/ssid';
+	self._sessionCookieName = 'n/' + self._appName + '/ssid';
 	
 	pathManager.init(self._paths.frameworkURL, self._paths.frameworkDirPath, self._paths.appDirPath, self._paths.appURL);
+	pathManager.setBaseURL(self._paths.appURL);
+	
+	if (fs.existsSync(self._paths.appLoadScriptPath)) {
+		self._paths.loadScriptURL = pathManager.pathToURL(self._paths.appLoadScriptPath);
+	} else {
+		self._paths.loadScriptURL = pathManager.pathToURL(self._paths.frameworkLoadScriptPath);
+	}
+	if (fs.existsSync(self._paths.appCookiesDisabledPath)) {
+		self._paths.cookiesDisabledURL = pathManager.pathToURL(self._paths.appCookiesDisabledPath);
+	} else {
+		self._paths.cookiesDisabledURL = pathManager.pathToURL(self._paths.frameworkCookiesDisabledPath);
+	}
+	if (fs.existsSync(self._paths.appFailedConnectionPath)) {
+		self._paths.failedConnectionURL = pathManager.pathToURL(self._paths.appFailedConnectionPath);
+	} else {
+		self._paths.failedConnectionURL = pathManager.pathToURL(self._paths.frameworkFailedConnectionPath);
+	}
+	
+	self.getPaths = function () {
+		var paths = {};
+		for (var i in self._paths) {
+			paths[i] = self._paths[i];
+		}
+		return paths;
+	};
 
 	self._useCoreLib = function (url, index) {
 		var normalURL = self._normalizeURL(url);
@@ -325,8 +368,6 @@ Master.prototype._init = function (options) {
 		self._bundledResources.push(url);
 	};
 
-	pathManager.setBaseURL(self._paths.appURL);
-
 	self._paths.frameworkSocketClientURL = self._paths.frameworkModulesURL + 'socketcluster-client/socketcluster.js';
 
 	self._minAddressSocketLimit = 20;
@@ -445,22 +486,6 @@ Master.prototype._start = function () {
 		watch: true,
 		updateDelay: self._options.bundleUpdateDelay
 	});
-
-	if (fs.existsSync(self._paths.appLoadScriptPath)) {
-		self._paths.loadScriptURL = pathManager.pathToURL(self._paths.appLoadScriptPath);
-	} else {
-		self._paths.loadScriptURL = pathManager.pathToURL(self._paths.frameworkLoadScriptPath);
-	}
-	if (fs.existsSync(self._paths.appCookiesDisabledPath)) {
-		self._paths.cookiesDisabledURL = pathManager.pathToURL(self._paths.appCookiesDisabledPath);
-	} else {
-		self._paths.cookiesDisabledURL = pathManager.pathToURL(self._paths.frameworkCookiesDisabledPath);
-	}
-	if (fs.existsSync(self._paths.appFailedConnectionPath)) {
-		self._paths.failedConnectionURL = pathManager.pathToURL(self._paths.appFailedConnectionPath);
-	} else {
-		self._paths.failedConnectionURL = pathManager.pathToURL(self._paths.frameworkFailedConnectionPath);
-	}
 
 	var updateCSSBundle = function () {
 		self.triggerInfo('Updating styles bundle...', 'master');
@@ -978,34 +1003,15 @@ Master.prototype.colorText = function (message, color) {
 
 Master.prototype._getAppDef = function () {
 	var appDef = {};
+	
+	for (var i in this._paths) {
+		appDef[i] = this._paths[i];
+	}
 
 	appDef.appURL = this._paths.appURL;
 	appDef.frameworkURL = this._paths.frameworkURL;
 	appDef.sessionCookieName = this._sessionCookieName;
 	appDef.cacheCookieName = this._cacheCookieName;
-	appDef.virtualURL = appDef.appURL + '~virtual/';
-	appDef.appStyleBundleURL = appDef.virtualURL + 'styles.css';
-	appDef.appTemplateBundleURL = appDef.virtualURL + 'templates.js';
-	appDef.frameworkCoreBundleURL = appDef.virtualURL + 'core.js';
-	appDef.appLibBundleURL = appDef.virtualURL + 'libs.js';
-	appDef.appScriptBundleURL = appDef.virtualURL + 'scripts.js';
-	appDef.freshnessURL = this._paths.freshnessURL;
-	appDef.relativeFrameworkScriptsPath = this._paths.relativeFrameworkScriptsPath;
-	appDef.frameworkClientURL = this._paths.frameworkClientURL;
-	appDef.frameworkLibsURL = this._paths.frameworkClientURL + 'libs/';
-	appDef.frameworkAssetsURL = this._paths.frameworkClientURL + 'assets/';
-	appDef.pluginsURL = this._paths.frameworkClientURL + 'plugins/';
-	appDef.frameworkScriptsURL = this._paths.frameworkClientURL + 'scripts/';
-	appDef.loadScriptURL = this._paths.loadScriptURL;
-	appDef.cookiesDisabledURL = this._paths.cookiesDisabledURL;
-	appDef.failedConnectionURL = this._paths.failedConnectionURL;
-	appDef.frameworkStylesURL = this._paths.frameworkClientURL + 'styles/';
-	appDef.appScriptsURL = appDef.appURL + 'scripts/';
-	appDef.appLibsURL = appDef.appURL + 'libs/';
-	appDef.appStylesURL = appDef.appURL + 'styles/';
-	appDef.appTemplatesURL = appDef.appURL + 'templates/';
-	appDef.appAssetsURL = appDef.appURL + 'assets/';
-	appDef.appFilesURL = appDef.appURL + 'files/';
 	appDef.releaseMode = this._options.release;
 	appDef.timeout = this._options.connectTimeout * 1000;
 	appDef.resourceSizeMap = this._resourceSizes;

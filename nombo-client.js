@@ -47,6 +47,8 @@ var $n = {
 		$n.initIO();
 	},
 	
+	getAppDefinition: $loader.getAppDefinition,
+	
 	session: {		
 		end: function (callback) {
 			NOMBO_SESSION_MANAGER.endSession(callback);

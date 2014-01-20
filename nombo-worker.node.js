@@ -106,7 +106,7 @@ Worker.prototype._init = function (options) {
 	
 	var i;
 	for (i in self._bundles) {
-		cachemere.setRaw(i, self._bundles[i], 'text/javascript');
+		cachemere.setRaw(i, self._bundles[i], 'text/javascript', true);
 	}
 	
 	self._uglifier = new Uglifier({
@@ -250,7 +250,7 @@ Worker.prototype.getPaths = function () {
 
 Worker.prototype.handleCacheUpdate = function (url, content, size) {
 	this._resourceSizes[url] = size;
-	cachemere.setRaw(url, content);
+	cachemere.setRaw(url, content, null, true);
 };
 
 Worker.prototype.handleCacheVersionUpdate = function (cacheVersion) {
@@ -719,7 +719,7 @@ Worker.prototype._start = function () {
 			throw new Error('Failed to get favicon due to the following error: ' + (err.message || err));
 		} else {
 			var favURL = '/favicon.ico';
-			cachemere.setRaw(favURL, data, 'image/gif');
+			cachemere.setRaw(favURL, data, 'image/gif', true);
 			self.setPublicResource(favURL);
 			cachemere.on('ready', function () {
 				self._socketServer.removeListener('connection', serverNotReady);

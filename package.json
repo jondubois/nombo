@@ -1,7 +1,7 @@
 {
 	"name": "nombo",
 	"description": "Cloud application framework",
-	"version": "1.0.14",
+	"version": "1.0.15",
 	"author": {
 		"name": "JF Gros-Dubois",
 		"email": "flashthink@gmail.com"

@@ -452,7 +452,7 @@ Master.prototype.errorHandler = function (err, origin) {
 	err.time = Date.now();
 
 	this.emit(this.EVENT_FAIL, err);
-	console.log(err.stack);
+	this.log(err.stack);
 };
 
 Master.prototype.noticeHandler = function (notice, origin) {
@@ -487,7 +487,7 @@ Master.prototype.triggerInfo = function (info, origin) {
 			time: Date.now()
 		};
 		this.emit(this.EVENT_INFO, infoData);
-		console.log('   ' + infoData.time + ' - ' + info);
+		this.log(info, infoData.time);
 	}
 };
 
@@ -789,59 +789,63 @@ Master.prototype._start = function () {
 				});
 			}
 			
-			if (!firstTime) {
-				var workersData = [];
-				var i;
-				for (i in self._workers) {
-					workersData.push(self._workers[i].data);
-				}
-				self._balancer.send({
-					type: 'setWorkers',
-					data: workersData
-				});
+			if (self._active) {
+				self.log('Worker ' + worker.data.id + ' was respawned on port ' + worker.data.port);
 			}
 			
-			if (self._workers.length >= self._options.workers.length && firstTime) {
-				console.log('   ' + self.colorText('[Active]', 'green') + ' Nombo server started');
-				console.log('            Port: ' + self._options.port);
-				console.log('            Mode: ' + (self._options.release ? 'Release' : 'Debug'));
-				console.log('            Master PID: ' + process.pid);
-				console.log('            Balancer count: ' + self._options.balancerCount);
-				console.log('            Worker count: ' + self._options.workers.length);
-				console.log('            Store count: ' + self._options.stores.length);
-				console.log();
-				firstTime = false;
-				
-				if (!workersActive) {
-					initLoadBalancer();
-					workersActive = true;
-				}
-				
-				process.on('SIGUSR2', function () {
-					for (var i in self._workers) {
-						self._workers[i].kill();
+			if (self._workers.length >= self._options.workers.length) {
+				if (firstTime) {
+					console.log('   ' + self.colorText('[Active]', 'green') + ' Nombo server started');
+					console.log('            Port: ' + self._options.port);
+					console.log('            Mode: ' + (self._options.release ? 'Release' : 'Debug'));
+					console.log('            Master PID: ' + process.pid);
+					console.log('            Balancer count: ' + self._options.balancerCount);
+					console.log('            Worker count: ' + self._options.workers.length);
+					console.log('            Store count: ' + self._options.stores.length);
+					console.log();
+					firstTime = false;
+					
+					if (!workersActive) {
+						initLoadBalancer();
+						workersActive = true;
 					}
-				});
-				
-				if (self._options.release) {
-					watchr.watch({
-						paths: [self._paths.versionFilePath],
-						listener: function (event, filePath) {
-							var oldCacheVersion = self._cacheVersion;
-							self._updateCacheVersion(function () {
-								if (self._cacheVersion != oldCacheVersion) {
-									var data = {
-										cacheVersion: self._cacheVersion
-									};
-									for (var i in self._workers) {
-										self._workers[i].send({
-											type: 'updateCacheVersion',
-											data: data
-										});
-									}
-								}
-							});
+					
+					process.on('SIGUSR2', function () {
+						for (var i in self._workers) {
+							self._workers[i].kill();
 						}
+					});
+					
+					if (self._options.release) {
+						watchr.watch({
+							paths: [self._paths.versionFilePath],
+							listener: function (event, filePath) {
+								var oldCacheVersion = self._cacheVersion;
+								self._updateCacheVersion(function () {
+									if (self._cacheVersion != oldCacheVersion) {
+										var data = {
+											cacheVersion: self._cacheVersion
+										};
+										for (var i in self._workers) {
+											self._workers[i].send({
+												type: 'updateCacheVersion',
+												data: data
+											});
+										}
+									}
+								});
+							}
+						});
+					}
+				} else {
+					var workersData = [];
+					var i;
+					for (i in self._workers) {
+						workersData.push(self._workers[i].data);
+					}
+					self._balancer.send({
+						type: 'setWorkers',
+						data: workersData
 					});
 				}
 				self._active = true;
@@ -934,7 +938,7 @@ Master.prototype._start = function () {
 				leaderId = -1;
 				self.errorHandler(new Error(message), {type: 'master'});
 
-				console.log('   Respawning worker');
+				self.log('Respawning worker ' + worker.id);
 				launchWorker(workerData, lead);
 			});
 
@@ -989,6 +993,13 @@ Master.prototype._start = function () {
 	
 	launchIOCluster();
 	self._ioCluster.on('ready', ioClusterReady);
+};
+
+Master.prototype.log = function (message, time) {
+	if (time == null) {
+		time = Date.now();
+	}
+	console.log(time + ' - ' + message);
 };
 
 Master.prototype._updateCacheVersion = function (callback) {

@@ -28,8 +28,8 @@ var Worker = function (options) {
 	self._errorDomain = domain.create();
 	self._errorDomain.on('error', function () {
 		self.errorHandler.apply(self, arguments);
+		process.exit();
 	});
-	self._errorDomain.add(self);
 	
 	self.start = self._errorDomain.bind(self._start);
 	self._errorDomain.run(function () {

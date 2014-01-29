@@ -28,7 +28,9 @@ var Worker = function (options) {
 	self._errorDomain = domain.create();
 	self._errorDomain.on('error', function () {
 		self.errorHandler.apply(self, arguments);
-		process.exit();
+		if (self._options.rebootWorkerOnError) {
+			process.exit();
+		}
 	});
 	
 	self.start = self._errorDomain.bind(self._start);

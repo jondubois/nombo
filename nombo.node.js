@@ -48,6 +48,7 @@ Master.prototype._init = function (options) {
 		workers: null,
 		stores: null,
 		release: false,
+		rebootWorkerOnError: true,
 		title: 'Nombo App',
 		protocol: 'http',
 		protocolOptions: null,

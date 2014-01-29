@@ -17,7 +17,7 @@ var options = {
 	spinnerOptions: {
 		lines: 10,
 		radius: 15,
-		color: '#9cd85b'
+		color: '#8cc84b'
 	},
 	logLevel: 2
 };

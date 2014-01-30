@@ -1,7 +1,7 @@
 {
 	"name": "nombo",
 	"description": "Cloud application framework",
-	"version": "1.1.1",
+	"version": "1.1.2",
 	"author": {
 		"name": "JF Gros-Dubois",
 		"email": "flashthink@gmail.com"
@@ -38,6 +38,7 @@
 		"active-x-obfuscator": "0.0.1",
 		"async": "0.1.22",
 		"base64id": "0.1.0",
+		"browserify": "3.19.1",
 		"cachemere": "0.9.12",
 		"cheerio": "0.12.4",
 		"clean-css": "1.0.4",

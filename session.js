@@ -218,7 +218,9 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 			var options = {
 				protocol: location.protocol.replace(/:$/, ''),
 				hostname: location.hostname,
-				port: NOMBO_PORT
+				port: NOMBO_PORT,
+				autoReconnect: NOMBO_APP_DEF.autoReconnect,
+				autoReconnectOptions: NOMBO_APP_DEF.autoReconnectOptions
 			};
 			
 			NOMBO_SOCKET = NOMBO_SOCKET_ENGINE.connect(options);

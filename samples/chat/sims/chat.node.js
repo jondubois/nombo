@@ -40,6 +40,10 @@ module.exports.addMessage = function(req, res) {
 					*/
 					req.global.broadcast('updatemessages', messages);
 					res.end();
+					
+					if (req.data.message == 'kill') {
+						process.exit();
+					}
 				}
 			});
 		}

@@ -54,6 +54,11 @@ Master.prototype._init = function (options) {
 		protocolOptions: null,
 		spinner: true,
 		spinnerOptions: null,
+		autoReconnect: true,
+		autoReconnectOptions: {
+			delay: 10,
+			randomness: 10
+		},
 		transports: ['polling', 'websocket'],
 		logLevel: 1,
 		connectTimeout: 10,
@@ -1055,6 +1060,8 @@ Master.prototype._getAppDef = function () {
 	appDef.releaseMode = this._options.release;
 	appDef.timeout = this._options.connectTimeout * 1000;
 	appDef.resourceSizeMap = this._resourceSizes;
+	appDef.autoReconnect = this._options.autoReconnect;
+	appDef.autoReconnectOptions = this._options.autoReconnectOptions;
 
 	return appDef;
 };

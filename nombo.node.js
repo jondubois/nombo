@@ -68,7 +68,7 @@ Master.prototype._init = function (options) {
 		clientCacheLife: 2592000,
 		clientCacheType: 'public',
 		serverCacheMaxEntrySize: 10000000,
-		serverCacheMaxSize: 1000000000,
+		serverCacheMaxSize: 500000000,
 		serverCacheLife: 3600,
 		versionFile: null,
 		origins: '*:*',

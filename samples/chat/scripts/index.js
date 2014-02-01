@@ -5,11 +5,9 @@
 $n.grab.app.style('styles.css');
 
 /*
-	This uses the $j.mvp plugin which lets you work with views - You don't have to use the MVP plugin if you don't want to
-	In most cases, you can simply manipulate the DOM using jQuery.
-	Here it is grabbing a view based on the template 'chatbox' (app/templates/chatbox.handlebars), 
-	If you want to grab the template directly, you should use the $n.grab.template("chatbox") method directly - You can then get the string representation of
-	this template by calling its render() method (with an optional data argument).
+	Here it is grabbing the template 'chatbox' (app/templates/chatbox.handlebars), 
+	You can then get the string representation of this template by calling its render()
+	method (with an optional data argument).
 */
 var chatView = $n.grab.app.template("chatbox");
 var chatListView = $n.grab.app.template("chatlist");
@@ -46,9 +44,9 @@ function sendMessage(e) {
 	var nameBox = $("#nameBox");
 	
 	/*
-		Calls the chat server interface's addMessage method (see app/serverinterfaces/chat.node.js)
-		Feel free to add new server interfaces to the app/serverinterfaces/ directory and call their methods from the client-side using $n.local.exec
-		Make sure that your server interface file have a .node.js extension - The .node.js extension keeps your code private
+		Calls the chat server interface's addMessage method (see app/sims/chat.node.js)
+		Feel free to add new server interfaces to the app/sims/ directory and call their methods from the client-side using $n.local.exec
+		Make sure that your server interface files have a .node.js extension - The .node.js extension keeps your code private
 	*/
 	$n.local.exec('chat', 'addMessage', {user: nameBox.val(), message: sendBox.val()}, function(err) {
 		if (err) {
@@ -65,17 +63,8 @@ function sendMessage(e) {
 	Note that once inside $n.ready, you may choose to load other external scripts which can have their own $n.ready handlers
 */
 $n.ready(function () {
-	/* 
-		This is a method of the $n.mvp.View class, it fills the {{chatArea}} handlebars segment with the given $n.mvp.View object (also accepts HTML strings)
-		See http://handlebarsjs.com/ for more info on handlebars templates
-	*/
 	var chatString = chatView.render({"chatArea": chatListView.render()});
 	
-	/*
-		Sets the root view of your application - You only need this if you're using the full MVP approach, otherwise you can just use $(document.body).html()
-		Just make sure to choose one way, not both - Here we chose to go with the MVP component-based approach, but there is no right way to do this provided that you can
-		keep your code under control
-	*/
 	$(document.body).html(chatString);
 	// Call the chat server interfaces' getChatLog method - The chatHandler object will handle the result (through its success property)
 	$n.local.exec('chat', 'getChatLog', showChat);

@@ -59,6 +59,7 @@ Master.prototype._init = function (options) {
 			delay: 10,
 			randomness: 10
 		},
+		useLessCSS: false,
 		transports: ['polling', 'websocket'],
 		logLevel: 1,
 		connectTimeout: 10,

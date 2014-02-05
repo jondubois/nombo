@@ -21,6 +21,7 @@ var cheerio = require('cheerio');
 var retry = require('retry');
 var domain = require('domain');
 var async = require('async');
+var less = require('less');
 
 var Worker = function (options) {
 	var self = this;
@@ -71,6 +72,8 @@ Worker.prototype._init = function (options) {
 	self._ioRequestCount = 0;
 	self._httpRPM = 0;
 	self._ioRPM = 0;
+	
+	self._customPreps = {};
 	
 	self._bundles = self._options.bundles;
 	self._bundledResources = self._options.bundledResources;
@@ -240,6 +243,15 @@ Worker.prototype._init = function (options) {
 	self._ioClusterClient.on('sessiondestroy', function (sessionId) {
 		self.emit(self.EVENT_SESSION_DESTROY, sessionId);
 	});
+	
+	if (self._options.useLessCSS) {
+		self.setPrep('css', function (resource, callback) {
+			if (typeof resource.content != 'string') {
+				resource.content = resource.content.toString();
+			}
+			less.render(resource.content, callback);
+		});
+	}
 };
 
 Worker.prototype.getPaths = function () {
@@ -653,6 +665,21 @@ Worker.prototype._start = function () {
 		var matches = url.match(extRegex);
 		if (matches) {
 			var ext = matches[1];
+			
+			if (self._customPreps[ext]) {
+				self._customPreps[ext];
+				return function (resource, callback) {
+					self._customPreps[ext](resource, function (err, content) {
+						if (!err && extPreps[ext]) {
+							resource.content = content;
+							extPreps[ext](resource, callback);
+						} else {
+							callback(err, content);
+						}
+					});
+				};
+			}
+			
 			if (extPreps[ext]) {
 				return extPreps[ext];
 			}
@@ -738,6 +765,10 @@ Worker.prototype.getHTTPRate = function () {
 
 Worker.prototype.getIORate = function () {
 	return this._ioRPM;
+};
+
+Worker.prototype.setPrep = function (fileExt, prep) {
+	this._customPreps[fileExt] = prep;
 };
 
 Worker.prototype.errorHandler = function (err) {

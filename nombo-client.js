@@ -222,7 +222,7 @@ $n.RemoteInterface = function (url, namespace, wsSocket) {
 	var mainNamespace = '__';
 	var simNamespace = '__nc';
 	
-	if (!wsSocket) {		
+	if (!wsSocket) {
 		wsSocket = NOMBO_SOCKET_ENGINE.connect(url, {
 			forceJSONP: true
 		});

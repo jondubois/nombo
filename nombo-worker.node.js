@@ -164,6 +164,7 @@ Worker.prototype._init = function (options) {
 	
 	self._middleware[self.MIDDLEWARE_HTTP] = stepper.create({context: self});
 	self._middleware[self.MIDDLEWARE_HTTP].addFunction(self._prepareHTTPHandler);
+	self._middleware[self.MIDDLEWARE_HTTP].addFunction(self._statusRequestHandler);
 	
 	self._middleware[self.MIDDLEWARE_IO] = stepper.create({context: self});
 	
@@ -193,7 +194,6 @@ Worker.prototype._init = function (options) {
 	};
 	
 	self._mainStepper = stepper.create({context: self});
-	self._mainStepper.addFunction(self._statusRequestHandler);
 	self._mainStepper.addFunction(self._getParamsHandler);
 	self._mainStepper.addFunction(self._sessionHandler);
 	self._mainStepper.addFunction(self._cacheVersionHandler);
@@ -821,9 +821,14 @@ Worker.prototype._statusRequestHandler = function (req, res, next) {
 		req.on('data', function (chunk) {
 			buffers.push(chunk);
 		});
+		
 		req.on('end', function () {
-			var statusReq = JSON.parse(Buffer.concat(buffers).toString());
-			if (statusReq.dataKey == self._options.dataKey) {
+			var statusReq = null;
+			try {
+				statusReq = JSON.parse(Buffer.concat(buffers).toString());
+			} catch (e) {}
+			
+			if (statusReq && statusReq.dataKey == self._options.dataKey) {
 				var status = JSON.stringify(self.getStatus());
 				res.writeHead(200, {
 					'Content-Type': 'application/json'

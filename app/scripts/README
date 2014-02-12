@@ -1,1 +1,14 @@
 This directory contains the modular .js script files that make-up the client-side of the application.
+When you setup your app for the first time, the following special script files will be 
+inside the scripts/ directory:
+
+index.js - This is your app's main entry file; it is where all your client-side application logic should begin.
+You may want to add subdirectories inside the script/ directory to structure your app's code.
+
+load.js - This file gets executed as part of Nombo's preloading stage; you can completely customize the 
+preloading screen by using this file. It's a good idea to keep this file light-weight.
+
+cookiesdisabled.js - Will be invoked if a user's browser doesn't support cookies (which are required by Nombo).
+
+failedconnection.js - Will be invoked whenever an initial connection fails; for whatever reason. You can use the
+global variable NOMBO_ERROR to show more details about the error.

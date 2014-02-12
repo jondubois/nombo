@@ -989,8 +989,7 @@ Master.prototype._start = function () {
 		self._ioCluster = new self._clusterEngine.IOCluster({
 			stores: stores,
 			dataKey: pass,
-			expiryAccuracy: self._dataExpiryAccuracy,
-			secure: self._options.protocol == 'https'
+			expiryAccuracy: self._dataExpiryAccuracy
 		});
 		
 		self._ioCluster.on('error', function (err) {

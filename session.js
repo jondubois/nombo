@@ -42,8 +42,8 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 			speed: 1,
 			trail: 60,
 			shadow: false,
-			hwaccel: false,
-			zIndex: 2e9,
+			hwaccel: true,
+			zIndex: 10000,
 			top: 'auto',
 			left: 'auto'
 		};

@@ -228,10 +228,8 @@ Worker.prototype._init = function (options) {
 	self._cacheCookieRegex = new RegExp('(^|; *)' + self._options.appDef.cacheCookieName + '=1');
 	
 	self._ioClusterClient = new self._clusterEngine.IOClusterClient({
-		workerPort: self._options.workerPort,
 		stores: self._options.stores,
 		dataKey: self._options.dataKey,
-		clusterKey: self._options.clusterKey,
 		connectTimeout: self._options.connectTimeout,
 		dataExpiry: self._options.sessionTimeout,
 		heartRate: self._options.sessionHeartRate,

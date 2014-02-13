@@ -22,6 +22,12 @@ To create a 'nombo-samples/' directory containing sample apps use:
 nombo samples
 ```
 
+To deploy/redeploy the Nombo framework core on its own (for example, to upgrade Nombo), use create without arguments:
+
+```bash
+nombo create
+```
+
 If you would like to contribute to the Nombo framework, you should:
 
 1. Fork this repo.

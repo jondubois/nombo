@@ -2,51 +2,50 @@
 	Default loader for Nombo apps.
 */
 
-var jLoad = {
-	_ie: /MSIE (\d+\.\d+);/.test(navigator.userAgent),
-	_loader: null,
-	_loaderTextBox: null,
-	_loaderAnimInterval: 200,
-	_loaderText: null,
-	_frameworkURL: null,
-	_fadeSpeed: 20,
-	_alpha: 0,
-	_fadeInterval: null,
-	_isFinished: false,
+(function () {
+	_loader = null;
+	_loaderTextBox = null;
+	_loaderAnimInterval = 200;
+	_loaderText = null;
+	_frameworkURL = null;
+	_fadeSpeed = 20;
+	_alpha = 0;
+	_fadeInterval = null;
+	_isFinished = false;
     
-	start: function(settings) {
-		jLoad._frameworkURL = settings.frameworkURL;
-		jLoad._frameworkClientURL = settings.frameworkClientURL;
+	start = function (settings) {
+		_frameworkURL = settings.frameworkURL;
+		_frameworkClientURL = settings.frameworkClientURL;
 		
-		var imgURL = NOMBO_CACHE_MANAGER.setURLCacheVersion(jLoad._frameworkClientURL + 'assets/logo.png');
+		var imgURL = NOMBO_CACHE_MANAGER.setURLCacheVersion(_frameworkClientURL + 'assets/logo.png');
 		var text = 'Loading';
 		
-		jLoad._load(imgURL, 'Nombo', 'http://nombo.io/', text);
-	},
+		_load(imgURL, 'Nombo', 'http://nombo.io/', text);
+	};
 	
-	progress: function(status) {
-		if (jLoad._loaderTextBox != null) {
+	progress = function (status) {
+		if (_loaderTextBox != null) {
 			var percentage;
 			if(status.total == 0) {
 				percentage = 100;
 			} else {
 				percentage = Math.round(status.loaded / status.total * 100);
 			}
-			jLoad._loaderTextBox.innerHTML = jLoad._loaderText + ' (' + percentage + '%)';
+			_loaderTextBox.innerHTML = _loaderText + ' (' + percentage + '%)';
 		}
-	},
+	};
 	
-	_load: function(loadImageURL, loadImageCaption, loadImageLinkURL, text) {
+	_load = function (loadImageURL, loadImageCaption, loadImageLinkURL, text) {
 		if (!NOMBO_DEBUG) {
-			var showLoader = function() {
-				if (!jLoad._isFinished) {
-					jLoad._loader = document.createElement('div');
-					jLoad._loader.style.position = 'absolute';
-					jLoad._loader.style.visibility = 'hidden';
-					jLoad._loader.style.width = '80px';
+			var showLoader = function () {
+				if (!_isFinished) {
+					_loader = document.createElement('div');
+					_loader.style.position = 'absolute';
+					_loader.style.visibility = 'hidden';
+					_loader.style.width = '80px';
 					
-					jLoad.hideLoader();
-					jLoad._loaderText = text;
+					hideLoader();
+					_loaderText = text;
 					
 					var linkEl = document.createElement('a');
 					linkEl.setAttribute('href', loadImageLinkURL);
@@ -62,47 +61,47 @@ var jLoad = {
 					imgEl.setAttribute('alt', loadImageCaption);
 					imgEl.setAttribute('border', '0px');
 					
-					jLoad._loaderTextBox = document.createElement('div');
-					jLoad._loaderTextBox.style.whiteSpace = 'nowrap';
-					jLoad._loaderTextBox.style.marginTop = '4px';
-					jLoad._loaderTextBox.style.fontFamily = 'Arial';
-					jLoad._loaderTextBox.style.fontSize = '12px';
-					jLoad._loaderTextBox.style.color = '#666';
+					_loaderTextBox = document.createElement('div');
+					_loaderTextBox.style.whiteSpace = 'nowrap';
+					_loaderTextBox.style.marginTop = '4px';
+					_loaderTextBox.style.fontFamily = 'Arial';
+					_loaderTextBox.style.fontSize = '12px';
+					_loaderTextBox.style.color = '#666';
 					
-					jLoad.progress({loaded: 0, total: 1});
+					progress({loaded: 0, total: 1});
 					
 					linkEl.appendChild(imgEl);
 					
-					jLoad._loader.appendChild(linkEl);
-					jLoad._loader.appendChild(jLoad._loaderTextBox);
+					_loader.appendChild(linkEl);
+					_loader.appendChild(_loaderTextBox);
 					
-					document.body.appendChild(jLoad._loader);
+					document.body.appendChild(_loader);
 					
-					var loadWidth = jLoad._loader.offsetWidth;
-					var loadHeight = jLoad._loader.offsetHeight;
+					var loadWidth = _loader.offsetWidth;
+					var loadHeight = _loader.offsetHeight;
 					
-					jLoad._loader.style.left = '50%';
-					jLoad._loader.style.top = '50%';
-					jLoad._loader.style.marginLeft = -loadWidth / 2 + 'px';
-					jLoad._loader.style.marginTop = -loadHeight / 2 + 'px';
+					_loader.style.left = '50%';
+					_loader.style.top = '50%';
+					_loader.style.marginLeft = -loadWidth / 2 + 'px';
+					_loader.style.marginTop = -loadHeight / 2 + 'px';
 					
-					jLoad._alpha = 0;
-					jLoad._setOpacity(jLoad._loader, jLoad._alpha);
+					_alpha = 0;
+					_setOpacity(_loader, _alpha);
 					
-					jLoad._loader.style.visibility = 'visible';
+					_loader.style.visibility = 'visible';
 					if (NOMBO_IS_FRESH) {
-						$loader.progress(jLoad.progress);
-						jLoad._fadeInterval = setInterval(function() {
-							if(jLoad._alpha < 100) {
-								jLoad._alpha += jLoad._fadeSpeed;
+						$loader.progress(progress);
+						_fadeInterval = setInterval(function () {
+							if(_alpha < 100) {
+								_alpha += _fadeSpeed;
 							} else {
-								jLoad._alpha = 100;
-								clearInterval(jLoad._fadeInterval);
+								_alpha = 100;
+								clearInterval(_fadeInterval);
 							}
-							if(jLoad._loader) {
-								jLoad._setOpacity(jLoad._loader, jLoad._alpha);
+							if(_loader) {
+								_setOpacity(_loader, _alpha);
 							} else {
-								clearInterval(jLoad._fadeInterval);
+								clearInterval(_fadeInterval);
 							}
 						}, 25);
 					}
@@ -113,66 +112,50 @@ var jLoad = {
 			img.onload = showLoader;
 			img.src = loadImageURL;
 			
-			$loader.on('loadall', jLoad._loaded);
+			$loader.on('loadall', _loaded);
 		} else {
 			$loader.on('loadall', $loader.finish);
 		}
 		
 		$loader.loadAll();
-	},
+	};
 	
-	_setOpacity: function(obj, value) {
+	_setOpacity = function (obj, value) {
 		obj.style.opacity = value / 100;
 		obj.style.filter = 'alpha(opacity=' + value + ')';
-	},
+	};
 	
-	_loaded: function() {
-		jLoad._isFinished = true;
-		$loader.off('progress', jLoad.progress);
-		jLoad.progress({loaded: 1, total: 1});
-		jLoad.fadeOutLoader($loader.finish);
-	},
+	_loaded = function () {
+		_isFinished = true;
+		$loader.off('progress', progress);
+		progress({loaded: 1, total: 1});
+		fadeOutLoader($loader.finish);
+	};
 	
-	hideLoader: function() {
-		if(document.body && jLoad._loader && jLoad._loader.parentNode == document.body) {
-			document.body.removeChild(jLoad._loader);
+	hideLoader = function () {
+		if(document.body && _loader && _loader.parentNode == document.body) {
+			document.body.removeChild(_loader);
 		}
-	},
+	};
 	
-	fadeOutLoader: function(callback) {
-		clearInterval(jLoad._fadeInterval);
-		jLoad._fadeInterval = setInterval(function() {
-			if(jLoad._alpha > 0) {
-				jLoad._alpha -= jLoad._fadeSpeed;
+	fadeOutLoader = function (callback) {
+		clearInterval(_fadeInterval);
+		_fadeInterval = setInterval(function () {
+			if(_alpha > 0) {
+				_alpha -= _fadeSpeed;
 			} else {
-				jLoad._alpha = 0;
-				jLoad.hideLoader();
-				jLoad._loader = null;
+				_alpha = 0;
+				hideLoader();
+				_loader = null;
 			}
-			if(jLoad._loader) {
-				jLoad._setOpacity(jLoad._loader, jLoad._alpha);
+			if(_loader) {
+				_setOpacity(_loader, _alpha);
 			} else {
-				clearInterval(jLoad._fadeInterval);
+				clearInterval(_fadeInterval);
 				callback();
 			}
 		}, 25);
-	},
+	};
 	
-	getWindowWidth: function() {
-		if(jLoad._ie) {
-			return document.documentElement.clientWidth ? document.documentElement.clientWidth : document.body.clientWidth;
-		} else {
-			return window.innerWidth;
-		}
-	},
-	
-	getWindowHeight: function() {
-		if(jLoad._ie) {
-			return document.documentElement.clientHeight ? document.documentElement.clientHeight : document.body.clientHeight;
-		} else {
-			return window.innerHeight;
-		}
-	}
-};
-
-$loader.ready(jLoad.start);
+	$loader.ready(start);
+})();

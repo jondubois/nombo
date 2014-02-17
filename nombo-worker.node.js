@@ -707,7 +707,6 @@ Worker.prototype._start = function () {
 		pingTimeout: self._options.heartbeatTimeout,
 		pingInterval: self._options.heartbeatInterval,
 		upgradeTimeout: self._options.connectTimeout,
-		logLevel: self._options.logLevel,
 		hostAddress: self._options.hostAddress,
 		secure: self._options.protocol == 'https'
 	});

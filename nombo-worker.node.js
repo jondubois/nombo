@@ -707,7 +707,8 @@ Worker.prototype._start = function () {
 		pingInterval: self._options.heartbeatInterval,
 		upgradeTimeout: self._options.connectTimeout,
 		hostname: self._options.hostname,
-		secure: self._options.protocol == 'https'
+		secure: self._options.protocol == 'https',
+		appName: self._options.appName
 	});
 	
 	self._socketServer.on('notice', self.noticeHandler.bind(self));

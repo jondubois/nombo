@@ -234,8 +234,11 @@ Master.prototype._init = function (options) {
 	self._paths.appAssetsURL = self._paths.appURL + 'assets/';
 	self._paths.appFilesURL = self._paths.appURL + 'files/';
 	
-	self._cacheCookieName = 'n/' + self._options.hostname + '/' + self._options.port + '/cached';
-	self._sessionCookieName = 'n/' + self._options.hostname + '/' + self._options.port + '/ssid';
+	self._appName = path.basename(self._paths.appDirPath);
+	self._options.appName = self._appName;
+
+	self._cacheCookieName = 'n/' + self._appName + '/cached';
+	self._sessionCookieName = 'n/' + self._appName + '/ssid';
 	
 	pathManager.init(self._paths.frameworkURL, self._paths.frameworkDirPath, self._paths.appDirPath, self._paths.appURL);
 	pathManager.setBaseURL(self._paths.appURL);

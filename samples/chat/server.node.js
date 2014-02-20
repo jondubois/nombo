@@ -12,7 +12,6 @@ var options = {
 	stores: [9120],
 	addressSocketLimit: 4,
 	connectTimeout: 10,
-	//hostAddress: '127.0.0.1',
 	spinner: true,
 	spinnerOptions: {
 		lines: 10,

@@ -83,7 +83,7 @@ Master.prototype._init = function (options) {
 		workerStatusInterval: 10,
 		allowUploads: false,
 		propagateErrors: true,
-		hostAddress: null,
+		hostname: 'localhost',
 		balancerCount: null,
 		customSIMExtension: 'node.js',
 		privateExtensions: ['node.js', 'node.json', 'node.txt'],
@@ -234,11 +234,8 @@ Master.prototype._init = function (options) {
 	self._paths.appAssetsURL = self._paths.appURL + 'assets/';
 	self._paths.appFilesURL = self._paths.appURL + 'files/';
 	
-	self._appName = path.basename(self._paths.appDirPath);
-	self._options.appName = self._appName;
-	
-	self._cacheCookieName = 'n/' + self._appName + '/cached';
-	self._sessionCookieName = 'n/' + self._appName + '/ssid';
+	self._cacheCookieName = 'n/' + self._options.hostname + '/' + self._options.port + '/cached';
+	self._sessionCookieName = 'n/' + self._options.hostname + '/' + self._options.port + '/ssid';
 	
 	pathManager.init(self._paths.frameworkURL, self._paths.frameworkDirPath, self._paths.appDirPath, self._paths.appURL);
 	pathManager.setBaseURL(self._paths.appURL);
@@ -737,7 +734,7 @@ Master.prototype._start = function () {
 				dataKey: pass,
 				sourcePort: self._options.port,
 				workers: self._options.workers,
-				hostAddress: self._options.hostAddress,
+				hostname: self._options.hostname,
 				balancerCount: self._options.balancerCount,
 				protocol: self._options.protocol,
 				protocolOptions: self._options.protocolOptions,

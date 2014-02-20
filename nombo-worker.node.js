@@ -700,14 +700,13 @@ Worker.prototype._start = function () {
 	setInterval(this._calculateStatus.bind(this), this._options.workerStatusInterval * 1000);
 	
 	self._socketServer = socketCluster.attach(self._server, {
-		appName: self._options.appName,
 		sourcePort: self._options.port,
 		ioClusterClient: self._ioClusterClient,
 		transports: self._options.transports,
 		pingTimeout: self._options.heartbeatTimeout,
 		pingInterval: self._options.heartbeatInterval,
 		upgradeTimeout: self._options.connectTimeout,
-		hostAddress: self._options.hostAddress,
+		hostname: self._options.hostname,
 		secure: self._options.protocol == 'https'
 	});
 	

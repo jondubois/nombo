@@ -175,22 +175,6 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 		var cacheCookieName = NOMBO_APP_DEF.cacheCookieName;
 		
 		var sessionDestRegex = /^([^_]*)_([^_]*)_([^_]*)_([^_]*)_/;
-	
-		self._setIDCookies = function (soid) {
-			var ssid = getCookie(sessionCookieName);
-			var ssidDest = null;
-			if (ssid) {
-				ssidDest = ssid.match(sessionDestRegex);
-				ssidDest = ssidDest ? ssidDest[0] : null;
-			}
-			var soidDest = soid.match(sessionDestRegex);
-			soidDest = soidDest ? soidDest[0]: null;
-			if (!ssid || soidDest != ssidDest) {
-				ssid = soid;
-				setCookie(sessionCookieName, ssid);
-			}
-			return ssid;
-		};
 		
 		self.getTimeout = function () {
 			return timeout;
@@ -239,8 +223,7 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 					clearTimeout(timeoutCallback);
 					NOMBO_SOCKET.removeListener('connect', connectCallback);
 					NOMBO_SOCKET.removeListener('fail', errorCallback);
-					sessionID = self._setIDCookies(NOMBO_SOCKET.id);
-					callback(null, sessionID);
+					callback(null, NOMBO_SOCKET.ssid);
 				}
 				
 				if (timeout > 0) {

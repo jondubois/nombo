@@ -115,6 +115,15 @@ Master.prototype._init = function (options) {
 		if (protoOpts.pfx instanceof Buffer) {
 			protoOpts.pfx = protoOpts.pfx.toString();
 		}
+		if (protoOpts.passphrase == null) {
+			var privKeyEncLine = protoOpts.key.split('\n')[1];
+			if (privKeyEncLine.toUpperCase().indexOf('ENCRYPTED') > -1) {
+				var message = 'The supplied private key is encrypted and cannot be used without a passphrase - ' +
+					'Please provide a valid passphrase as a property to protocolOptions';
+				throw new Error(message);
+			}
+			process.exit();
+		}
 	}
 	
 	if (self._options.stores) {

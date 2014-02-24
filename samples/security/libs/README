@@ -1,0 +1,1 @@
+This directory contains the .js script (lib) files that make-up the client-side of the application. The content of libs are loaded into the global scope.

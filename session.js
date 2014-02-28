@@ -32,10 +32,10 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 
 	if (NOMBO_SPINNER) {
 		var spinnerOpts = {
-			lines: 8,
-			length: 5,
+			lines: 12,
+			length: 7,
 			width: 4,
-			radius: 7,
+			radius: 20,
 			corners: 2,
 			rotate: 0,
 			color: '#666',

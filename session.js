@@ -235,7 +235,7 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 				}
 				
 				NOMBO_SOCKET.on('fail', errorCallback);
-				//NOMBO_SOCKET.on('connect', connectCallback);
+				NOMBO_SOCKET.on('connect', connectCallback);
 			}
 		};
 		

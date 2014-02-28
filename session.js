@@ -32,10 +32,10 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 
 	if (NOMBO_SPINNER) {
 		var spinnerOpts = {
-			lines: 12,
+			lines: 10,
 			length: 7,
 			width: 4,
-			radius: 20,
+			radius: 15,
 			corners: 2,
 			rotate: 0,
 			color: '#666',
@@ -235,7 +235,7 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 				}
 				
 				NOMBO_SOCKET.on('fail', errorCallback);
-				NOMBO_SOCKET.on('connect', connectCallback);
+				//NOMBO_SOCKET.on('connect', connectCallback);
 			}
 		};
 		

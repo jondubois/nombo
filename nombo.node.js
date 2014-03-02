@@ -169,7 +169,10 @@ Master.prototype._init = function (options) {
 	}
 	
 	if (!self._options.balancerCount) {
-		self._options.balancerCount = self._options.workers.length;
+		self._options.balancerCount = Math.floor(self._options.workers.length / 2);
+		if (self._options.balancerCount < 1) {
+			self._options.balancerCount = 1;
+		}
 	}
 	
 	self._extRegex = /[.][^\/\\]*$/;

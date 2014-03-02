@@ -46,8 +46,5 @@ process.on('message', function (m) {
 		} else {
 			worker.handleMasterEvent(m.event);
 		}
-		
-	} else if (m.type == 'kill') {
-		worker.kill();
 	}
 });

@@ -42,7 +42,11 @@
 					_loader = document.createElement('div');
 					_loader.style.position = 'absolute';
 					_loader.style.visibility = 'hidden';
-					_loader.style.width = '80px';
+					_loader.style.overflow = 'visible';
+					_loader.style.width = '0';
+					_loader.style.height = '0';
+					_loader.style.left = '50%';
+					_loader.style.top = '50%';
 					
 					hideLoader();
 					_loaderText = text;
@@ -55,17 +59,20 @@
 					imgEl.style.width = '80px';
 					imgEl.style.height = '80px';
 					imgEl.style.display = 'block';
-					imgEl.style.marginRight = 'auto';
-					imgEl.style.marginLeft = 'auto';
+					imgEl.style.marginTop = '-40px';
+					imgEl.style.marginLeft = '-40px';
 					imgEl.setAttribute('src', loadImageURL);
 					imgEl.setAttribute('alt', loadImageCaption);
-					imgEl.setAttribute('border', '0px');
+					imgEl.setAttribute('border', '0');
 					
 					_loaderTextBox = document.createElement('div');
+					_loaderTextBox.style.width = '200px';
+					_loaderTextBox.style.marginLeft = '-100px';
+					_loaderTextBox.style.textAlign = 'center';
 					_loaderTextBox.style.whiteSpace = 'nowrap';
-					_loaderTextBox.style.marginTop = '4px';
+					_loaderTextBox.style.marginTop = '5px';
 					_loaderTextBox.style.fontFamily = 'Arial';
-					_loaderTextBox.style.fontSize = '12px';
+					_loaderTextBox.style.fontSize = '14px';
 					_loaderTextBox.style.color = '#666';
 					
 					progress({loaded: 0, total: 1});
@@ -76,14 +83,6 @@
 					_loader.appendChild(_loaderTextBox);
 					
 					document.body.appendChild(_loader);
-					
-					var loadWidth = _loader.offsetWidth;
-					var loadHeight = _loader.offsetHeight;
-					
-					_loader.style.left = '50%';
-					_loader.style.top = '50%';
-					_loader.style.marginLeft = -loadWidth / 2 + 'px';
-					_loader.style.marginTop = -loadHeight / 2 + 'px';
 					
 					_alpha = 0;
 					_setOpacity(_loader, _alpha);

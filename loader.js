@@ -1038,7 +1038,6 @@ var $loader = {
 						}
 					}
 					
-					// all text-based files
 					$loader.ajax(ajaxSettings);
 				}
 			}

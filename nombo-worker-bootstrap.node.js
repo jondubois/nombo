@@ -21,6 +21,14 @@ var handleNotice = function (notice) {
 	process.send({type: 'notice', data: notice});
 };
 
+var handleWorkerStart = function () {
+	process.send({type: 'ready'});
+};
+
+var handleExit = function () {
+	process.exit();
+};
+
 process.on('message', function (m) {
 	if (m.type == 'init') {
 		worker = new Worker(m.data);
@@ -28,6 +36,8 @@ process.on('message', function (m) {
 		if (m.data.propagateErrors) {
 			worker.on('error', handleError);
 			worker.on('notice', handleNotice);
+			worker.on(worker.EVENT_WORKER_START, handleWorkerStart);
+			worker.on(worker.EVENT_WORKER_EXIT, handleExit);
 		}
 		
 		var workerController = require(m.data.paths.appWorkerControllerPath);

@@ -26,11 +26,28 @@ var less = require('less');
 var Worker = function (options) {
 	var self = this;
 	
+	// Low level middleware
+	self.MIDDLEWARE_HTTP = 'http';
+	self.MIDDLEWARE_IO = 'io';
+	
+	// Core middleware
+	self.MIDDLEWARE_GET = 'get';
+	self.MIDDLEWARE_POST = 'post';
+	
+	self.MIDDLEWARE_RPC = 'rpc';
+	
+	self.EVENT_WORKER_START = 'workerstart';
+	self.EVENT_LEADER_START = 'leaderstart';
+	self.EVENT_WORKER_EXIT = 'exit';
+	self.EVENT_SOCKET_CONNECT = 'socketconnect';
+	self.EVENT_SOCKET_DISCONNECT = 'socketdisconnect';
+	self.EVENT_SESSION_DESTROY = 'sessiondestroy';
+	
 	self._errorDomain = domain.create();
 	self._errorDomain.on('error', function () {
 		self.errorHandler.apply(self, arguments);
 		if (self._options.rebootWorkerOnError) {
-			process.exit();
+			self.emit(self.EVENT_WORKER_EXIT);
 		}
 	});
 	
@@ -45,24 +62,7 @@ Worker.prototype = Object.create(EventEmitter.prototype);
 Worker.prototype._init = function (options) {
 	var self = this;
 	
-	// Low level middleware
-	self.MIDDLEWARE_HTTP = 'http';
-	self.MIDDLEWARE_IO = 'io';
-	
-	// Core middleware
-	self.MIDDLEWARE_GET = 'get';
-	self.MIDDLEWARE_POST = 'post';
-	
-	self.MIDDLEWARE_RPC = 'rpc';
-	
-	self.EVENT_WORKER_START = 'workerstart';
-	self.EVENT_LEADER_START = 'leaderstart';
-	self.EVENT_SOCKET_CONNECT = 'socketconnect';
-	self.EVENT_SOCKET_DISCONNECT = 'socketdisconnect';
-	self.EVENT_SESSION_DESTROY = 'sessiondestroy';
-	
 	self._options = options;
-	
 	self._options.secure = self._options.protocol == 'https';
 	
 	self.id = self._options.workerId;
@@ -281,7 +281,6 @@ Worker.prototype.handleMasterEvent = function () {
 
 Worker.prototype.ready = function () {
 	this.emit(this.EVENT_WORKER_START);
-	process.send({type: 'ready'});
 };
 
 Worker.prototype._handleConnectionNotReady = function (socket) {

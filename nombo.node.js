@@ -88,7 +88,8 @@ Master.prototype._init = function (options) {
 		customSIMExtension: 'node.js',
 		privateExtensions: ['node.js', 'node.json', 'node.txt'],
 		clusterEngine: 'iocluster',
-		bundleUpdateDelay: 1000
+		bundleUpdateDelay: 1000,
+		appName: null
 	};
 	
 	self._active = false;
@@ -246,7 +247,11 @@ Master.prototype._init = function (options) {
 	self._paths.appAssetsURL = self._paths.appURL + 'assets/';
 	self._paths.appFilesURL = self._paths.appURL + 'files/';
 	
-	self._appName = path.basename(self._paths.appDirPath);
+	if (self._options.appName) {
+		self._appName = self._options.appName;
+	} else {
+		self._appName = path.basename(self._paths.appDirPath);
+	}
 	self._options.appName = self._appName;
 
 	self._cacheCookieName = 'n/' + self._appName + '/cached';

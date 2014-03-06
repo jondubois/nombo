@@ -818,28 +818,44 @@ Worker.prototype._statusRequestHandler = function (req, res, next) {
 	if (req.url == this._paths.statusURL) {
 		var self = this;
 		
+		var isOpen = true;
+	
+		var reqTimeout = setTimeout(function () {
+			if (isOpen) {
+				res.writeHead(500, {
+					'Content-Type': 'application/json'
+				});
+				res.end();
+				isOpen = false;
+			}
+		}, self._options.connectTimeout * 1000);
+		
 		var buffers = [];
 		req.on('data', function (chunk) {
 			buffers.push(chunk);
 		});
 		
 		req.on('end', function () {
-			var statusReq = null;
-			try {
-				statusReq = JSON.parse(Buffer.concat(buffers).toString());
-			} catch (e) {}
-			
-			if (statusReq && statusReq.dataKey == self._options.dataKey) {
-				var status = JSON.stringify(self.getStatus());
-				res.writeHead(200, {
-					'Content-Type': 'application/json'
-				});
-				res.end(status);
-			} else {
-				res.writeHead(401, {
-					'Content-Type': 'application/json'
-				});
-				res.end();
+			clearTimeout(reqTimeout);
+			if (isOpen) {
+				var statusReq = null;
+				try {
+					statusReq = JSON.parse(Buffer.concat(buffers).toString());
+				} catch (e) {}
+				
+				if (statusReq && statusReq.dataKey == self._options.dataKey) {
+					var status = JSON.stringify(self.getStatus());
+					res.writeHead(200, {
+						'Content-Type': 'application/json'
+					});
+					res.end(status);
+				} else {
+					res.writeHead(401, {
+						'Content-Type': 'application/json'
+					});
+					res.end();
+				}
+				isOpen = false;
 			}
 		});
 	} else {

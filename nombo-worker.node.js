@@ -698,7 +698,10 @@ Worker.prototype._start = function () {
 	self._httpRPM = 0;
 	self._ioRPM = 0;
 	
-	setInterval(this._calculateStatus.bind(this), this._options.workerStatusInterval * 1000);
+	if (self._statusInterval != null) {
+		clearInterval(self._statusInterval);
+	}
+	self._statusInterval = setInterval(this._calculateStatus.bind(this), this._options.workerStatusInterval * 1000);
 	
 	self._socketServer = socketCluster.attach(self._server, {
 		sourcePort: self._options.port,

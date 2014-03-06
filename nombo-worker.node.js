@@ -302,12 +302,14 @@ Worker.prototype._handleConnection = function (socket) {
 	var remoteAddress = socket.address;
 	var nSocket = socket.ns('__nc');
 	
+	nSocket.on('message', function () {
+		self._ioRequestCount++;
+	});
+	
 	// Handle local server interface call
 	nSocket.on('rpc', function (request, response) {
-		self._ioRequestCount++;
 		var req = new IORequest(request, nSocket, socket.session, socket.global, remoteAddress, self._options.secure);
 		var res = new IOResponse(request, response);
-
 		self._middleware[self.MIDDLEWARE_IO].run(req, res);
 	});
 	

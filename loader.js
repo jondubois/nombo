@@ -948,7 +948,7 @@ var $loader = {
 					self._deepResourcesLoaded[rootURL] = [];
 				}
 				
-				if (/[.](png|jpg|gif)$/.test(url)) {
+				if (/[.](png|apng|jpg|jpeg|gif)$/.test(url)) {
 					// images
 					var img = new Image();
 					img.onload = function () {

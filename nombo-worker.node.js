@@ -710,7 +710,7 @@ Worker.prototype._start = function () {
 		pingTimeout: self._options.heartbeatTimeout,
 		pingInterval: self._options.heartbeatInterval,
 		upgradeTimeout: self._options.connectTimeout,
-		hostname: self._options.hostname,
+		host: self._options.host,
 		secure: self._options.protocol == 'https',
 		appName: self._options.appName
 	});

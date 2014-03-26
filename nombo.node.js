@@ -43,7 +43,7 @@ Master.prototype._init = function (options) {
 	var backslashRegex = /\\/g;
 	var appDirPath = path.dirname(require.main.filename).replace(backslashRegex, '/');
 	
-	self._options = {
+	self.options = {
 		port: 8000,
 		workers: null,
 		stores: null,
@@ -96,17 +96,17 @@ Master.prototype._init = function (options) {
 
 	var i;
 	for (i in options) {
-		self._options[i] = options[i];
+		self.options[i] = options[i];
 	}
 	
-	if (self._options.logLevel > 3) {
+	if (self.options.logLevel > 3) {
 		process.env.DEBUG = 'engine*';
-	} else if (self._options.logLevel > 2) {
+	} else if (self.options.logLevel > 2) {
 		process.env.DEBUG = 'engine';
 	}
 	
-	if (self._options.protocolOptions) {
-		var protoOpts = self._options.protocolOptions;
+	if (self.options.protocolOptions) {
+		var protoOpts = self.options.protocolOptions;
 		if (protoOpts.key instanceof Buffer) {
 			protoOpts.key = protoOpts.key.toString();
 		}
@@ -127,12 +127,12 @@ Master.prototype._init = function (options) {
 		}
 	}
 	
-	if (self._options.stores) {
+	if (self.options.stores) {
 		var newStores = [];
 		var curStore;
 		
-		for (i in self._options.stores) {
-			curStore = self._options.stores[i];
+		for (i in self.options.stores) {
+			curStore = self.options.stores[i];
 			if (typeof curStore == 'number') {
 				curStore = {port: curStore};
 			} else {
@@ -142,19 +142,19 @@ Master.prototype._init = function (options) {
 			}
 			newStores.push(curStore);
 		}
-		self._options.stores = newStores;
+		self.options.stores = newStores;
 	}
 	
-	if (!self._options.stores || self._options.stores.length < 1) {
-		self._options.stores = [{port: self._options.port + 2}];
+	if (!self.options.stores || self.options.stores.length < 1) {
+		self.options.stores = [{port: self.options.port + 2}];
 	}
 	
-	if (self._options.workers) {
+	if (self.options.workers) {
 		var newWorkers = [];
 		var curWorker;
 
-		for (i in self._options.workers) {
-			curWorker = self._options.workers[i];
+		for (i in self.options.workers) {
+			curWorker = self.options.workers[i];
 			if (typeof curWorker == 'number') {
 				curWorker = {port: curWorker};
 			} else {
@@ -164,15 +164,15 @@ Master.prototype._init = function (options) {
 			}
 			newWorkers.push(curWorker);
 		}
-		self._options.workers = newWorkers;
+		self.options.workers = newWorkers;
 	} else {
-		self._options.workers = [{port: self._options.port + 3}];
+		self.options.workers = [{port: self.options.port + 3}];
 	}
 	
-	if (!self._options.balancerCount) {
-		self._options.balancerCount = Math.floor(self._options.workers.length / 2);
-		if (self._options.balancerCount < 1) {
-			self._options.balancerCount = 1;
+	if (!self.options.balancerCount) {
+		self.options.balancerCount = Math.floor(self.options.workers.length / 2);
+		if (self.options.balancerCount < 1) {
+			self.options.balancerCount = 1;
 		}
 	}
 	
@@ -208,10 +208,10 @@ Master.prototype._init = function (options) {
 	
 	self._paths.appWorkerControllerPath = self._paths.appDirPath + '/worker.node.js';
 	
-	if (self._options.versionFile == null) {
+	if (self.options.versionFile == null) {
 		self._paths.versionFilePath = self._paths.appDirPath + '/version.node.txt';
 	} else {
-		self._paths.versionFilePath = self._options.versionFile;
+		self._paths.versionFilePath = self.options.versionFile;
 	}
 
 	self._paths.appLoadScriptPath = self._paths.appDirPath + '/scripts/load.js';
@@ -247,12 +247,12 @@ Master.prototype._init = function (options) {
 	self._paths.appAssetsURL = self._paths.appURL + 'assets/';
 	self._paths.appFilesURL = self._paths.appURL + 'files/';
 	
-	if (self._options.appName) {
-		self._appName = self._options.appName;
+	if (self.options.appName) {
+		self._appName = self.options.appName;
 	} else {
 		self._appName = path.basename(self._paths.appDirPath);
 	}
-	self._options.appName = self._appName;
+	self.options.appName = self._appName;
 
 	self._cacheCookieName = 'n/' + self._appName + '/cached';
 	self._sessionCookieName = 'n/' + self._appName + '/ssid';
@@ -425,17 +425,17 @@ Master.prototype._init = function (options) {
 	self._minAddressSocketLimit = 20;
 	self._dataExpiryAccuracy = 5000;
 
-	if (self._options.addressSocketLimit == null) {
-		var limit = self._options.sessionTimeout / 40;
+	if (self.options.addressSocketLimit == null) {
+		var limit = self.options.sessionTimeout / 40;
 		if (limit < self._minAddressSocketLimit) {
 			limit = self._minAddressSocketLimit;
 		}
-		self._options.addressSocketLimit = limit;
+		self.options.addressSocketLimit = limit;
 	}
 
-	self._clusterEngine = require(self._options.clusterEngine);
-	if (!self._options.release && self._options.clientCacheLife == null) {
-		self._options.clientCacheLife = 86400;
+	self._clusterEngine = require(self.options.clusterEngine);
+	if (!self.options.release && self.options.clientCacheLife == null) {
+		self.options.clientCacheLife = 86400;
 	}
 
 	self._colorCodes = {
@@ -536,7 +536,7 @@ Master.prototype._start = function () {
 		watchDirs: styleDirs,
 		files: stylePaths,
 		watch: true,
-		updateDelay: self._options.bundleUpdateDelay
+		updateDelay: self.options.bundleUpdateDelay
 	});
 
 	var updateCSSBundle = function () {
@@ -569,7 +569,7 @@ Master.prototype._start = function () {
 		watchDirs: templateDirs,
 		files: templatePaths,
 		watch: true,
-		updateDelay: self._options.bundleUpdateDelay
+		updateDelay: self.options.bundleUpdateDelay
 	});
 
 	var updateTemplateBundle = function () {
@@ -650,7 +650,7 @@ Master.prototype._start = function () {
 	
 	var updateLibBundle = function (callback) {
 		self.triggerInfo('Updating libs bundle...', 'master');
-		libBundle.bundle({debug: !self._options.release}, function (err, jsBundle) {
+		libBundle.bundle({debug: !self.options.release}, function (err, jsBundle) {
 			if (err) {
 				self._errorDomain.emit('error', err);
 				callback && callback();
@@ -685,7 +685,7 @@ Master.prototype._start = function () {
 	
 	var updateScriptBundle = function (callback) {
 		self.triggerInfo('Updating scripts bundle...', 'master');
-		scriptBundle.bundle({debug: !self._options.release}, function (err, jsBundle) {
+		scriptBundle.bundle({debug: !self.options.release}, function (err, jsBundle) {
 			if (err) {
 				self._errorDomain.emit('error', err);
 				callback && callback();
@@ -752,15 +752,15 @@ Master.prototype._start = function () {
 			type: 'init',
 			data: {
 				dataKey: pass,
-				sourcePort: self._options.port,
-				workers: self._options.workers,
-				host: self._options.host,
-				balancerCount: self._options.balancerCount,
-				protocol: self._options.protocol,
-				protocolOptions: self._options.protocolOptions,
-				checkStatusTimeout: self._options.connectTimeout * 1000,
+				sourcePort: self.options.port,
+				workers: self.options.workers,
+				host: self.options.host,
+				balancerCount: self.options.balancerCount,
+				protocol: self.options.protocol,
+				protocolOptions: self.options.protocolOptions,
+				checkStatusTimeout: self.options.connectTimeout * 1000,
 				statusURL: self._paths.statusURL,
-				statusCheckInterval: self._options.workerStatusInterval * 1000
+				statusCheckInterval: self.options.workerStatusInterval * 1000
 			}
 		});
 	};
@@ -817,15 +817,15 @@ Master.prototype._start = function () {
 				self.log('Worker ' + worker.data.id + ' was respawned on port ' + worker.data.port);
 			}
 			
-			if (self._workers.length >= self._options.workers.length) {
+			if (self._workers.length >= self.options.workers.length) {
 				if (firstTime) {
 					console.log('   ' + self.colorText('[Active]', 'green') + ' Nombo server started');
-					console.log('            Port: ' + self._options.port);
-					console.log('            Mode: ' + (self._options.release ? 'Release' : 'Debug'));
+					console.log('            Port: ' + self.options.port);
+					console.log('            Mode: ' + (self.options.release ? 'Release' : 'Debug'));
 					console.log('            Master PID: ' + process.pid);
-					console.log('            Balancer count: ' + self._options.balancerCount);
-					console.log('            Worker count: ' + self._options.workers.length);
-					console.log('            Store count: ' + self._options.stores.length);
+					console.log('            Balancer count: ' + self.options.balancerCount);
+					console.log('            Worker count: ' + self.options.workers.length);
+					console.log('            Store count: ' + self.options.stores.length);
 					console.log();
 					firstTime = false;
 					
@@ -840,7 +840,7 @@ Master.prototype._start = function () {
 						}
 					});
 					
-					if (self._options.release) {
+					if (self.options.release) {
 						watchr.watch({
 							paths: [self._paths.versionFilePath],
 							listener: function (event, filePath) {
@@ -903,7 +903,7 @@ Master.prototype._start = function () {
 			worker.id = workerData.id;
 			worker.data = workerData;
 
-			var workerOpts = self._cloneObject(self._options);
+			var workerOpts = self._cloneObject(self.options);
 			workerOpts.appDef = self._getAppDef();
 			workerOpts.paths = self._paths;
 			workerOpts.workerId = worker.id;
@@ -971,7 +971,7 @@ Master.prototype._start = function () {
 
 		var launchWorkers = function () {
 			initBundles(function () {
-				var len = self._options.workers.length;
+				var len = self.options.workers.length;
 				if (len > 0) {
 					var i;
 					for (i in bundles) {
@@ -983,23 +983,23 @@ Master.prototype._start = function () {
 						self._resourceSizes[i] = styleAssetSizeMap[i];
 					}
 			
-					launchWorker(self._options.workers[0], true);
+					launchWorker(self.options.workers[0], true);
 					for (i = 1; i < len; i++) {
-						launchWorker(self._options.workers[i]);
+						launchWorker(self.options.workers[i]);
 					}
 					autoRebundle();
 				}
 			});
 		};
 		
-		if (self._options.release) {
+		if (self.options.release) {
 			self._updateCacheVersion(launchWorkers);
 		} else {
 			launchWorkers();
 		}
 	};
 
-	var stores = self._options.stores;
+	var stores = self.options.stores;
 	var pass = crypto.randomBytes(32).toString('hex');
 	
 	var launchIOCluster = function () {
@@ -1074,11 +1074,11 @@ Master.prototype._getAppDef = function () {
 	appDef.frameworkURL = this._paths.frameworkURL;
 	appDef.sessionCookieName = this._sessionCookieName;
 	appDef.cacheCookieName = this._cacheCookieName;
-	appDef.releaseMode = this._options.release;
-	appDef.timeout = this._options.connectTimeout * 1000;
+	appDef.releaseMode = this.options.release;
+	appDef.timeout = this.options.connectTimeout * 1000;
 	appDef.resourceSizeMap = this._resourceSizes;
-	appDef.autoReconnect = this._options.autoReconnect;
-	appDef.autoReconnectOptions = this._options.autoReconnectOptions;
+	appDef.autoReconnect = this.options.autoReconnect;
+	appDef.autoReconnectOptions = this.options.autoReconnectOptions;
 
 	return appDef;
 };

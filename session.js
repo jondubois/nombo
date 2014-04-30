@@ -172,7 +172,6 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 		var timeout = NOMBO_TIMEOUT;
 		var sessionID = null;
 		var sessionCookieName = NOMBO_APP_DEF.sessionCookieName;
-		var cacheCookieName = NOMBO_APP_DEF.cacheCookieName;
 		
 		var sessionDestRegex = /^([^_]*)_([^_]*)_([^_]*)_([^_]*)_/;
 		
@@ -182,12 +181,9 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 		
 		self.markAsCached = function () {
 			if (NOMBO_IS_FRESH) {
-				setCookie(cacheCookieName, 1);
 				var xmlhttp = _getHTTPReqObject();
-
 				xmlhttp.open('GET', freshnessURL, true);
 				xmlhttp.send(null);
-				setCookie(cacheCookieName, '', -100);
 			}
 		};
 		

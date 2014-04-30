@@ -225,8 +225,6 @@ Worker.prototype._init = function (options) {
 	}
 	self._customSIMExtension = self._options.customSIMExtension;
 	
-	self._cacheCookieRegex = new RegExp('(^|; *)' + self._options.appDef.cacheCookieName + '=1');
-	
 	self._ioClusterClient = new self._clusterEngine.IOClusterClient({
 		stores: self._options.stores,
 		dataKey: self._options.dataKey,
@@ -874,20 +872,14 @@ Worker.prototype._cacheVersionHandler = function (req, res, next) {
 		res.setHeader('Content-Type', 'application/javascript');
 		res.setHeader('Cache-Control', 'no-cache');
 		res.setHeader('Pragma', 'no-cache');
+		res.setHeader('ETag', cacheVersion);
 		
-		var script;
-		var cookie = req.headers.cookie;
+		var script = 'var NOMBO_CACHE_VERSION = "' + cacheVersion + '";\n';
 		
 		var ifNoneMatch = req.headers['if-none-match'];
 		if (ifNoneMatch == cacheVersion) {
-			res.setHeader('ETag', cacheVersion);
-			script = 'var NOMBO_CACHE_VERSION = "' + cacheVersion + '";\n';
 			script += 'var NOMBO_IS_FRESH = false;';
-		} else if (cookie && this._cacheCookieRegex.test(cookie)) {
-			script = '/* Cached app */';
-			res.setHeader('ETag', cacheVersion);
 		} else {
-			script = 'var NOMBO_CACHE_VERSION = "' + cacheVersion + '";\n';
 			script += 'var NOMBO_IS_FRESH = true;';
 		}
 		res.writeHead(200);

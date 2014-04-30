@@ -207,6 +207,7 @@ Master.prototype._init = function (options) {
 		.replace(backslashRegex, '/');
 	
 	self._paths.appWorkerControllerPath = self._paths.appDirPath + '/worker.node.js';
+	self._paths.appBalancerControllerPath = self._paths.appDirPath + '/balancer.node.js';
 	
 	if (self.options.versionFile == null) {
 		self._paths.versionFilePath = self._paths.appDirPath + '/version.node.txt';
@@ -760,7 +761,8 @@ Master.prototype._start = function () {
 				protocolOptions: self.options.protocolOptions,
 				checkStatusTimeout: self.options.connectTimeout * 1000,
 				statusURL: self._paths.statusURL,
-				statusCheckInterval: self.options.workerStatusInterval * 1000
+				statusCheckInterval: self.options.workerStatusInterval * 1000,
+				appBalancerControllerPath: self._paths.appBalancerControllerPath
 			}
 		});
 	};

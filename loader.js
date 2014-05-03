@@ -131,7 +131,6 @@ var $loader = {
 		}
 		
 		$loader.grab.init(appDefinition);
-		//$loader.grab.scriptTag($loader._appDefinition.loadScriptURL, 'text/javascript');
 	},
 	
 	EventEmitter: function () {

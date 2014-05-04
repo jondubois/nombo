@@ -186,7 +186,7 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 					Requesting freshnessURL without using the cache cookie will simply allow us to check
 					whether or not the app has been fully cached.
 					We use the cache cookie as a way to notify the server (via a request to freshnessURL) that the app has been fully cached.
-					We can't use a POST request here because that would mess up our use of ETags to achieve the desired effect.
+					We can't use a POST request here because that would mess up our use of ETags.
 				*/
 				setCookie(cacheCookieName, 1);
 				var xmlhttp = _getHTTPReqObject();

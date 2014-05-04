@@ -890,15 +890,16 @@ Worker.prototype._cacheVersionHandler = function (req, res, next) {
 		
 		if (markAsCached) {
 			res.setHeader('ETag', cacheVersion);
-			script = '/* Cached app */';
+			script = 'if (window.NOMBO_CACHE_VERSION == null) window.NOMBO_CACHE_VERSION = "' + cacheVersion + '";\n';
+			script += 'if (window.NOMBO_IS_FRESH == null) window.NOMBO_IS_FRESH = false;';
 		} else {
 			if (ifNoneMatch == cacheVersion) {
 				res.setHeader('ETag', cacheVersion);
-				script = 'var NOMBO_CACHE_VERSION = "' + cacheVersion + '";\n';
-				script += 'var NOMBO_IS_FRESH = false;';
+				script = 'window.NOMBO_CACHE_VERSION = "' + cacheVersion + '";\n';
+				script += 'window.NOMBO_IS_FRESH = false;';
 			} else {
-				script = 'var NOMBO_CACHE_VERSION = "' + cacheVersion + '";\n';
-				script += 'var NOMBO_IS_FRESH = true;';
+				script = 'window.NOMBO_CACHE_VERSION = "' + cacheVersion + '";\n';
+				script += 'window.NOMBO_IS_FRESH = true;';
 			}
 		}
 		res.writeHead(200);

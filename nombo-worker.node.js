@@ -225,6 +225,8 @@ Worker.prototype._init = function (options) {
 	}
 	self._customSIMExtension = self._options.customSIMExtension;
 	
+	self._cacheCookieRegex = new RegExp('(^|; *)' + self._options.appDef.cacheCookieName + '=1');
+	
 	self._ioClusterClient = new self._clusterEngine.IOClusterClient({
 		stores: self._options.stores,
 		dataKey: self._options.dataKey,
@@ -872,15 +874,31 @@ Worker.prototype._cacheVersionHandler = function (req, res, next) {
 		res.setHeader('Content-Type', 'application/javascript');
 		res.setHeader('Cache-Control', 'no-cache');
 		res.setHeader('Pragma', 'no-cache');
-		res.setHeader('ETag', cacheVersion);
 		
-		var script = 'var NOMBO_CACHE_VERSION = "' + cacheVersion + '";\n';
+		var cookie = req.headers.cookie;
+		var script;
 		
+		/* 
+			Note that the freshness URL may be requested twice when time a browser accesses the app.
+			The presence of the cache cookie indicates that this is a 'set' request as opposed to a 'get' request.
+			The reason why we can't just use a POST request to differentiate a 'set' request from a 'get' request
+			is because we want to share the same ETag data betwen both.
+		*/
+		var markAsCached = cookie && this._cacheCookieRegex.test(cookie);
 		var ifNoneMatch = req.headers['if-none-match'];
-		if (ifNoneMatch == cacheVersion) {
-			script += 'var NOMBO_IS_FRESH = false;';
+		
+		if (markAsCached) {
+			res.setHeader('ETag', cacheVersion);
+			script = '/* Cached app */';
 		} else {
-			script += 'var NOMBO_IS_FRESH = true;';
+			if (ifNoneMatch == cacheVersion) {
+				res.setHeader('ETag', cacheVersion);
+				script = 'var NOMBO_CACHE_VERSION = "' + cacheVersion + '";\n';
+				script += 'var NOMBO_IS_FRESH = false;';
+			} else {
+				script = 'var NOMBO_CACHE_VERSION = "' + cacheVersion + '";\n';
+				script += 'var NOMBO_IS_FRESH = true;';
+			}
 		}
 		res.writeHead(200);
 		res.end(script);

@@ -172,6 +172,7 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 		var timeout = NOMBO_TIMEOUT;
 		var sessionID = null;
 		var sessionCookieName = NOMBO_APP_DEF.sessionCookieName;
+		var cacheCookieName = NOMBO_APP_DEF.cacheCookieName;
 		
 		var sessionDestRegex = /^([^_]*)_([^_]*)_([^_]*)_([^_]*)_/;
 		
@@ -181,9 +182,17 @@ var NOMBO_SPINNER_OPTIONS = {{{spinnerOptions}}};
 		
 		self.markAsCached = function () {
 			if (NOMBO_IS_FRESH) {
+				/*
+					Requesting freshnessURL without using the cache cookie will simply allow us to check
+					whether or not the app has been fully cached.
+					We use the cache cookie as a way to notify the server (via a request to freshnessURL) that the app has been fully cached.
+					We can't use a POST request here because that would mess up our use of ETags to achieve the desired effect.
+				*/
+				setCookie(cacheCookieName, 1);
 				var xmlhttp = _getHTTPReqObject();
 				xmlhttp.open('GET', freshnessURL, true);
 				xmlhttp.send(null);
+				setCookie(cacheCookieName, '', -100);
 			}
 		};
 		

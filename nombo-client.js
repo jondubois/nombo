@@ -25,7 +25,7 @@ var $n = {
 		$n.socket = NOMBO_SOCKET;
 		$n.local = new $n.LocalInterface($n.socket);
 	},
-    
+	
 	init: function () {
 		var appDefinition = $loader.getAppDefinition();
 		
@@ -81,7 +81,7 @@ var $n = {
 		Bind a callback function to Nombo's fail event. The specified function will be called when Nombo fails to load a resource.
 		The callback can accept a parameter which indicates the URL of the resource which failed to load.
 	*/
-	fail:  $loader.grab.fail,
+	fail: $loader.grab.fail,
 	
 	/**
 		This object holds error functions to handle various client-side error types that can occur within the system.
@@ -137,17 +137,13 @@ var $n = {
 	_remoteClientMap: {}
 };
 
-$n.LocalInterface = function (wsSocket, namespace) {
+$n.LocalInterface = function (wsSocket) {
 	$n.EventEmitter.call(this);
 
 	var self = this;
-	var mainNamespace = '__';
-	var simNamespace = '__nc';
-	this.sock = wsSocket;
-	var mainSocket = wsSocket.ns(mainNamespace);
-	var simSocket = wsSocket.ns(simNamespace);
 	
-	self.namespace = namespace || mainNamespace;
+	this.sock = wsSocket;
+	
 	self.connected = wsSocket.connected;
 	
 	wsSocket.on('disconnect', function () {
@@ -163,10 +159,6 @@ $n.LocalInterface = function (wsSocket, namespace) {
 	wsSocket.on('error', function (err) {
 		self.emit('error', err);
 	});
-	
-	self.ns = function (namespace) {
-		return new $n.LocalInterface(wsSocket, namespace);
-	};
 	
 	self.exec = function () {
 		var serverInterface = arguments[0];
@@ -189,38 +181,36 @@ $n.LocalInterface = function (wsSocket, namespace) {
 			}
 		}
 		
-		simSocket.emit('rpc', request, callback);
+		wsSocket.emit('rpc', request, callback);
 	};
 	
 	self.watch = function (event, handler) {
-		mainSocket.on(event, handler);
+		wsSocket.on(event, handler);
 	};
 	
 	self.watchOnce = function (event, handler) {
-		mainSocket.once(event, handler);
+		wsSocket.once(event, handler);
 	};
 	
 	self.unwatch = function (event, handler) {
 		if (event && handler) {
-			mainSocket.removeListener(event, handler);
+			wsSocket.removeListener(event, handler);
 		} else {
-			mainSocket.removeAllListeners(event);
+			wsSocket.removeAllListeners(event);
 		}
 	};
 	
 	self.watchers = function (event) {
-		mainSocket.listeners(event);
+		wsSocket.listeners(event);
 	};
 };
 
 $n.LocalInterface.prototype = Object.create($n.EventEmitter.prototype);
 
-$n.RemoteInterface = function (url, namespace, wsSocket) {
+$n.RemoteInterface = function (url, wsSocket) {
 	$n.EventEmitter.call(this);
 
 	var self = this;
-	var mainNamespace = '__';
-	var simNamespace = '__nc';
 	
 	if (!wsSocket) {
 		wsSocket = NOMBO_SOCKET_ENGINE.connect({
@@ -245,15 +235,6 @@ $n.RemoteInterface = function (url, namespace, wsSocket) {
 		self.emit('error', err);
 	});
 	
-	var mainSocket = wsSocket.ns(mainNamespace);
-	var simSocket = wsSocket.ns(simNamespace);
-	
-	self.namespace = namespace || mainNamespace;
-	
-	self.ns = function (namespace) {
-		return new $n.RemoteInterface(url, namespace, wsSocket);
-	};
-	
 	self.exec = function () {
 		var serverInterface = arguments[0];
 		var method = arguments[1];
@@ -275,27 +256,27 @@ $n.RemoteInterface = function (url, namespace, wsSocket) {
 			}
 		}
 		
-		simSocket.emit('rpc', request, callback);
+		wsSocket.emit('rpc', request, callback);
 	};
 	
 	self.watch = function (event, handler) {
-		mainSocket.on(event, handler);
+		wsSocket.on(event, handler);
 	};
 	
 	self.watchOnce = function (event, handler) {
-		mainSocket.once(event, handler);
+		wsSocket.once(event, handler);
 	};
 	
 	self.unwatch = function (event, handler) {
 		if (event && handler) {
-			mainSocket.removeListener(event, handler);
+			wsSocket.removeListener(event, handler);
 		} else {
-			mainSocket.removeAllListeners(event);
+			wsSocket.removeAllListeners(event);
 		}
 	};
 	
 	self.watchers = function (event) {
-		mainSocket.listeners(event);
+		wsSocket.listeners(event);
 	};
 };
 

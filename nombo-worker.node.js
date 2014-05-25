@@ -233,10 +233,12 @@ Worker.prototype._init = function (options) {
 		connectTimeout: self._options.connectTimeout,
 		dataExpiry: self._options.sessionTimeout,
 		heartRate: self._options.sessionHeartRate,
-		addressSocketLimit: self._options.addressSocketLimit
+		addressSocketLimit: self._options.addressSocketLimit,
+    socketEventLimit: self._options.socketEventLimit
 	});
 
 	self._errorDomain.add(self._ioClusterClient);
+  self._ioClusterClient.on('notice', self.noticeHandler.bind(self));
 	
 	self._ioClusterClient.on('sessiondestroy', function (sessionId) {
 		self.emit(self.EVENT_SESSION_DESTROY, sessionId);
@@ -300,15 +302,14 @@ Worker.prototype._handleConnection = function (socket) {
 	
 	self._errorDomain.add(socket);
 	var remoteAddress = socket.address;
-	var nSocket = socket.ns('__nc');
 	
-	nSocket.on('message', function () {
+	socket.on('message', function () {
 		self._ioRequestCount++;
 	});
 	
 	// Handle local server interface call
-	nSocket.on('rpc', function (request, response) {
-		var req = new IORequest(request, nSocket, socket.session, socket.global, remoteAddress, self._options.secure);
+	socket.on('rpc', function (request, response) {
+		var req = new IORequest(request, socket, socket.session, socket.global, remoteAddress, self._options.secure);
 		var res = new IOResponse(request, response);
 		self._middleware[self.MIDDLEWARE_IO].run(req, res);
 	});

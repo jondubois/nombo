@@ -77,6 +77,7 @@ Master.prototype._init = function (options) {
 		minifyMangle: false,
 		matchOriginProtocol: true,
 		addressSocketLimit: null,
+		socketEventLimit: 100,
 		pollingDuration: 30,
 		heartbeatInterval: 25,
 		heartbeatTimeout: 60,
@@ -497,6 +498,10 @@ Master.prototype.noticeHandler = function (notice, origin) {
 	notice.time = Date.now();
 	
 	this.emit(this.EVENT_NOTICE, notice);
+	
+	if (this.options.logLevel > 1) {
+		this.log(notice.stack);
+	}
 };
 
 Master.prototype.triggerInfo = function (info, origin) {
